@@ -1,0 +1,135 @@
+@import "tailwindcss";
+
+/* ══════════════════════════════════════════════════════════════════════
+   DevAtlas design tokens — taken directly from the approved design
+   screens (Hub/Browse/Detail/Form/Login/Signup/NavBar/Profile). Every
+   color, font and radius a component uses should come from here, not
+   from a one-off hex/px value.
+   ══════════════════════════════════════════════════════════════════ */
+:root {
+  --ink: #14181f;
+  --surface: #1c222c;
+  --surface-2: #242b38;
+  --text: #edeef2;
+  --muted: #8a90a0;
+  --brass: #e8a33d;
+  --teal: #2f7a6b;
+  --danger: #e0605a;
+  --border: rgba(255, 255, 255, 0.08);
+
+  /* category legend colors — reused everywhere a category appears */
+  --cat-new-app: #e8a33d;
+  --cat-module-feature: #5b8def;
+  --cat-debugging: #e0605a;
+  --cat-frontend: #2f7a6b;
+  --cat-backend: #9c7bd9;
+
+  --radius-sm: 4px;
+  --radius-md: 6px;
+  --radius-lg: 8px;
+  --radius-xl: 10px;
+
+  --font-display: "Fraunces", Georgia, serif;
+  --font-body: "Inter", system-ui, sans-serif;
+  --font-mono: "IBM Plex Mono", ui-monospace, monospace;
+}
+
+@theme inline {
+  --color-ink: var(--ink);
+  --color-surface: var(--surface);
+  --color-surface-2: var(--surface-2);
+  --color-text: var(--text);
+  --color-muted: var(--muted);
+  --color-brass: var(--brass);
+  --color-teal: var(--teal);
+  --color-danger: var(--danger);
+  --color-border: var(--border);
+
+  --color-cat-new-app: var(--cat-new-app);
+  --color-cat-module-feature: var(--cat-module-feature);
+  --color-cat-debugging: var(--cat-debugging);
+  --color-cat-frontend: var(--cat-frontend);
+  --color-cat-backend: var(--cat-backend);
+
+  --radius-sm: var(--radius-sm);
+  --radius-md: var(--radius-md);
+  --radius-lg: var(--radius-lg);
+  --radius-xl: var(--radius-xl);
+
+  --font-display: var(--font-display);
+  --font-body: var(--font-body);
+  --font-mono: var(--font-mono);
+}
+
+* {
+  box-sizing: border-box;
+}
+
+body {
+  background: var(--ink);
+  color: var(--text);
+  font-family: var(--font-body);
+}
+
+h1, h2, h3, h4 {
+  font-family: var(--font-display);
+  font-weight: 500;
+}
+
+@keyframes riseIn {
+  from { opacity: 0; transform: translateY(10px); }
+  to { opacity: 1; transform: translateY(0); }
+}
+
+@keyframes shimmer {
+  0% { background-position: -200px 0; }
+  100% { background-position: 200px 0; }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  *, *::before, *::after {
+    animation-duration: 0.001ms !important;
+    animation-iteration-count: 1 !important;
+    transition-duration: 0.001ms !important;
+  }
+}
+
+/* on-brand focus ring, replacing the default blue everywhere */
+:focus {
+  outline: none;
+}
+:focus-visible {
+  outline: 2px solid var(--brass);
+  outline-offset: 2px;
+  border-radius: var(--radius-sm);
+}
+
+::selection {
+  background: color-mix(in srgb, var(--brass) 30%, transparent);
+}
+
+/* shared form control look used by every text input/textarea in the app */
+.dv-input {
+  width: 100%;
+  box-sizing: border-box;
+  background: var(--ink);
+  border: 1px solid var(--border);
+  border-radius: var(--radius-md);
+  color: var(--text);
+  font-family: var(--font-body);
+  font-size: 13px;
+  padding: 9px 12px;
+}
+.dv-input:hover {
+  border-color: color-mix(in srgb, var(--text) 30%, transparent);
+}
+.dv-input:focus-visible {
+  outline: 2px solid var(--brass);
+  outline-offset: 1px;
+}
+.dv-input::placeholder {
+  color: var(--muted);
+}
+.dv-input:disabled {
+  opacity: 0.6;
+}
