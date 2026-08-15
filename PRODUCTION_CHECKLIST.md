@@ -26,26 +26,40 @@ No action needed here — called out so these aren't re-litigated later.
 
 ## 🔴 Blocking — fix before launch
 
-- [ ] **Add automated tests.** Zero unit/integration/e2e coverage exists —
-      no test framework in `package.json`. At minimum, cover the
-      RLS-dependent auth flows and the server actions in
-      `app/actions/prompts.ts` / `app/actions/profile.ts`.
-- [ ] **Add error tracking / observability.** No Sentry (or equivalent), no
-      structured logging, no App Router error boundaries anywhere under
-      `app/` (`error.tsx`, `global-error.tsx`, `not-found.tsx` are all
-      absent). Production errors currently have zero visibility once
-      deployed.
-- [ ] **Add rate limiting on auth endpoints.** `/login`, `/signup`, and
-      `app/(auth)/callback/route.ts` have no throttling — open to
-      brute-force / credential-stuffing.
-- [ ] **Stop leaking raw DB errors to the client.** `createPrompt`,
-      `updatePrompt`, `deletePrompt` (`app/actions/prompts.ts`) and
-      `updatePassword` (`app/actions/profile.ts`) surface `error.message`
-      from Supabase/Postgres directly to the UI. Replace with generic
-      user-facing messages and log the real error server-side once
-      observability is in place.
-- [ ] **Add security headers / CSP.** `next.config.ts` is the bare
-      default — no CSP, `X-Frame-Options`, HSTS, or `Referrer-Policy`.
+All five closed out. Two need a one-time action from you before they're
+fully live (marked below) — everything else is done and verified.
+
+- [x] **Add automated tests.** Vitest (`npm run test`, wired into CI as a
+      blocking job) covers `lib/validation/prompt-schema.ts`,
+      `lib/auth/require-user.ts`, and `lib/rate-limit.ts` — 34 tests.
+      Playwright e2e (`npm run test:e2e`) covers sign up/in, prompt
+      create/edit/delete, and the two-account RLS check, against a local
+      Supabase stack (`.github/workflows/e2e.yml`, not required-on-PR —
+      see that file for why).
+- [x] **Add error tracking / observability.** `@sentry/nextjs` is fully
+      wired (`instrumentation.ts`, `instrumentation-client.ts`,
+      `next.config.ts`) plus `app/error.tsx`, `app/global-error.tsx`,
+      `app/not-found.tsx`. **Action needed:** it's inert until you set
+      `SENTRY_DSN` / `NEXT_PUBLIC_SENTRY_DSN` (and `SENTRY_AUTH_TOKEN` for
+      source maps) — see `.env.local.example`.
+- [x] **Add rate limiting.** Login/signup bypass our server entirely
+      (`AuthForm.tsx` calls Supabase's Auth API directly from the
+      browser) — Supabase's own dashboard-tunable per-IP limits cover
+      those; see the README's new "Rate limiting" section if you want to
+      adjust them. What does run on our server is now limited via a
+      Postgres-backed counter (`supabase/migrations/0008_rate_limiting.sql`,
+      `lib/rate-limit.ts`): `app/(auth)/callback/route.ts` and the
+      mutating server actions.
+- [x] **Stop leaking raw DB errors to the client.** `lib/errors/action-error.ts`'s
+      `toSafeActionError()` now wraps every raw-error return in
+      `app/actions/prompts.ts` and `app/actions/profile.ts`.
+- [x] **Add security headers / CSP.** `next.config.ts`'s `headers()` now
+      sets a real CSP plus `X-Frame-Options`, `X-Content-Type-Options`,
+      `Referrer-Policy`, HSTS, and `Permissions-Policy`. **Note:**
+      `script-src`/`style-src` still need `'unsafe-inline'` (Next's inline
+      hydration bootstrap, and `app/layout.tsx`'s inline font-variable
+      style) — a stronger nonce-based CSP is a follow-up that touches
+      `proxy.ts`'s matcher, intentionally out of scope here.
 
 ## 🟠 Should-fix before/shortly after launch
 
@@ -58,7 +72,7 @@ No action needed here — called out so these aren't re-litigated later.
       `scripts/supabase-security-allowlist.json`) once/if on a paid tier.
 - [ ] Decide if the **manual-SQL admin promotion** flow (README §5) is
       acceptable for launch, or needs a self-serve UI.
-- [ ] Bump **`@types/node`** from `^20` to `^22` to match the Node 22
+- [x] Bump **`@types/node`** from `^20` to `^22` to match the Node 22
       runtime used in CI (`.github/workflows/ci.yml`).
 - [ ] Add **SEO basics**: `robots.txt`, `app/sitemap.ts`, Open Graph/Twitter
       metadata, and per-route `<title>`/`description` overrides (currently
