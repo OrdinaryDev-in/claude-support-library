@@ -9,6 +9,7 @@
     "lint": "eslint",
     "test": "vitest run",
     "test:watch": "vitest",
+    "test:e2e": "playwright test",
     "seed": "node --env-file=.env.local --import tsx scripts/seed-prompts.ts",
     "generate-seed-sql": "npx tsx scripts/generate-seed-sql.ts",
     "supabase:security-check": "bash scripts/check-supabase-security.sh",
@@ -26,6 +27,7 @@
     "zod": "^4.4.3"
   },
   "devDependencies": {
+    "@playwright/test": "^1.62.1",
     "@tailwindcss/postcss": "^4",
     "@types/node": "^22",
     "@types/react": "^19",

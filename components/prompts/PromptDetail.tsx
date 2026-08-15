@@ -169,8 +169,16 @@ export function PromptDetail({
 
       {showDeleteConfirm && (
         <div className="fixed inset-0 bg-black/55 flex items-center justify-center z-50 p-4">
-          <div className="bg-[var(--surface-2)] border border-[var(--border)] rounded-[10px] p-7 w-full max-w-[380px]">
-            <h2 className="font-[family-name:var(--font-display)] text-lg font-medium mb-2.5">
+          <div
+            role="alertdialog"
+            aria-modal="true"
+            aria-labelledby="delete-prompt-heading"
+            className="bg-[var(--surface-2)] border border-[var(--border)] rounded-[10px] p-7 w-full max-w-[380px]"
+          >
+            <h2
+              id="delete-prompt-heading"
+              className="font-[family-name:var(--font-display)] text-lg font-medium mb-2.5"
+            >
               Delete this prompt?
             </h2>
             <p className="text-[13px] text-[var(--muted)] mb-5 leading-relaxed">

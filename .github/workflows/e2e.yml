@@ -1,0 +1,63 @@
+name: E2E
+
+# Not run on every push/PR (unlike ci.yml): `supabase start` pulls ~10
+# Docker images and is slow/flaky enough that gating every PR on it is
+# disproportionate for this app's size. Runs on demand and weekly
+# instead, so the suite still gets exercised regularly. Revisit
+# promoting it to a required check once it's proven stable.
+on:
+  workflow_dispatch: {}
+  schedule:
+    - cron: "23 4 * * 1"
+
+jobs:
+  e2e:
+    name: Playwright e2e (local Supabase)
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v5
+
+      - uses: actions/setup-node@v5
+        with:
+          node-version: 22
+          cache: npm
+
+      - run: npm ci
+
+      - uses: supabase/setup-cli@v1
+        with:
+          version: latest
+
+      - name: Start local Supabase
+        # supabase/config.toml already sets [auth.email]
+        # enable_confirmations = false, so signups get a session
+        # immediately — no email confirmation step needed here.
+        run: supabase start
+
+      - name: Get local Supabase env vars
+        id: supabase-status
+        # `-o env` emits API_URL / ANON_KEY / SERVICE_ROLE_KEY / DB_URL as
+        # Supabase's documented default names for this flag. Not exercised
+        # in this sandbox (no Docker available to actually run
+        # `supabase start` here) — spot-check the step below's env values
+        # on this workflow's first real run and adjust the two var names
+        # if they don't match.
+        run: |
+          supabase status -o env >> "$GITHUB_OUTPUT"
+
+      - name: Install Playwright's Chromium
+        run: npx playwright install --with-deps chromium
+
+      - name: Run e2e tests
+        env:
+          SUPABASE_LOCAL_URL: ${{ steps.supabase-status.outputs.API_URL }}
+          SUPABASE_LOCAL_ANON_KEY: ${{ steps.supabase-status.outputs.ANON_KEY }}
+        run: npm run test:e2e
+
+      - name: Upload Playwright report
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: playwright-report
+          path: playwright-report/
+          retention-days: 14

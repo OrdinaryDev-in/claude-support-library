@@ -106,18 +106,45 @@ scripts/seed-prompts.ts              — loads them via Supabase (npm run seed)
 - Sign in as a second account and confirm you can't edit/delete the first account's prompt (RLS-enforced, not just hidden in the UI) — then promote that second account to admin via the SQL above and confirm it now can.
 - Filter by category and tag on `/library/prompts`, and try the `/` keyboard shortcut to jump to search.
 
+## Testing
+
+**Unit/integration tests** (Vitest) — pure logic and mocked-Supabase
+tests, no setup required:
+
+```bash
+npm run test        # one-shot, used in CI
+npm run test:watch  # local dev loop
+```
+
+**End-to-end tests** (Playwright) — drives the real UI (sign up, sign in,
+create/edit/delete a prompt, a two-account RLS check) against a local
+Supabase stack:
+
+```bash
+supabase start                              # once per machine session
+npx playwright install --with-deps chromium # once per machine
+npm run test:e2e
+```
+
+`supabase/config.toml` already disables email confirmation for the local
+stack, so signups get a session immediately — no inbox needed.
+
 ## CI & security
 
 Two GitHub Actions workflows run on every push/PR to `main`
-(`.github/workflows/`):
+(`.github/workflows/`), plus a third that doesn't:
 
-- **`ci.yml`** — installs deps, `npm run lint`, `tsc --noEmit`, `next build`,
-  and an `npm audit` pass for known-vulnerable dependencies (advisory only —
-  it reports rather than blocks, since transitive advisories are outside
-  this repo's control).
+- **`ci.yml`** — installs deps, `npm run lint`, `tsc --noEmit`, `npm run test`,
+  `next build`, and an `npm audit` pass for known-vulnerable dependencies
+  (advisory only — it reports rather than blocks, since transitive
+  advisories are outside this repo's control).
 - **`codeql.yml`** — GitHub CodeQL static analysis for the JS/TypeScript
   code, also on a weekly schedule so new advisory patterns get caught
   between pushes.
+- **`e2e.yml`** — the Playwright suite above, against a local Supabase
+  stack spun up in the runner. Not gated on every push (`supabase start`
+  pulls ~10 Docker images and is slow/flaky enough to be disproportionate
+  for this app's size) — runs on manual dispatch and weekly instead.
 
 This app's authorization model leans on Postgres Row Level Security, not
 just app-layer checks — every table's policies live in
@@ -130,6 +157,22 @@ user could set their own `role` to `'admin'` via a direct PostgREST call,
 bypassing the app UI entirely. That trigger (not just the RLS policy) is
 what actually blocks it, since a policy's implicit `WITH CHECK` can't
 compare old vs. new column values the way a `BEFORE UPDATE` trigger can.
+
+### Rate limiting
+
+Sign-in/sign-up (`components/auth/AuthForm.tsx`) call Supabase's Auth API
+directly from the browser — they never touch our server, so app-layer
+rate limiting can't intercept them. Supabase applies its own per-IP
+limits there by default; tune them under **Authentication → Rate
+Limits** in the dashboard if the defaults don't fit.
+
+What *does* run on our server gets its own limiting instead, via a
+Postgres-backed fixed-window counter
+(`supabase/migrations/0008_rate_limiting.sql`, `lib/rate-limit.ts`):
+`app/(auth)/callback/route.ts` (by IP) and the mutating server actions —
+`updatePassword` (by user id, since it re-authenticates with the current
+password) and create/update/delete/duplicate on prompts (shared bucket
+per user id).
 
 ### Pre-push security gate
 
