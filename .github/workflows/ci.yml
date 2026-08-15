@@ -30,6 +30,13 @@ jobs:
       - name: Lint
         run: npm run lint
 
+      # `LayoutProps`/`PageProps` are ambient types Next.js generates into
+      # .next/types — they don't exist until typegen/build has run once, so
+      # this must come before `tsc --noEmit` or every route file's props
+      # fail to resolve.
+      - name: Generate route types
+        run: npx next typegen
+
       - name: Type-check
         run: npx tsc --noEmit
 
