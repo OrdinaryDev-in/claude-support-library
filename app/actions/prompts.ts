@@ -1,8 +1,8 @@
 "use server";
 
-import { redirect } from "next/navigation";
 import { revalidatePath } from "next/cache";
 import { createClient } from "@/lib/supabase/server";
+import { requireUser, isAuthorOrAdmin } from "@/lib/auth/require-user";
 import {
   searchPrompts,
   PROMPTS_PAGE_SIZE,
@@ -19,29 +19,6 @@ import {
 export type PromptActionResult =
   | { ok: true; slug: string }
   | { ok: false; error: string };
-
-async function requireUser() {
-  const supabase = await createClient();
-  const {
-    data: { user },
-  } = await supabase.auth.getUser();
-  if (!user) redirect("/login");
-  return { supabase, user };
-}
-
-async function isAuthorOrAdmin(
-  supabase: Awaited<ReturnType<typeof createClient>>,
-  userId: string,
-  authorId: string
-) {
-  if (userId === authorId) return true;
-  const { data } = await supabase
-    .from("profiles")
-    .select("role")
-    .eq("id", userId)
-    .single();
-  return data?.role === "admin";
-}
 
 /** Generates a unique slug, appending -2, -3... on collision. */
 async function uniqueSlug(
