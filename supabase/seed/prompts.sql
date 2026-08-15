@@ -14,7 +14,7 @@ values (
   '00000000-0000-0000-0000-000000000000',
   '00000000-0000-0000-0000-000000000001',
   'authenticated', 'authenticated', 'seed@devatlas.internal',
-  crypt('5f99e0f3-c163-4567-b42e-ce106718ad70', gen_salt('bf')),
+  crypt('0f7174ea-3295-45b0-8d4a-b496b442b114', gen_salt('bf')),
   now(), '{"provider":"email","providers":["email"]}', '{"full_name":"DevAtlas Seed"}',
   now(), now()
 )
@@ -540,4 +540,874 @@ on conflict (slug) do nothing;
 insert into public.prompt_tags (prompt_id, tag_id)
 select pr.id, t.id from public.prompts pr, public.tags t
 where pr.slug = 'implement-rate-limiting-and-api-auth' and t.slug = any(array['api', 'auth']::text[])
+on conflict do nothing;
+
+insert into public.prompts (
+  author_id, title, slug, description, category, is_published,
+  base_instructions, fill_in_details_guidance, reference_projects_guidance,
+  reference_links_guidance, expected_output_notes
+)
+values (
+  '00000000-0000-0000-0000-000000000001',
+  $body$Real-Time Chat Application Bootstrap$body$,
+  'realtime-chat-app-bootstrap',
+  $body$Bootstrap a real-time chat app from scratch: message delivery, presence, and reconnect handling wired end-to-end.$body$,
+  'new_app',
+  true,
+  $body$You are a senior full-stack engineer bootstrapping a real-time chat application from an empty repository. Stand up message persistence, a WebSocket (or equivalent real-time) transport, online-presence tracking, and reconnect/resume handling so a dropped connection doesn't lose or duplicate messages. Prove the transport works end-to-end with one real conversation thread, not a mocked demo.$body$,
+  $body$Product: [ONE-SENTENCE DESCRIPTION, e.g. '1:1 and group chat for a support tool']. Preferred stack: [FRAMEWORK, REAL-TIME LIBRARY — e.g. Supabase Realtime, Socket.IO, Pusher — OR 'recommend one']. Database: [YOUR DATABASE]. Message features needed: [e.g. 'read receipts, typing indicators, attachments — list what applies']. Expected concurrent users: [ROUGH SCALE, IF KNOWN].$body$,
+  $body$[PASTE A LINK OR DESCRIPTION OF A REAL-TIME APP YOU'VE BUILT WHOSE RECONNECT/PRESENCE HANDLING WORKED WELL].$body$,
+  $body$[LINK: YOUR CHOSEN REAL-TIME TRANSPORT'S DOCS]. [LINK: YOUR DATABASE'S DOCS ON THE REAL-TIME/CHANGE-FEED FEATURE, IF USING ONE].$body$,
+  $body$A correct response includes: a message schema with delivery/read state, a working real-time transport wired to one real conversation thread, presence tracking (online/offline, and typing if requested), reconnect logic that resyncs missed messages instead of silently dropping them, and a note on how message ordering is guaranteed under concurrent sends.$body$
+)
+on conflict (slug) do nothing;
+
+insert into public.tags (name, slug)
+select unnest(array['websockets', 'typescript', 'postgres']::text[]), unnest(array['websockets', 'typescript', 'postgres']::text[])
+on conflict (slug) do nothing;
+
+insert into public.prompt_tags (prompt_id, tag_id)
+select pr.id, t.id from public.prompts pr, public.tags t
+where pr.slug = 'realtime-chat-app-bootstrap' and t.slug = any(array['websockets', 'typescript', 'postgres']::text[])
+on conflict do nothing;
+
+insert into public.prompts (
+  author_id, title, slug, description, category, is_published,
+  base_instructions, fill_in_details_guidance, reference_projects_guidance,
+  reference_links_guidance, expected_output_notes
+)
+values (
+  '00000000-0000-0000-0000-000000000001',
+  $body$Browser Extension From Scratch$body$,
+  'browser-extension-from-scratch',
+  $body$Build a browser extension with a background service worker, content script, and popup UI wired together correctly.$body$,
+  'new_app',
+  true,
+  $body$You are a senior engineer building a browser extension (Manifest V3) from scratch. Set up the background service worker, any content scripts, and the popup/options UI, with correct message-passing between them — this is where most extension bugs live, so be explicit about which context each piece of code runs in and how they communicate. Request the minimum permissions the stated functionality actually needs.$body$,
+  $body$Extension purpose: [WHAT IT DOES, ONE SENTENCE]. Target browser(s): [CHROME/FIREFOX/BOTH — Manifest V3 compatibility]. Pages it needs to interact with: [SPECIFIC SITES, OR 'all sites']. Permissions likely needed: [e.g. 'storage, activeTab, scripting — or unsure, ask']. Build tooling preference: [e.g. Vite/CRXJS — or 'recommend one'].$body$,
+  $body$[PASTE A LINK OR DESCRIPTION OF AN EXTENSION WITH A SIMILAR CONTENT-SCRIPT/BACKGROUND MESSAGING PATTERN YOU WANT MIRRORED].$body$,
+  $body$[LINK: CHROME/FIREFOX MANIFEST V3 DOCS]. [LINK: YOUR BUILD TOOL'S EXTENSION-PACKAGING DOCS, IF USING ONE].$body$,
+  $body$A correct response includes: a valid Manifest V3 manifest requesting only the necessary permissions, a background service worker, a content script (if needed) with correct message-passing to the background/popup, a working popup UI, and a note on how to load the unpacked extension locally for testing.$body$
+)
+on conflict (slug) do nothing;
+
+insert into public.tags (name, slug)
+select unnest(array['typescript', 'testing']::text[]), unnest(array['typescript', 'testing']::text[])
+on conflict (slug) do nothing;
+
+insert into public.prompt_tags (prompt_id, tag_id)
+select pr.id, t.id from public.prompts pr, public.tags t
+where pr.slug = 'browser-extension-from-scratch' and t.slug = any(array['typescript', 'testing']::text[])
+on conflict do nothing;
+
+insert into public.prompts (
+  author_id, title, slug, description, category, is_published,
+  base_instructions, fill_in_details_guidance, reference_projects_guidance,
+  reference_links_guidance, expected_output_notes
+)
+values (
+  '00000000-0000-0000-0000-000000000001',
+  $body$E-Commerce Storefront Bootstrap$body$,
+  'ecommerce-storefront-bootstrap',
+  $body$Stand up a storefront skeleton: product catalog, cart, and a checkout flow ready to wire to a payment provider.$body$,
+  'new_app',
+  true,
+  $body$You are a senior full-stack engineer bootstrapping an e-commerce storefront from scratch. Build the product catalog schema and listing/detail pages, a persistent cart (survives refresh, and ideally login), and a checkout flow structured to plug into a payment provider next — get the state machine and data model right even if payment itself is stubbed. Handle inventory/stock correctly: don't let two carts oversell the last unit without at least flagging it.$body$,
+  $body$Store type: [WHAT'S BEING SOLD, ONE SENTENCE]. Stack: [FRAMEWORK, DATABASE]. Payment provider (even if stubbed for now): [e.g. Stripe — or 'undecided']. Cart persistence requirement: [GUEST CART / MUST BE LOGGED IN / BOTH]. Inventory tracking needed: [YES/NO, AND HOW STRICT — e.g. 'hard stock limit' vs 'soft, backorder allowed'].$body$,
+  $body$[PASTE A LINK OR DESCRIPTION OF A STOREFRONT WHOSE CART/CHECKOUT STATE MACHINE YOU WANT MIRRORED].$body$,
+  $body$[LINK: YOUR CHOSEN PAYMENT PROVIDER'S DOCS, EVEN IF INTEGRATING LATER]. [LINK: YOUR FRAMEWORK'S DOCS].$body$,
+  $body$A correct response includes: a product/variant/inventory schema, catalog listing and detail pages backed by real data, a cart that persists correctly per the stated requirement, a checkout flow structured for a payment provider to plug into, and explicit handling (not silence) around what happens when stock runs out mid-checkout.$body$
+)
+on conflict (slug) do nothing;
+
+insert into public.tags (name, slug)
+select unnest(array['nextjs', 'postgres', 'api']::text[]), unnest(array['nextjs', 'postgres', 'api']::text[])
+on conflict (slug) do nothing;
+
+insert into public.prompt_tags (prompt_id, tag_id)
+select pr.id, t.id from public.prompts pr, public.tags t
+where pr.slug = 'ecommerce-storefront-bootstrap' and t.slug = any(array['nextjs', 'postgres', 'api']::text[])
+on conflict do nothing;
+
+insert into public.prompts (
+  author_id, title, slug, description, category, is_published,
+  base_instructions, fill_in_details_guidance, reference_projects_guidance,
+  reference_links_guidance, expected_output_notes
+)
+values (
+  '00000000-0000-0000-0000-000000000001',
+  $body$Internal Admin / Back-Office Tool Bootstrap$body$,
+  'internal-admin-tool-bootstrap',
+  $body$Bootstrap an internal admin tool for staff to manage the app's data, with auth gating from day one.$body$,
+  'new_app',
+  true,
+  $body$You are a senior full-stack engineer bootstrapping an internal admin/back-office tool for staff to view and manage the main application's data. Gate the entire tool behind staff-only auth from the start (never ship an admin tool with a TODO to add auth later), build data tables with sort/filter/pagination for the core entities, and make destructive actions (delete, bulk-edit) require explicit confirmation.$body$,
+  $body$Main app it's administering: [ONE-SENTENCE DESCRIPTION]. Entities staff need to manage: [LIST THEM, e.g. 'users, orders, support tickets']. Staff auth approach: [SEPARATE ADMIN LOGIN / REUSE MAIN APP AUTH WITH A ROLE CHECK]. Actions needed beyond viewing: [e.g. 'edit user role, refund an order, ban a user — list them'].$body$,
+  $body$[PASTE A LINK OR DESCRIPTION OF AN INTERNAL TOOL WITH A DATA-TABLE/ACTIONS PATTERN YOU WANT MIRRORED].$body$,
+  $body$[LINK: YOUR AUTH PROVIDER'S DOCS FOR ROLE-GATING]. [LINK: A DATA-TABLE LIBRARY'S DOCS, IF USING ONE, e.g. TanStack Table].$body$,
+  $body$A correct response includes: the entire tool gated behind a staff-only check (not just hidden nav), data tables for each listed entity with working sort/filter/pagination, confirmation dialogs on every destructive action, and an audit trail (who did what, when) for actions that mutate other users' data.$body$
+)
+on conflict (slug) do nothing;
+
+insert into public.tags (name, slug)
+select unnest(array['react', 'postgres', 'auth']::text[]), unnest(array['react', 'postgres', 'auth']::text[])
+on conflict (slug) do nothing;
+
+insert into public.prompt_tags (prompt_id, tag_id)
+select pr.id, t.id from public.prompts pr, public.tags t
+where pr.slug = 'internal-admin-tool-bootstrap' and t.slug = any(array['react', 'postgres', 'auth']::text[])
+on conflict do nothing;
+
+insert into public.prompts (
+  author_id, title, slug, description, category, is_published,
+  base_instructions, fill_in_details_guidance, reference_projects_guidance,
+  reference_links_guidance, expected_output_notes
+)
+values (
+  '00000000-0000-0000-0000-000000000001',
+  $body$Content / Docs Site Bootstrap$body$,
+  'content-docs-site-bootstrap',
+  $body$Stand up a statically-generated content or documentation site with a content pipeline that's easy to add pages to.$body$,
+  'new_app',
+  true,
+  $body$You are a senior frontend engineer bootstrapping a statically-generated content or documentation site from scratch. Set up the content pipeline (MDX or a headless CMS, per what's specified), navigation/sidebar generation that stays in sync with actual content instead of being hand-maintained, and search. Optimize for a low-friction authoring experience — adding a new page should not require touching routing code.$body$,
+  $body$Site purpose: [DOCS / BLOG / MARKETING CONTENT — ONE SENTENCE]. Content source: [MDX FILES IN-REPO / HEADLESS CMS — NAME IT, OR 'recommend one']. Framework: [e.g. Next.js, Astro — or 'recommend one']. Search requirement: [YES/NO, AND WHETHER CLIENT-SIDE (e.g. FlexSearch) OR HOSTED (e.g. Algolia) IS PREFERRED]. Initial page count/structure: [ROUGH OUTLINE, IF KNOWN].$body$,
+  $body$[PASTE A LINK OR DESCRIPTION OF A DOCS/CONTENT SITE WITH A NAVIGATION/AUTHORING PATTERN YOU WANT MIRRORED].$body$,
+  $body$[LINK: YOUR FRAMEWORK'S DOCS]. [LINK: YOUR CHOSEN SEARCH SOLUTION'S DOCS, IF ANY].$body$,
+  $body$A correct response includes: the content pipeline wired up end-to-end (adding a new content file produces a new page with zero routing-code changes), auto-generated navigation that reflects actual content, working search if requested, and static generation confirmed (not accidentally forced dynamic).$body$
+)
+on conflict (slug) do nothing;
+
+insert into public.tags (name, slug)
+select unnest(array['nextjs', 'typescript']::text[]), unnest(array['nextjs', 'typescript']::text[])
+on conflict (slug) do nothing;
+
+insert into public.prompt_tags (prompt_id, tag_id)
+select pr.id, t.id from public.prompts pr, public.tags t
+where pr.slug = 'content-docs-site-bootstrap' and t.slug = any(array['nextjs', 'typescript']::text[])
+on conflict do nothing;
+
+insert into public.prompts (
+  author_id, title, slug, description, category, is_published,
+  base_instructions, fill_in_details_guidance, reference_projects_guidance,
+  reference_links_guidance, expected_output_notes
+)
+values (
+  '00000000-0000-0000-0000-000000000001',
+  $body$Multi-Tenant SaaS Bootstrap$body$,
+  'multi-tenant-saas-bootstrap',
+  $body$Bootstrap a multi-tenant SaaS with tenant isolation built into the data model and every query from day one.$body$,
+  'new_app',
+  true,
+  $body$You are a senior full-stack engineer bootstrapping a multi-tenant SaaS product from an empty repository. Bake tenant isolation into the data model and every query from the start (a shared `tenant_id` column plus row-level security or an equivalent enforced-at-the-database layer, not just app-code discipline) — retrofitting isolation after data exists across tenants is high-risk. Prove isolation with a concrete test: two tenants' data, one query, confirm no cross-tenant leakage.$body$,
+  $body$Product: [ONE-SENTENCE DESCRIPTION]. Tenancy model: [ONE ORG PER TENANT / ONE USER PER TENANT / OTHER]. Stack: [FRAMEWORK, DATABASE]. Isolation approach preference: [SHARED SCHEMA WITH ROW-LEVEL SECURITY / SCHEMA-PER-TENANT / DATABASE-PER-TENANT — or 'recommend one for the expected scale']. Expected tenant count and scale: [ROUGH NUMBERS, IF KNOWN].$body$,
+  $body$[PASTE A LINK OR DESCRIPTION OF A MULTI-TENANT SYSTEM WHOSE ISOLATION APPROACH YOU WANT MIRRORED].$body$,
+  $body$[LINK: YOUR DATABASE'S ROW-LEVEL SECURITY / MULTI-TENANCY DOCS]. [LINK: YOUR AUTH PROVIDER'S DOCS ON ORG/TENANT MODELING, IF RELEVANT].$body$,
+  $body$A correct response includes: the tenant data model, isolation enforced at the database layer (not only in application code), a first working end-to-end tenant-scoped feature, and an explicit test or query demonstrating that a second tenant's data is genuinely unreachable — not just unlinked in the UI.$body$
+)
+on conflict (slug) do nothing;
+
+insert into public.tags (name, slug)
+select unnest(array['postgres', 'auth', 'security']::text[]), unnest(array['postgres', 'auth', 'security']::text[])
+on conflict (slug) do nothing;
+
+insert into public.prompt_tags (prompt_id, tag_id)
+select pr.id, t.id from public.prompts pr, public.tags t
+where pr.slug = 'multi-tenant-saas-bootstrap' and t.slug = any(array['postgres', 'auth', 'security']::text[])
+on conflict do nothing;
+
+insert into public.prompts (
+  author_id, title, slug, description, category, is_published,
+  base_instructions, fill_in_details_guidance, reference_projects_guidance,
+  reference_links_guidance, expected_output_notes
+)
+values (
+  '00000000-0000-0000-0000-000000000001',
+  $body$Add Real-Time Collaboration$body$,
+  'add-real-time-collaboration',
+  $body$Add live presence and real-time synced updates (e.g. multiplayer editing or live dashboards) to an existing view.$body$,
+  'module_feature',
+  true,
+  $body$You are a senior full-stack engineer adding real-time collaboration to an existing view — live presence (who else is here) and synced updates when data changes, without requiring a manual refresh. Handle the conflict case explicitly: what happens when two users change the same thing near-simultaneously. Degrade gracefully if the real-time connection drops (fall back to the last-known state, don't crash the view).$body$,
+  $body$Stack: [YOUR APP'S TECH STACK]. Real-time transport available/preferred: [e.g. Supabase Realtime, Pusher, custom WebSocket server — or 'recommend one']. The view being made collaborative: [DESCRIBE IT, e.g. 'a shared kanban board']. Conflict scenario to handle: [e.g. 'two users drag the same card at once — describe the desired resolution, or ask for a recommendation']. Presence info needed: [e.g. 'avatar + cursor position', or just 'online/offline'].$body$,
+  $body$[PASTE A LINK OR DESCRIPTION OF A COLLABORATIVE FEATURE YOU'VE BUILT WITH A CONFLICT-RESOLUTION APPROACH YOU WANT MIRRORED].$body$,
+  $body$[LINK: YOUR REAL-TIME TRANSPORT'S DOCS]. [LINK: A CRDT OR OPERATIONAL-TRANSFORM LIBRARY'S DOCS, IF THE CONFLICT CASE NEEDS ONE].$body$,
+  $body$A correct response includes: presence tracking wired to the view, live-synced updates without a manual refresh, an explicit, stated resolution for the near-simultaneous-edit conflict case (not silently last-write-wins unless that was the actual decision), and graceful behavior when the connection drops and reconnects.$body$
+)
+on conflict (slug) do nothing;
+
+insert into public.tags (name, slug)
+select unnest(array['websockets', 'react', 'postgres']::text[]), unnest(array['websockets', 'react', 'postgres']::text[])
+on conflict (slug) do nothing;
+
+insert into public.prompt_tags (prompt_id, tag_id)
+select pr.id, t.id from public.prompts pr, public.tags t
+where pr.slug = 'add-real-time-collaboration' and t.slug = any(array['websockets', 'react', 'postgres']::text[])
+on conflict do nothing;
+
+insert into public.prompts (
+  author_id, title, slug, description, category, is_published,
+  base_instructions, fill_in_details_guidance, reference_projects_guidance,
+  reference_links_guidance, expected_output_notes
+)
+values (
+  '00000000-0000-0000-0000-000000000001',
+  $body$Add File Upload and Storage Pipeline$body$,
+  'add-file-upload-storage-pipeline',
+  $body$Add secure file/image upload to an existing app: validation, storage, and access-controlled serving.$body$,
+  'module_feature',
+  true,
+  $body$You are a senior full-stack engineer adding a file/image upload pipeline to an existing application. Validate file type and size before accepting an upload (not just at the client, since that's trivially bypassed), store files in object storage rather than the database, and serve them with access control matching the app's existing permission model — don't make every uploaded file publicly guessable by URL unless that's explicitly intended.$body$,
+  $body$Stack: [YOUR APP'S TECH STACK]. Storage backend: [e.g. S3, Supabase Storage, Cloudinary — or 'recommend one']. What's being uploaded: [e.g. 'user avatars and document attachments — list allowed types and max size']. Access model needed: [PUBLIC / PRIVATE-PER-OWNER / PRIVATE-PER-TEAM]. Processing needed on upload: [e.g. 'image resizing/thumbnails' — or 'none'].$body$,
+  $body$[PASTE A LINK OR DESCRIPTION OF AN UPLOAD PIPELINE YOU'VE BUILT WITH A VALIDATION/ACCESS-CONTROL PATTERN YOU WANT MIRRORED].$body$,
+  $body$[LINK: YOUR STORAGE BACKEND'S DOCS, INCLUDING SIGNED-URL/ACCESS-CONTROL SECTION]. [LINK: AN IMAGE-PROCESSING LIBRARY'S DOCS, IF RESIZING IS NEEDED].$body$,
+  $body$A correct response includes: server-side validation of file type/size (not just client-side), storage in object storage with a schema linking files to their owning record, access-controlled serving matching the stated model (signed URLs or an authorization check, not public-by-default), and any requested processing (e.g. thumbnails) actually wired into the upload flow.$body$
+)
+on conflict (slug) do nothing;
+
+insert into public.tags (name, slug)
+select unnest(array['api', 'aws', 'postgres']::text[]), unnest(array['api', 'aws', 'postgres']::text[])
+on conflict (slug) do nothing;
+
+insert into public.prompt_tags (prompt_id, tag_id)
+select pr.id, t.id from public.prompts pr, public.tags t
+where pr.slug = 'add-file-upload-storage-pipeline' and t.slug = any(array['api', 'aws', 'postgres']::text[])
+on conflict do nothing;
+
+insert into public.prompts (
+  author_id, title, slug, description, category, is_published,
+  base_instructions, fill_in_details_guidance, reference_projects_guidance,
+  reference_links_guidance, expected_output_notes
+)
+values (
+  '00000000-0000-0000-0000-000000000001',
+  $body$Add Multi-Factor Authentication (MFA)$body$,
+  'add-multi-factor-authentication-mfa',
+  $body$Add TOTP-based multi-factor authentication to an existing app, including enrollment, verification, and recovery.$body$,
+  'module_feature',
+  true,
+  $body$You are a senior full-stack engineer adding multi-factor authentication (TOTP-based, e.g. authenticator apps) to an existing application. Implement enrollment (QR code + verification before it's activated, so a typo'd setup can't lock a user out), the login-time challenge, and a recovery path (backup codes) for when the user loses their authenticator device — MFA without a recovery path turns a security feature into a support-ticket generator.$body$,
+  $body$Stack: [YOUR APP'S TECH STACK]. Auth provider/library: [YOUR CURRENT AUTH SETUP — e.g. Supabase Auth, custom, Auth0]. MFA requirement: [OPTIONAL PER-USER / MANDATORY FOR ALL / MANDATORY FOR ADMIN ROLES ONLY]. Recovery approach preference: [BACKUP CODES / SMS FALLBACK / SUPPORT-ASSISTED RESET — or 'recommend one'].$body$,
+  $body$[PASTE A LINK OR DESCRIPTION OF AN MFA IMPLEMENTATION YOU'VE SHIPPED OR SEEN WITH A GOOD ENROLLMENT/RECOVERY UX].$body$,
+  $body$[LINK: YOUR AUTH PROVIDER'S MFA/TOTP DOCS]. [LINK: RFC 6238 (TOTP), IF IMPLEMENTING FROM SCRATCH RATHER THAN VIA A PROVIDER].$body$,
+  $body$A correct response includes: enrollment with QR code generation and a verify-before-activate step, the login-time TOTP challenge wired into the existing auth flow, single-use backup/recovery codes generated at enrollment, and a note on what happens if a user is mid-login when MFA is turned on for their account.$body$
+)
+on conflict (slug) do nothing;
+
+insert into public.tags (name, slug)
+select unnest(array['auth', 'security']::text[]), unnest(array['auth', 'security']::text[])
+on conflict (slug) do nothing;
+
+insert into public.prompt_tags (prompt_id, tag_id)
+select pr.id, t.id from public.prompts pr, public.tags t
+where pr.slug = 'add-multi-factor-authentication-mfa' and t.slug = any(array['auth', 'security']::text[])
+on conflict do nothing;
+
+insert into public.prompts (
+  author_id, title, slug, description, category, is_published,
+  base_instructions, fill_in_details_guidance, reference_projects_guidance,
+  reference_links_guidance, expected_output_notes
+)
+values (
+  '00000000-0000-0000-0000-000000000001',
+  $body$Add Internationalization (i18n)$body$,
+  'add-internationalization-i18n',
+  $body$Add multi-language support to an existing app: string extraction, a translation pipeline, and locale-aware formatting.$body$,
+  'module_feature',
+  true,
+  $body$You are a senior frontend engineer adding internationalization to an existing application that currently has hardcoded English strings. Extract strings into a translation-key structure, wire up an i18n library with locale detection and switching, and make sure dates/numbers/currency are locale-formatted, not just the copy text. Don't stop at the happy-path screens — cover error messages and empty states too, since those are the ones teams usually forget.$body$,
+  $body$Stack: [YOUR FRONTEND FRAMEWORK]. i18n library preference: [e.g. next-intl, react-i18next — or 'recommend one']. Target locales: [LIST THEM, e.g. 'en, es, ja']. Locale detection/switching requirement: [AUTO-DETECT FROM BROWSER / URL-BASED (e.g. /es/...) / USER PREFERENCE SETTING]. Scope: [WHICH SCREENS/FLOWS NEED TRANSLATING FIRST, IF NOT THE WHOLE APP].$body$,
+  $body$[PASTE A LINK OR DESCRIPTION OF AN I18N SETUP YOU'VE BUILT WITH A STRING-EXTRACTION/TRANSLATION-KEY CONVENTION YOU WANT MIRRORED].$body$,
+  $body$[LINK: YOUR CHOSEN I18N LIBRARY'S DOCS]. [LINK: THE INTL/ECMA-402 DOCS FOR LOCALE-AWARE DATE/NUMBER FORMATTING].$body$,
+  $body$A correct response includes: hardcoded strings replaced with translation keys in the stated scope (including error/empty states, not just happy-path copy), a working locale switcher, translation files for every target locale (even if placeholder-translated), and locale-aware date/number/currency formatting, not just swapped-out prose.$body$
+)
+on conflict (slug) do nothing;
+
+insert into public.tags (name, slug)
+select unnest(array['react', 'i18n']::text[]), unnest(array['react', 'i18n']::text[])
+on conflict (slug) do nothing;
+
+insert into public.prompt_tags (prompt_id, tag_id)
+select pr.id, t.id from public.prompts pr, public.tags t
+where pr.slug = 'add-internationalization-i18n' and t.slug = any(array['react', 'i18n']::text[])
+on conflict do nothing;
+
+insert into public.prompts (
+  author_id, title, slug, description, category, is_published,
+  base_instructions, fill_in_details_guidance, reference_projects_guidance,
+  reference_links_guidance, expected_output_notes
+)
+values (
+  '00000000-0000-0000-0000-000000000001',
+  $body$Add a Feature Flag / Gradual Rollout System$body$,
+  'add-feature-flag-gradual-rollout-system',
+  $body$Add a feature-flagging system so new features can ship to a subset of users and be killed instantly if something breaks.$body$,
+  'module_feature',
+  true,
+  $body$You are a senior backend engineer adding a feature-flag system to an existing application, so new features can be enabled for a subset of users (by percentage, user list, or attribute) and disabled instantly without a deploy if something goes wrong. Make flag evaluation fast (no per-request round trip to an external service on the hot path unless that's explicitly acceptable) and make the kill-switch path genuinely instant — not gated behind the same deploy pipeline as the feature itself.$body$,
+  $body$Stack: [YOUR APP'S TECH STACK]. Approach preference: [BUILD IN-HOUSE (SIMPLE) / USE A PROVIDER, e.g. LaunchDarkly, Statsig, Unleash]. Targeting needed: [PERCENTAGE ROLLOUT / SPECIFIC USER LIST / USER ATTRIBUTE, e.g. 'beta testers' — list what's needed]. Where flags need to be checked: [e.g. 'backend API and frontend UI, or just one'].$body$,
+  $body$[PASTE A LINK OR DESCRIPTION OF A FEATURE-FLAG SETUP YOU'VE BUILT OR USED WITH A TARGETING/KILL-SWITCH PATTERN YOU WANT MIRRORED].$body$,
+  $body$[LINK: YOUR CHOSEN FLAG PROVIDER'S DOCS, IF USING ONE]. [LINK: YOUR CACHING LAYER'S DOCS, IF FLAGS NEED TO BE EVALUATED FAST AND OFTEN].$body$,
+  $body$A correct response includes: a flag schema/config supporting the stated targeting rules, an evaluation path fast enough for the hot path it's used on, a way to flip a flag off that takes effect immediately (no redeploy required), and a note on how flag state is cached/invalidated so the kill-switch is actually instant.$body$
+)
+on conflict (slug) do nothing;
+
+insert into public.tags (name, slug)
+select unnest(array['api', 'postgres']::text[]), unnest(array['api', 'postgres']::text[])
+on conflict (slug) do nothing;
+
+insert into public.prompt_tags (prompt_id, tag_id)
+select pr.id, t.id from public.prompts pr, public.tags t
+where pr.slug = 'add-feature-flag-gradual-rollout-system' and t.slug = any(array['api', 'postgres']::text[])
+on conflict do nothing;
+
+insert into public.prompts (
+  author_id, title, slug, description, category, is_published,
+  base_instructions, fill_in_details_guidance, reference_projects_guidance,
+  reference_links_guidance, expected_output_notes
+)
+values (
+  '00000000-0000-0000-0000-000000000001',
+  $body$Add Audit Logging for Compliance$body$,
+  'add-audit-logging-for-compliance',
+  $body$Add an immutable audit trail of who changed what and when, for the actions that need one for compliance or trust.$body$,
+  'module_feature',
+  true,
+  $body$You are a senior backend engineer adding audit logging to an existing application for compliance and internal trust. Record who performed an action, what changed (before/after where applicable), when, and from where (IP/user agent if relevant) — for the specific actions that need it, not indiscriminately every request. Make the audit log append-only and inaccessible to normal application code paths that could tamper with it.$body$,
+  $body$Stack: [YOUR APP'S TECH STACK]. Database: [YOUR DATABASE]. Actions that need auditing: [LIST THEM, e.g. 'role changes, data deletion, billing plan changes']. Retention requirement: [HOW LONG AUDIT RECORDS MUST BE KEPT, IF KNOWN]. Who needs to view the audit log: [ADMINS ONLY / THE AFFECTED USER TOO / EXTERNAL COMPLIANCE EXPORT].$body$,
+  $body$[PASTE A LINK OR DESCRIPTION OF AN AUDIT-LOGGING IMPLEMENTATION YOU'VE BUILT WITH A SCHEMA/TAMPER-RESISTANCE APPROACH YOU WANT MIRRORED].$body$,
+  $body$[LINK: YOUR DATABASE'S DOCS ON APPEND-ONLY/IMMUTABLE TABLE PATTERNS OR TRIGGERS]. [LINK: RELEVANT COMPLIANCE STANDARD'S AUDIT REQUIREMENTS, e.g. SOC 2, IF APPLICABLE].$body$,
+  $body$A correct response includes: an audit log schema capturing actor, action, before/after state, and timestamp, hooks on every listed action that write to it, database-level protection against normal app code updating/deleting audit rows, and a view/export path for whoever is stated as needing to read the log.$body$
+)
+on conflict (slug) do nothing;
+
+insert into public.tags (name, slug)
+select unnest(array['postgres', 'security', 'api']::text[]), unnest(array['postgres', 'security', 'api']::text[])
+on conflict (slug) do nothing;
+
+insert into public.prompt_tags (prompt_id, tag_id)
+select pr.id, t.id from public.prompts pr, public.tags t
+where pr.slug = 'add-audit-logging-for-compliance' and t.slug = any(array['postgres', 'security', 'api']::text[])
+on conflict do nothing;
+
+insert into public.prompts (
+  author_id, title, slug, description, category, is_published,
+  base_instructions, fill_in_details_guidance, reference_projects_guidance,
+  reference_links_guidance, expected_output_notes
+)
+values (
+  '00000000-0000-0000-0000-000000000001',
+  $body$Diagnose and Fix a Memory Leak$body$,
+  'diagnose-and-fix-a-memory-leak',
+  $body$Confirm, isolate, and fix a memory leak using heap snapshots or profiling rather than guessing at the cause.$body$,
+  'debugging',
+  true,
+  $body$You are a senior engineer diagnosing a suspected memory leak. Confirm it's real (memory growing unboundedly over time, not just normal working-set fluctuation) using a heap snapshot, profiler, or memory-over-time metric before proposing a fix. Identify the specific retained-reference pattern (e.g. an uncleared interval, an event listener never removed, a growing cache with no eviction) rather than a vague 'reduce memory usage' fix.$body$,
+  $body$Stack/runtime: [YOUR APP'S TECH STACK, e.g. Node.js, browser, a specific mobile runtime]. Symptom: [DESCRIBE HOW MEMORY GROWTH SHOWS UP, e.g. 'server RSS climbs steadily over 24h until OOM']. Available tooling: [e.g. 'Chrome DevTools heap snapshots', '--inspect + clinic.js', 'nothing set up yet']. Suspected area, if any: [A COMPONENT/MODULE YOU SUSPECT, OR 'unknown'].$body$,
+  $body$[PASTE A LINK OR DESCRIPTION OF A SIMILAR MEMORY-LEAK PATTERN YOU'VE DIAGNOSED BEFORE IN THIS OR A SIMILAR CODEBASE].$body$,
+  $body$[LINK: YOUR RUNTIME'S MEMORY-PROFILING DOCS, e.g. Chrome DevTools Memory panel or Node --inspect]. [LINK: YOUR HOSTING/MONITORING PROVIDER'S MEMORY-METRICS DOCS].$body$,
+  $body$A correct response includes: confirmation the leak is real with evidence (a snapshot diff or memory-over-time graph, not a guess), the specific retained-reference pattern identified as the cause, a fix that removes the actual leak (not a periodic-restart workaround unless explicitly requested as a stopgap), and a way to verify memory now plateaus under sustained load.$body$
+)
+on conflict (slug) do nothing;
+
+insert into public.tags (name, slug)
+select unnest(array['performance', 'testing']::text[]), unnest(array['performance', 'testing']::text[])
+on conflict (slug) do nothing;
+
+insert into public.prompt_tags (prompt_id, tag_id)
+select pr.id, t.id from public.prompts pr, public.tags t
+where pr.slug = 'diagnose-and-fix-a-memory-leak' and t.slug = any(array['performance', 'testing']::text[])
+on conflict do nothing;
+
+insert into public.prompts (
+  author_id, title, slug, description, category, is_published,
+  base_instructions, fill_in_details_guidance, reference_projects_guidance,
+  reference_links_guidance, expected_output_notes
+)
+values (
+  '00000000-0000-0000-0000-000000000001',
+  $body$Track Down an N+1 Query Problem$body$,
+  'track-down-an-n-plus-1-query-problem',
+  $body$Find and fix an N+1 query pattern using query logs or an ORM query counter, not guesswork.$body$,
+  'debugging',
+  true,
+  $body$You are a senior backend engineer diagnosing a suspected N+1 query problem — one query to fetch a list, then one additional query per item to fetch related data. Confirm it with actual query logs or an ORM's query-count tooling before fixing, then resolve it with eager loading, a join, or a batching/dataloader pattern appropriate to the stack — pick the fix that fits the access pattern rather than reflexively eager-loading everything.$body$,
+  $body$Stack: [YOUR APP'S TECH STACK]. ORM/query layer: [e.g. Prisma, Drizzle, raw SQL]. The slow endpoint/view: [DESCRIBE IT AND WHAT DATA IT RETURNS]. Evidence so far: [PASTE QUERY LOGS OR A QUERY COUNT, IF ALREADY GATHERED — OR 'none yet, need help gathering it']. Relationship shape causing the suspected N+1: [e.g. 'posts, each needing its author and comment count'].$body$,
+  $body$[PASTE A LINK OR DESCRIPTION OF A SIMILAR N+1 PATTERN YOU'VE FIXED BEFORE IN THIS CODEBASE, e.g. a reusable eager-loading helper].$body$,
+  $body$[LINK: YOUR ORM'S DOCS ON EAGER LOADING/INCLUDES]. [LINK: YOUR DATABASE'S DOCS ON EXPLAIN/QUERY LOGGING, e.g. Postgres `EXPLAIN ANALYZE`].$body$,
+  $body$A correct response includes: confirmation of the N+1 pattern with an actual query count or log (before), the fix applied (join, eager-load, or batching, matched to the access pattern), the resulting query count after the fix (should be O(1) or O(log n), not O(n)), and a note on how to catch this pattern regressing again (e.g. a query-count assertion in tests).$body$
+)
+on conflict (slug) do nothing;
+
+insert into public.tags (name, slug)
+select unnest(array['postgres', 'performance', 'api']::text[]), unnest(array['postgres', 'performance', 'api']::text[])
+on conflict (slug) do nothing;
+
+insert into public.prompt_tags (prompt_id, tag_id)
+select pr.id, t.id from public.prompts pr, public.tags t
+where pr.slug = 'track-down-an-n-plus-1-query-problem' and t.slug = any(array['postgres', 'performance', 'api']::text[])
+on conflict do nothing;
+
+insert into public.prompts (
+  author_id, title, slug, description, category, is_published,
+  base_instructions, fill_in_details_guidance, reference_projects_guidance,
+  reference_links_guidance, expected_output_notes
+)
+values (
+  '00000000-0000-0000-0000-000000000001',
+  $body$Debug a Race Condition in Concurrent Code$body$,
+  'debug-a-race-condition-in-concurrent-code',
+  $body$Isolate a race condition between concurrent operations and fix it with proper synchronization, not a sleep/retry hack.$body$,
+  'debugging',
+  true,
+  $body$You are a senior engineer debugging a race condition — a bug that depends on the relative timing of two or more concurrent operations. Identify the specific shared state or resource both operations touch and the exact interleaving that causes the bug, then fix it with proper synchronization (a lock, a transaction with the right isolation level, an atomic operation, or a queue serializing the conflicting work) — not a `sleep()`, retry loop, or other timing-dependent workaround that just makes the bug rarer.$body$,
+  $body$Stack: [YOUR APP'S TECH STACK]. The concurrent operations involved: [DESCRIBE BOTH/ALL OPERATIONS AND WHAT SHARED STATE THEY TOUCH]. Symptom: [WHAT GOES WRONG, e.g. 'duplicate orders created', 'a counter ends up wrong under load']. How it's been reproduced so far: [DESCRIBE, OR 'only seen in production, not yet reproduced locally'].$body$,
+  $body$[PASTE A LINK OR DESCRIPTION OF A SIMILAR RACE CONDITION YOU'VE FIXED BEFORE, e.g. a locking pattern already used elsewhere in this codebase].$body$,
+  $body$[LINK: YOUR DATABASE'S DOCS ON TRANSACTION ISOLATION LEVELS OR ADVISORY LOCKS, IF THE RACE IS DATABASE-LEVEL]. [LINK: YOUR RUNTIME'S CONCURRENCY-PRIMITIVES DOCS, e.g. mutexes or atomics, IF APPLICATION-LEVEL].$body$,
+  $body$A correct response includes: the exact interleaving that causes the bug (stated explicitly, not just 'it's a race condition'), a fix using real synchronization appropriate to where the race occurs (app-level lock, DB transaction/isolation level, or atomic operation), confirmation the fix doesn't just narrow the timing window, and — ideally — a test that reliably reproduces the race before the fix and passes after.$body$
+)
+on conflict (slug) do nothing;
+
+insert into public.tags (name, slug)
+select unnest(array['testing', 'api']::text[]), unnest(array['testing', 'api']::text[])
+on conflict (slug) do nothing;
+
+insert into public.prompt_tags (prompt_id, tag_id)
+select pr.id, t.id from public.prompts pr, public.tags t
+where pr.slug = 'debug-a-race-condition-in-concurrent-code' and t.slug = any(array['testing', 'api']::text[])
+on conflict do nothing;
+
+insert into public.prompts (
+  author_id, title, slug, description, category, is_published,
+  base_instructions, fill_in_details_guidance, reference_projects_guidance,
+  reference_links_guidance, expected_output_notes
+)
+values (
+  '00000000-0000-0000-0000-000000000001',
+  $body$Diagnose Intermittent Third-Party API Failures$body$,
+  'diagnose-intermittent-third-party-api-failures',
+  $body$Determine whether intermittent failures calling a third-party API are your bug, their instability, or a rate limit — and fix accordingly.$body$,
+  'debugging',
+  true,
+  $body$You are a senior engineer diagnosing intermittent failures when calling a third-party API. Distinguish between three different root causes — a bug on your side (bad payload, timeout too short, connection pool exhaustion), genuine instability on their side, or you hitting a rate limit — since each needs a different fix. Once diagnosed, implement the right mitigation: retries with backoff for transient failures, a circuit breaker if their instability is sustained, or respecting their stated rate limits if that's the cause.$body$,
+  $body$Stack: [YOUR APP'S TECH STACK]. Third-party API involved: [NAME IT]. Failure pattern: [DESCRIBE — e.g. 'fails roughly 1 in 20 calls, mostly 502s', PASTE ANY ERROR RESPONSES/HEADERS RECEIVED]. Current retry/timeout behavior, if any: [DESCRIBE]. Their documented rate limits, if known: [PASTE OR 'not sure, need to check'].$body$,
+  $body$[PASTE A LINK OR DESCRIPTION OF A SIMILAR THIRD-PARTY-API RELIABILITY ISSUE YOU'VE HANDLED BEFORE AND HOW].$body$,
+  $body$[LINK: THE THIRD-PARTY API'S DOCS, ESPECIALLY RATE LIMITS AND ERROR-CODE MEANINGS]. [LINK: THEIR STATUS PAGE, IF THEY HAVE ONE, TO CROSS-CHECK TIMING].$body$,
+  $body$A correct response includes: a diagnosis backed by evidence (error codes/headers/timing, not a guess) of which of the three categories the failures fall into, the specific mitigation matched to that category (not retries-for-everything as a blanket fix), confirmation the mitigation doesn't make a genuine rate-limit problem worse, and a note on how to tell the difference again if it recurs.$body$
+)
+on conflict (slug) do nothing;
+
+insert into public.tags (name, slug)
+select unnest(array['api', 'testing']::text[]), unnest(array['api', 'testing']::text[])
+on conflict (slug) do nothing;
+
+insert into public.prompt_tags (prompt_id, tag_id)
+select pr.id, t.id from public.prompts pr, public.tags t
+where pr.slug = 'diagnose-intermittent-third-party-api-failures' and t.slug = any(array['api', 'testing']::text[])
+on conflict do nothing;
+
+insert into public.prompts (
+  author_id, title, slug, description, category, is_published,
+  base_instructions, fill_in_details_guidance, reference_projects_guidance,
+  reference_links_guidance, expected_output_notes
+)
+values (
+  '00000000-0000-0000-0000-000000000001',
+  $body$Bisect a Regression to Its Introducing Commit$body$,
+  'bisect-a-regression-to-its-introducing-commit',
+  $body$Use git bisect (or an equivalent binary search) to find the exact commit that introduced a regression, then fix it.$body$,
+  'debugging',
+  true,
+  $body$You are a senior engineer tracking down a regression whose cause isn't obvious from the symptom alone. Use `git bisect` (or an equivalent binary search over deploys/versions if the history isn't git-bisectable) with a reliable pass/fail check at each step, to find the exact commit that introduced it — don't jump straight to guessing based on 'what changed recently' if the range of candidate commits is more than a handful. Once found, explain why that commit caused the regression before fixing it, since the fix should address the actual mechanism, not just revert blindly.$body$,
+  $body$Stack: [YOUR APP'S TECH STACK]. The regression: [DESCRIBE THE SYMPTOM AND WHEN IT WAS FIRST NOTICED]. Known-good and known-bad reference points: [A COMMIT/TAG/DATE THAT DEFINITELY WORKED, AND ONE THAT DEFINITELY DOESN'T]. A reliable pass/fail check: [A TEST, SCRIPT, OR MANUAL STEP THAT CAN CONFIRM GOOD/BAD AT ANY GIVEN COMMIT — this is required for bisect to work].$body$,
+  $body$[PASTE A LINK OR DESCRIPTION OF A SIMILAR BISECT-FOUND REGRESSION IN THIS CODEBASE, IF ANY, FOR CONTEXT ON HOW CHANGES HERE TEND TO CAUSE REGRESSIONS].$body$,
+  $body$[LINK: GIT BISECT DOCUMENTATION]. [LINK: YOUR CI PROVIDER'S DOCS ON RUNNING A SPECIFIC HISTORICAL COMMIT/BUILD, IF THE CHECK NEEDS TO RUN IN CI RATHER THAN LOCALLY].$body$,
+  $body$A correct response includes: the exact introducing commit identified via bisection (not a hunch), a clear explanation of the mechanism by which that commit caused the regression, a fix addressing that mechanism (a targeted fix or an informed revert, stated explicitly which), and — if the pass/fail check didn't already exist as an automated test — a suggestion to add one so this regression can't silently reintroduce itself.$body$
+)
+on conflict (slug) do nothing;
+
+insert into public.tags (name, slug)
+select unnest(array['ci-cd', 'testing']::text[]), unnest(array['ci-cd', 'testing']::text[])
+on conflict (slug) do nothing;
+
+insert into public.prompt_tags (prompt_id, tag_id)
+select pr.id, t.id from public.prompts pr, public.tags t
+where pr.slug = 'bisect-a-regression-to-its-introducing-commit' and t.slug = any(array['ci-cd', 'testing']::text[])
+on conflict do nothing;
+
+insert into public.prompts (
+  author_id, title, slug, description, category, is_published,
+  base_instructions, fill_in_details_guidance, reference_projects_guidance,
+  reference_links_guidance, expected_output_notes
+)
+values (
+  '00000000-0000-0000-0000-000000000001',
+  $body$Diagnose Database Lock Contention / Deadlocks$body$,
+  'diagnose-database-lock-contention-deadlocks',
+  $body$Identify the queries and lock ordering causing contention or deadlocks, then fix the access pattern that causes them.$body$,
+  'debugging',
+  true,
+  $body$You are a senior backend engineer diagnosing database lock contention or deadlocks. Use the database's own lock/deadlock diagnostics (not application-level guessing) to identify which queries are holding and waiting on which locks, and in what order — a deadlock specifically requires two transactions acquiring the same locks in a different order. Fix the actual access pattern (consistent lock ordering, shorter transactions, a less restrictive isolation level, or `SELECT ... FOR UPDATE SKIP LOCKED` where appropriate) rather than adding a blind retry-on-deadlock wrapper as the only fix.$body$,
+  $body$Database: [YOUR DATABASE, e.g. Postgres]. Symptom: [DESCRIBE — e.g. 'random `deadlock detected` errors under load', 'queries pile up waiting on a lock during peak traffic']. Transactions/queries suspected of being involved: [DESCRIBE THE OPERATIONS THAT RUN CONCURRENTLY AND TOUCH THE SAME ROWS/TABLES]. Diagnostics already available: [e.g. deadlock log output, `pg_locks` query results — PASTE IF AVAILABLE].$body$,
+  $body$[PASTE A LINK OR DESCRIPTION OF A SIMILAR LOCK-CONTENTION ISSUE YOU'VE RESOLVED BEFORE IN THIS OR A SIMILAR SYSTEM].$body$,
+  $body$[LINK: YOUR DATABASE'S DOCS ON LOCK MONITORING AND DEADLOCK LOGGING, e.g. Postgres `pg_locks`/`log_lock_waits`]. [LINK: YOUR DATABASE'S DOCS ON TRANSACTION ISOLATION LEVELS].$body$,
+  $body$A correct response includes: the specific queries/transactions and lock acquisition order identified as the cause (from real diagnostics, not speculation), a fix that changes the access pattern itself (consistent ordering, shorter transaction scope, or an appropriate locking primitive), confirmation the fix doesn't just reduce the odds without eliminating the possibility, and a note on how contention is monitored going forward.$body$
+)
+on conflict (slug) do nothing;
+
+insert into public.tags (name, slug)
+select unnest(array['postgres', 'performance']::text[]), unnest(array['postgres', 'performance']::text[])
+on conflict (slug) do nothing;
+
+insert into public.prompt_tags (prompt_id, tag_id)
+select pr.id, t.id from public.prompts pr, public.tags t
+where pr.slug = 'diagnose-database-lock-contention-deadlocks' and t.slug = any(array['postgres', 'performance']::text[])
+on conflict do nothing;
+
+insert into public.prompts (
+  author_id, title, slug, description, category, is_published,
+  base_instructions, fill_in_details_guidance, reference_projects_guidance,
+  reference_links_guidance, expected_output_notes
+)
+values (
+  '00000000-0000-0000-0000-000000000001',
+  $body$Optimize Core Web Vitals / Page Load Performance$body$,
+  'optimize-core-web-vitals-page-load-performance',
+  $body$Diagnose and fix poor Core Web Vitals scores (LCP, CLS, INP) using real measurement, not guesswork.$body$,
+  'frontend',
+  true,
+  $body$You are a senior frontend engineer improving Core Web Vitals (LCP, CLS, INP) on a page with poor scores. Start by measuring — real field data (e.g. CrUX/RUM) if available, otherwise Lighthouse/PageSpeed Insights — to see which metric is actually failing and why, before making changes. Fix the specific cause (an unoptimized hero image for LCP, layout shift from late-loading content for CLS, a long main-thread task for INP) rather than applying generic 'performance best practices' that may not address the measured problem.$body$,
+  $body$Stack: [YOUR FRONTEND FRAMEWORK]. The page in question: [URL OR DESCRIPTION]. Current scores, if measured: [PASTE LIGHTHOUSE/PSI/CRUX NUMBERS, OR 'not measured yet, need help running this']. Suspected culprits, if any: [e.g. 'a large above-the-fold image', 'a third-party script', 'client-side data fetching blocking render'].$body$,
+  $body$[PASTE A LINK OR DESCRIPTION OF A PRIOR PERFORMANCE OPTIMIZATION YOU'VE DONE ON A SIMILAR PAGE TYPE].$body$,
+  $body$[LINK: web.dev'S CORE WEB VITALS GUIDANCE]. [LINK: YOUR FRAMEWORK'S DOCS ON IMAGE OPTIMIZATION / CODE SPLITTING / STREAMING, AS RELEVANT TO THE DIAGNOSED CAUSE].$body$,
+  $body$A correct response includes: a before measurement for the failing metric(s), the specific diagnosed cause (not a generic checklist), a targeted fix addressing that cause, an after measurement confirming improvement, and a note on how this metric is tracked going forward so it doesn't silently regress.$body$
+)
+on conflict (slug) do nothing;
+
+insert into public.tags (name, slug)
+select unnest(array['react', 'performance']::text[]), unnest(array['react', 'performance']::text[])
+on conflict (slug) do nothing;
+
+insert into public.prompt_tags (prompt_id, tag_id)
+select pr.id, t.id from public.prompts pr, public.tags t
+where pr.slug = 'optimize-core-web-vitals-page-load-performance' and t.slug = any(array['react', 'performance']::text[])
+on conflict do nothing;
+
+insert into public.prompts (
+  author_id, title, slug, description, category, is_published,
+  base_instructions, fill_in_details_guidance, reference_projects_guidance,
+  reference_links_guidance, expected_output_notes
+)
+values (
+  '00000000-0000-0000-0000-000000000001',
+  $body$Build a Design System Component Library$body$,
+  'build-a-design-system-component-library',
+  $body$Build a reusable component library with consistent design tokens, variants, and documentation for a design system.$body$,
+  'frontend',
+  true,
+  $body$You are a senior frontend engineer building a reusable component library to back a design system. Define design tokens (color, spacing, typography) as the single source of truth components consume rather than hardcoding values per-component, implement each component's stated variants and states (including disabled/loading/error where applicable), and make each accessible by default (correct semantics, keyboard support) rather than accessible-as-an-afterthought.$body$,
+  $body$Stack: [YOUR FRONTEND FRAMEWORK + STYLING APPROACH]. Components needed first: [LIST THEM, e.g. 'Button, Input, Select, Modal']. Design tokens source: [A DESIGN FILE/SPEC TO PULL VALUES FROM, OR 'define reasonable defaults']. Documentation/preview tooling: [e.g. Storybook — or 'recommend one']. Theming requirement: [SINGLE THEME / LIGHT+DARK / MULTI-BRAND].$body$,
+  $body$[PASTE A LINK OR DESCRIPTION OF A COMPONENT LIBRARY WHOSE TOKEN/VARIANT STRUCTURE YOU WANT MIRRORED].$body$,
+  $body$[LINK: THE DESIGN SPEC/FIGMA FILE, IF ONE EXISTS]. [LINK: YOUR DOCUMENTATION TOOL'S DOCS, e.g. Storybook].$body$,
+  $body$A correct response includes: a design-token layer components actually consume (not hardcoded values), the listed components with their stated variants/states implemented, accessible-by-default markup and keyboard support for each, documentation/preview entries for each component, and confirmation the theming requirement (single/light-dark/multi-brand) actually works end-to-end.$body$
+)
+on conflict (slug) do nothing;
+
+insert into public.tags (name, slug)
+select unnest(array['react', 'typescript']::text[]), unnest(array['react', 'typescript']::text[])
+on conflict (slug) do nothing;
+
+insert into public.prompt_tags (prompt_id, tag_id)
+select pr.id, t.id from public.prompts pr, public.tags t
+where pr.slug = 'build-a-design-system-component-library' and t.slug = any(array['react', 'typescript']::text[])
+on conflict do nothing;
+
+insert into public.prompts (
+  author_id, title, slug, description, category, is_published,
+  base_instructions, fill_in_details_guidance, reference_projects_guidance,
+  reference_links_guidance, expected_output_notes
+)
+values (
+  '00000000-0000-0000-0000-000000000001',
+  $body$Implement Optimistic UI Updates$body$,
+  'implement-optimistic-ui-updates',
+  $body$Make a mutating action feel instant with an optimistic UI update, with correct rollback if the server call fails.$body$,
+  'frontend',
+  true,
+  $body$You are a senior frontend engineer implementing an optimistic UI update for a mutating action (e.g. liking a post, reordering a list, toggling a setting) so the UI responds instantly instead of waiting on a round trip. Update local state immediately, fire the request in the background, and — this is the part that's usually missed — correctly roll back to the prior state and surface an error if the request actually fails, rather than leaving the UI in a now-incorrect optimistic state.$body$,
+  $body$Stack: [YOUR FRONTEND FRAMEWORK + DATA-FETCHING LIBRARY, e.g. React Query, SWR, or custom]. The action being made optimistic: [DESCRIBE IT]. Current behavior: [WAITS FOR THE SERVER RESPONSE BEFORE UPDATING UI — CONFIRM THIS IS THE STARTING POINT]. Failure UX preference: [SILENT ROLLBACK + TOAST / INLINE ERROR STATE / OTHER].$body$,
+  $body$[PASTE A LINK OR DESCRIPTION OF AN OPTIMISTIC-UPDATE IMPLEMENTATION YOU'VE BUILT BEFORE WITH A ROLLBACK PATTERN YOU WANT MIRRORED].$body$,
+  $body$[LINK: YOUR DATA-FETCHING LIBRARY'S DOCS ON OPTIMISTIC UPDATES/MUTATIONS].$body$,
+  $body$A correct response includes: the UI updating instantly on user action (no waiting for the server), the actual request firing in the background, correct rollback to the exact prior state when the request fails (not just any error state), a visible error surfaced to the user matching the stated failure UX, and confirmation concurrent/rapid repeated actions on the same item don't corrupt the rollback state.$body$
+)
+on conflict (slug) do nothing;
+
+insert into public.tags (name, slug)
+select unnest(array['react', 'api']::text[]), unnest(array['react', 'api']::text[])
+on conflict (slug) do nothing;
+
+insert into public.prompt_tags (prompt_id, tag_id)
+select pr.id, t.id from public.prompts pr, public.tags t
+where pr.slug = 'implement-optimistic-ui-updates' and t.slug = any(array['react', 'api']::text[])
+on conflict do nothing;
+
+insert into public.prompts (
+  author_id, title, slug, description, category, is_published,
+  base_instructions, fill_in_details_guidance, reference_projects_guidance,
+  reference_links_guidance, expected_output_notes
+)
+values (
+  '00000000-0000-0000-0000-000000000001',
+  $body$Build a Command Palette (Cmd+K) Interface$body$,
+  'build-a-command-palette-interface',
+  $body$Add a keyboard-driven command palette for fast navigation and actions, with fuzzy search and full keyboard operability.$body$,
+  'frontend',
+  true,
+  $body$You are a senior frontend engineer adding a command palette (Cmd/Ctrl+K) for fast keyboard-driven navigation and actions. Implement fuzzy search over the registered commands, full keyboard operability (open, navigate results, select, close — no mouse required at any step), and a way for new commands/pages to register themselves without hand-editing a giant central list. Make sure it doesn't intercept the shortcut while the user is typing in an unrelated text field.$body$,
+  $body$Stack: [YOUR FRONTEND FRAMEWORK]. Commands/actions to include first: [LIST THEM, e.g. 'navigate to X, create new Y, toggle dark mode']. Search behavior preference: [FUZZY MATCH / EXACT PREFIX / RECOMMEND ONE]. Extensibility need: [DOES A NEW PAGE/FEATURE NEED TO SELF-REGISTER A COMMAND, OR IS A FIXED LIST FINE FOR NOW].$body$,
+  $body$[PASTE A LINK OR DESCRIPTION OF A COMMAND PALETTE WHOSE UX/REGISTRATION PATTERN YOU WANT MIRRORED].$body$,
+  $body$[LINK: A COMMAND-PALETTE/COMBOBOX LIBRARY'S DOCS, IF USING ONE, e.g. cmdk]. [LINK: WCAG GUIDANCE ON ACCESSIBLE COMBOBOX/LISTBOX PATTERNS].$body$,
+  $body$A correct response includes: the palette opening/closing via the stated keyboard shortcut, fuzzy (or stated) search over the listed commands, full keyboard navigation and selection with no mouse dependency, correct focus management (focus returns to the trigger point on close), and confirmation the shortcut doesn't fire while the user is typing in a text input elsewhere on the page.$body$
+)
+on conflict (slug) do nothing;
+
+insert into public.tags (name, slug)
+select unnest(array['react', 'typescript']::text[]), unnest(array['react', 'typescript']::text[])
+on conflict (slug) do nothing;
+
+insert into public.prompt_tags (prompt_id, tag_id)
+select pr.id, t.id from public.prompts pr, public.tags t
+where pr.slug = 'build-a-command-palette-interface' and t.slug = any(array['react', 'typescript']::text[])
+on conflict do nothing;
+
+insert into public.prompts (
+  author_id, title, slug, description, category, is_published,
+  base_instructions, fill_in_details_guidance, reference_projects_guidance,
+  reference_links_guidance, expected_output_notes
+)
+values (
+  '00000000-0000-0000-0000-000000000001',
+  $body$Implement Infinite Scroll / Virtualized List for Large Data$body$,
+  'implement-infinite-scroll-virtualized-list',
+  $body$Render a large or unbounded list performantly with virtualization and correct infinite-scroll pagination.$body$,
+  'frontend',
+  true,
+  $body$You are a senior frontend engineer implementing a large or unbounded list view. Virtualize rendering so only visible (plus a small buffer of) rows are actually in the DOM at once — rendering thousands of real DOM nodes is the usual cause of jank here — and implement infinite-scroll pagination fetching the next page before the user hits the bottom, not after (a visible loading gap). Handle variable-height rows correctly if the data isn't uniform height, and preserve scroll position on navigating back to the list.$body$,
+  $body$Stack: [YOUR FRONTEND FRAMEWORK]. The data being listed: [DESCRIBE IT AND ROUGH EXPECTED SIZE, e.g. '50k+ rows, variable height cards']. Virtualization library preference: [e.g. TanStack Virtual, react-window — or 'recommend one']. Pagination source: [API SHAPE — CURSOR-BASED OR OFFSET-BASED]. Scroll-position requirement: [MUST BE PRESERVED WHEN NAVIGATING BACK TO THE LIST / NOT NEEDED].$body$,
+  $body$[PASTE A LINK OR DESCRIPTION OF A VIRTUALIZED LIST YOU'VE BUILT BEFORE THAT HANDLED VARIABLE-HEIGHT ROWS OR SCROLL RESTORATION WELL].$body$,
+  $body$[LINK: YOUR CHOSEN VIRTUALIZATION LIBRARY'S DOCS]. [LINK: YOUR API'S PAGINATION DOCS, IF CURSOR-BASED].$body$,
+  $body$A correct response includes: virtualized rendering confirmed to keep DOM node count low regardless of total data size, prefetching the next page before the user reaches the bottom (no visible stall), correct handling of variable row heights if applicable, scroll position preserved on back-navigation if that was required, and a tested empty/end-of-list state.$body$
+)
+on conflict (slug) do nothing;
+
+insert into public.tags (name, slug)
+select unnest(array['react', 'performance']::text[]), unnest(array['react', 'performance']::text[])
+on conflict (slug) do nothing;
+
+insert into public.prompt_tags (prompt_id, tag_id)
+select pr.id, t.id from public.prompts pr, public.tags t
+where pr.slug = 'implement-infinite-scroll-virtualized-list' and t.slug = any(array['react', 'performance']::text[])
+on conflict do nothing;
+
+insert into public.prompts (
+  author_id, title, slug, description, category, is_published,
+  base_instructions, fill_in_details_guidance, reference_projects_guidance,
+  reference_links_guidance, expected_output_notes
+)
+values (
+  '00000000-0000-0000-0000-000000000001',
+  $body$Fix Cross-Browser Rendering Inconsistencies$body$,
+  'fix-cross-browser-rendering-inconsistencies',
+  $body$Diagnose and fix a UI that renders differently across browsers, isolating the actual CSS/JS feature gap causing it.$body$,
+  'frontend',
+  true,
+  $body$You are a senior frontend engineer fixing a UI that renders inconsistently across browsers. Isolate the specific CSS property, layout behavior, or JS API causing the divergence (check caniuse.com/MDN browser-support tables rather than guessing) before applying a fix, and prefer a standards-based fix (a supported CSS fallback, a feature-detected code path) over a browser-sniffing hack, which breaks again the next time a browser updates.$body$,
+  $body$Stack: [YOUR FRONTEND FRAMEWORK]. Browsers affected vs. working correctly: [LIST WHICH BROWSERS/VERSIONS SHOW THE PROBLEM AND WHICH DON'T]. The visual/behavioral difference: [DESCRIBE OR ATTACH A SCREENSHOT COMPARISON]. Browser support requirement: [WHICH BROWSERS/VERSIONS THE APP MUST SUPPORT, e.g. 'last 2 versions of major browsers'].$body$,
+  $body$[PASTE A LINK OR DESCRIPTION OF A SIMILAR CROSS-BROWSER ISSUE YOU'VE RESOLVED BEFORE AND HOW].$body$,
+  $body$[LINK: caniuse.com OR MDN'S BROWSER-COMPATIBILITY TABLE FOR THE SUSPECTED CSS/JS FEATURE]. [LINK: YOUR CSS AUTOPREFIXER/POLYFILL TOOLING'S DOCS, IF ONE IS ALREADY IN USE].$body$,
+  $body$A correct response includes: the specific CSS/JS feature identified as the cause (backed by a compatibility-table reference, not a guess), a standards-based fix (fallback or feature detection) rather than user-agent sniffing, confirmation the fix works across every browser in the stated support requirement, and a note on whether this indicates other similar gaps elsewhere in the codebase worth auditing.$body$
+)
+on conflict (slug) do nothing;
+
+insert into public.tags (name, slug)
+select unnest(array['testing', 'react']::text[]), unnest(array['testing', 'react']::text[])
+on conflict (slug) do nothing;
+
+insert into public.prompt_tags (prompt_id, tag_id)
+select pr.id, t.id from public.prompts pr, public.tags t
+where pr.slug = 'fix-cross-browser-rendering-inconsistencies' and t.slug = any(array['testing', 'react']::text[])
+on conflict do nothing;
+
+insert into public.prompts (
+  author_id, title, slug, description, category, is_published,
+  base_instructions, fill_in_details_guidance, reference_projects_guidance,
+  reference_links_guidance, expected_output_notes
+)
+values (
+  '00000000-0000-0000-0000-000000000001',
+  $body$Design a Multi-Tenant Database Schema$body$,
+  'design-a-multi-tenant-database-schema',
+  $body$Design a database schema for a multi-tenant system with enforced, not just assumed, tenant isolation.$body$,
+  'backend',
+  true,
+  $body$You are a senior backend/database engineer designing a schema for a multi-tenant system. Choose an isolation strategy appropriate to the expected scale and compliance needs (shared tables with a `tenant_id` plus row-level security, schema-per-tenant, or database-per-tenant), and enforce isolation at the database layer rather than relying solely on every application query remembering to filter by tenant. State the tradeoffs of the chosen approach explicitly (cross-tenant query capability, migration complexity, blast radius of a bug).$body$,
+  $body$Domain: [WHAT THE APP MANAGES PER TENANT]. Expected scale: [TENANT COUNT AND ROUGH DATA VOLUME PER TENANT]. Compliance requirements, if any: [e.g. 'some enterprise customers require data never share physical storage']. Cross-tenant needs, if any: [DOES ANY FEATURE NEED TO QUERY ACROSS TENANTS, e.g. platform-wide admin reporting — or 'none'].$body$,
+  $body$[PASTE A LINK OR DESCRIPTION OF A MULTI-TENANT SCHEMA YOU'VE DESIGNED OR SEEN THAT MADE THE RIGHT ISOLATION TRADEOFF FOR A SIMILAR SCALE].$body$,
+  $body$[LINK: YOUR DATABASE'S ROW-LEVEL SECURITY DOCS, e.g. Postgres RLS]. [LINK: ANY RELEVANT COMPLIANCE STANDARD'S DATA-ISOLATION REQUIREMENTS].$body$,
+  $body$A correct response includes: a stated, justified isolation strategy (not a default assumption), the schema with isolation enforced at the database layer, an explicit tradeoff discussion for the chosen approach, a migration path if converting an existing single-tenant schema, and a concrete test proving one tenant cannot read another's data even via a buggy or malicious query.$body$
+)
+on conflict (slug) do nothing;
+
+insert into public.tags (name, slug)
+select unnest(array['postgres', 'security']::text[]), unnest(array['postgres', 'security']::text[])
+on conflict (slug) do nothing;
+
+insert into public.prompt_tags (prompt_id, tag_id)
+select pr.id, t.id from public.prompts pr, public.tags t
+where pr.slug = 'design-a-multi-tenant-database-schema' and t.slug = any(array['postgres', 'security']::text[])
+on conflict do nothing;
+
+insert into public.prompts (
+  author_id, title, slug, description, category, is_published,
+  base_instructions, fill_in_details_guidance, reference_projects_guidance,
+  reference_links_guidance, expected_output_notes
+)
+values (
+  '00000000-0000-0000-0000-000000000001',
+  $body$Implement Idempotent API Endpoints$body$,
+  'implement-idempotent-api-endpoints',
+  $body$Make mutating API endpoints safely retryable with idempotency keys, so a client retry never double-processes a request.$body$,
+  'backend',
+  true,
+  $body$You are a senior backend engineer making mutating endpoints (especially ones with real-world side effects like charging a card or sending an email) safely retryable via idempotency keys. Accept a client-supplied idempotency key, store the result of the first successful processing keyed by it, and return that stored result (not reprocess) on any retry with the same key — including the case where the original request is still in flight when the retry arrives.$body$,
+  $body$Stack: [YOUR APP'S TECH STACK]. Database: [YOUR DATABASE]. Endpoints that need this: [LIST THE MUTATING ENDPOINTS WITH REAL SIDE EFFECTS]. Idempotency key source: [CLIENT-GENERATED HEADER / SERVER-ISSUED — or 'recommend one, e.g. following Stripe's convention']. Key retention window: [HOW LONG A KEY SHOULD BE HONORED, e.g. '24 hours'].$body$,
+  $body$[PASTE A LINK OR DESCRIPTION OF AN IDEMPOTENCY-KEY IMPLEMENTATION YOU'VE BUILT OR SEEN THAT YOU WANT MIRRORED, e.g. Stripe's API].$body$,
+  $body$[LINK: STRIPE'S IDEMPOTENT REQUESTS DOCS, AS A REFERENCE CONVENTION]. [LINK: YOUR DATABASE'S DOCS ON UNIQUE CONSTRAINTS/UPSERTS, FOR THE KEY-STORAGE TABLE].$body$,
+  $body$A correct response includes: an idempotency-key storage table/mechanism with a unique constraint preventing double-processing, correct handling of the concurrent-retry case (a second request with the same in-flight key waits or is rejected, not double-processed), the stored result returned on retry rather than reprocessing, key expiry per the stated retention window, and test coverage for a genuine concurrent double-submit.$body$
+)
+on conflict (slug) do nothing;
+
+insert into public.tags (name, slug)
+select unnest(array['api', 'postgres']::text[]), unnest(array['api', 'postgres']::text[])
+on conflict (slug) do nothing;
+
+insert into public.prompt_tags (prompt_id, tag_id)
+select pr.id, t.id from public.prompts pr, public.tags t
+where pr.slug = 'implement-idempotent-api-endpoints' and t.slug = any(array['api', 'postgres']::text[])
+on conflict do nothing;
+
+insert into public.prompts (
+  author_id, title, slug, description, category, is_published,
+  base_instructions, fill_in_details_guidance, reference_projects_guidance,
+  reference_links_guidance, expected_output_notes
+)
+values (
+  '00000000-0000-0000-0000-000000000001',
+  $body$Set Up Zero-Downtime Database Migrations$body$,
+  'set-up-zero-downtime-database-migrations',
+  $body$Establish a migration workflow (expand/contract pattern) so schema changes ship without locking tables or breaking live traffic.$body$,
+  'backend',
+  true,
+  $body$You are a senior backend engineer establishing a zero-downtime database migration workflow. Use the expand/contract pattern for breaking changes (add the new column/table alongside the old, backfill, switch reads/writes over, only then drop the old one in a later migration) rather than a single migration that renames or drops columns the running application still references. Flag any migration that would take a long-held lock on a large table and propose a non-blocking alternative (e.g. `CREATE INDEX CONCURRENTLY`).$body$,
+  $body$Database: [YOUR DATABASE]. Migration tool: [e.g. Prisma Migrate, a custom SQL migration runner]. The change being made: [DESCRIBE THE SCHEMA CHANGE, e.g. 'renaming a column', 'splitting a table']. Table size/traffic: [ROUGH ROW COUNT AND WHETHER IT'S HIT BY LIVE TRAFFIC DURING DEPLOYS]. Deployment process: [HOW MIGRATIONS CURRENTLY GET APPLIED RELATIVE TO CODE DEPLOYS].$body$,
+  $body$[PASTE A LINK OR DESCRIPTION OF A ZERO-DOWNTIME MIGRATION YOU'VE DONE BEFORE FOR A SIMILAR CHANGE, e.g. a prior column rename via expand/contract].$body$,
+  $body$[LINK: YOUR DATABASE'S DOCS ON NON-BLOCKING SCHEMA CHANGES, e.g. Postgres `CREATE INDEX CONCURRENTLY` and lock behavior of `ALTER TABLE`]. [LINK: YOUR MIGRATION TOOL'S DOCS].$body$,
+  $body$A correct response includes: the change broken into an expand/contract sequence of migrations (not one breaking migration), confirmation neither the running old code nor new code breaks at any intermediate step, non-blocking techniques used for any large-table operation, an explicit backfill step if data needs copying, and a note on when it's safe to run the final contract (cleanup) migration.$body$
+)
+on conflict (slug) do nothing;
+
+insert into public.tags (name, slug)
+select unnest(array['postgres', 'ci-cd']::text[]), unnest(array['postgres', 'ci-cd']::text[])
+on conflict (slug) do nothing;
+
+insert into public.prompt_tags (prompt_id, tag_id)
+select pr.id, t.id from public.prompts pr, public.tags t
+where pr.slug = 'set-up-zero-downtime-database-migrations' and t.slug = any(array['postgres', 'ci-cd']::text[])
+on conflict do nothing;
+
+insert into public.prompts (
+  author_id, title, slug, description, category, is_published,
+  base_instructions, fill_in_details_guidance, reference_projects_guidance,
+  reference_links_guidance, expected_output_notes
+)
+values (
+  '00000000-0000-0000-0000-000000000001',
+  $body$Build a Webhook Delivery System With Retries$body$,
+  'build-a-webhook-delivery-system-with-retries',
+  $body$Build outbound webhook delivery to customer endpoints with signing, retry-with-backoff, and delivery visibility.$body$,
+  'backend',
+  true,
+  $body$You are a senior backend engineer building an outbound webhook delivery system to notify customer endpoints of events. Sign every payload (e.g. HMAC) so receivers can verify authenticity, retry failed deliveries with exponential backoff up to a sensible limit, and give customers (or internal ops) visibility into delivery status and a way to inspect/replay a failed delivery. Treat a customer endpoint being slow or down as an expected case, not an exception to crash the sender.$body$,
+  $body$Stack: [YOUR APP'S TECH STACK]. Events that trigger webhooks: [LIST THEM]. Expected webhook volume: [ROUGH SCALE]. Signing convention preference: [e.g. HMAC-SHA256 IN A HEADER, FOLLOWING A CONVENTION LIKE STRIPE'S — or 'recommend one']. Retry/give-up policy: [MAX RETRIES AND BACKOFF SHAPE, OR 'recommend one'].$body$,
+  $body$[PASTE A LINK OR DESCRIPTION OF A WEBHOOK SYSTEM YOU'VE BUILT OR INTEGRATED WITH WHOSE SIGNING/RETRY CONVENTION YOU WANT MIRRORED, e.g. Stripe or GitHub webhooks].$body$,
+  $body$[LINK: STRIPE'S OR GITHUB'S WEBHOOK SIGNING DOCS, AS A REFERENCE CONVENTION]. [LINK: YOUR QUEUE/JOB INFRASTRUCTURE'S DOCS, FOR THE RETRY MECHANISM].$body$,
+  $body$A correct response includes: a signed payload scheme with verification instructions a receiver could implement, a queued delivery mechanism with exponential backoff up to a stated retry limit, a dead-letter/failed-delivery state after retries are exhausted, a delivery-status view (succeeded/pending/failed per event), and a replay mechanism for a failed delivery.$body$
+)
+on conflict (slug) do nothing;
+
+insert into public.tags (name, slug)
+select unnest(array['api', 'aws']::text[]), unnest(array['api', 'aws']::text[])
+on conflict (slug) do nothing;
+
+insert into public.prompt_tags (prompt_id, tag_id)
+select pr.id, t.id from public.prompts pr, public.tags t
+where pr.slug = 'build-a-webhook-delivery-system-with-retries' and t.slug = any(array['api', 'aws']::text[])
+on conflict do nothing;
+
+insert into public.prompts (
+  author_id, title, slug, description, category, is_published,
+  base_instructions, fill_in_details_guidance, reference_projects_guidance,
+  reference_links_guidance, expected_output_notes
+)
+values (
+  '00000000-0000-0000-0000-000000000001',
+  $body$Implement a Redis Caching Layer With Invalidation$body$,
+  'implement-a-redis-caching-layer-with-invalidation',
+  $body$Add a Redis cache in front of an expensive read path, with an explicit, correct invalidation strategy — the actual hard part.$body$,
+  'backend',
+  true,
+  $body$You are a senior backend engineer adding a Redis cache in front of an expensive read path. The caching itself is the easy part; design the invalidation strategy explicitly — what event(s) invalidate which cache keys, and whether a brief staleness window is acceptable (cache-aside with a TTL) or the data must be always-fresh (invalidate-on-write). State the chosen approach and its staleness guarantee rather than leaving it implicit, since a cache with silently-wrong invalidation is worse than no cache at all.$body$,
+  $body$Stack: [YOUR APP'S TECH STACK]. The expensive read path being cached: [DESCRIBE IT AND WHY IT'S EXPENSIVE]. Redis (or equivalent) availability: [ALREADY PROVISIONED / NEEDS SETTING UP]. Staleness tolerance: [CAN THE DATA BE UP TO N SECONDS/MINUTES STALE, OR MUST WRITES INVALIDATE IMMEDIATELY]. Write paths that should invalidate the cache: [LIST THE OPERATIONS THAT CHANGE THE CACHED DATA].$body$,
+  $body$[PASTE A LINK OR DESCRIPTION OF A CACHING LAYER YOU'VE BUILT BEFORE WITH AN INVALIDATION STRATEGY YOU WANT MIRRORED].$body$,
+  $body$[LINK: YOUR CACHE PROVIDER'S DOCS, e.g. Redis]. [LINK: YOUR DATABASE'S DOCS ON CHANGE-DATA-CAPTURE/TRIGGERS, IF INVALIDATION IS EVENT-DRIVEN RATHER THAN CALLED EXPLICITLY FROM WRITE CODE PATHS].$body$,
+  $body$A correct response includes: the cache-key structure for the read path, a stated invalidation strategy (TTL-based or invalidate-on-write) with its staleness guarantee made explicit, invalidation wired into every listed write path (not just the obvious one), a cache-miss fallback that doesn't stampede the database under concurrent misses, and a note on how to verify cached data actually matches source-of-truth after a write.$body$
+)
+on conflict (slug) do nothing;
+
+insert into public.tags (name, slug)
+select unnest(array['performance', 'api']::text[]), unnest(array['performance', 'api']::text[])
+on conflict (slug) do nothing;
+
+insert into public.prompt_tags (prompt_id, tag_id)
+select pr.id, t.id from public.prompts pr, public.tags t
+where pr.slug = 'implement-a-redis-caching-layer-with-invalidation' and t.slug = any(array['performance', 'api']::text[])
+on conflict do nothing;
+
+insert into public.prompts (
+  author_id, title, slug, description, category, is_published,
+  base_instructions, fill_in_details_guidance, reference_projects_guidance,
+  reference_links_guidance, expected_output_notes
+)
+values (
+  '00000000-0000-0000-0000-000000000001',
+  $body$Design an Event-Driven Architecture With a Message Queue$body$,
+  'design-an-event-driven-architecture-with-a-message-queue',
+  $body$Decouple services with an event/message queue, with clear event contracts, ordering guarantees, and failure handling.$body$,
+  'backend',
+  true,
+  $body$You are a senior backend engineer designing an event-driven integration between services using a message queue or event bus. Define explicit event contracts (schema, versioning approach) rather than letting consumers infer the shape from producer code, state the ordering guarantee the chosen queue actually provides (and whether the design needs it), and handle consumer failure explicitly — what happens to a message that fails processing repeatedly (dead-letter queue, alerting) rather than it silently vanishing or blocking the queue forever.$body$,
+  $body$Services/components involved: [DESCRIBE THE PRODUCER(S) AND CONSUMER(S)]. Queue/broker preference: [e.g. SQS, Kafka, RabbitMQ, Postgres-backed queue like pgmq — or 'recommend one for this scale']. Events to model first: [LIST THEM]. Ordering requirement: [MUST EVENTS FOR THE SAME ENTITY BE PROCESSED IN ORDER, OR IS ORDER-INDEPENDENT PROCESSING FINE]. Failure tolerance: [WHAT SHOULD HAPPEN TO A MESSAGE THAT REPEATEDLY FAILS TO PROCESS].$body$,
+  $body$[PASTE A LINK OR DESCRIPTION OF AN EVENT-DRIVEN INTEGRATION YOU'VE BUILT BEFORE WITH A CONTRACT/DEAD-LETTER PATTERN YOU WANT MIRRORED].$body$,
+  $body$[LINK: YOUR CHOSEN QUEUE/BROKER'S DOCS, INCLUDING ITS ORDERING AND DELIVERY GUARANTEES]. [LINK: A SCHEMA-VERSIONING APPROACH'S DOCS, IF EVENT CONTRACTS NEED TO EVOLVE OVER TIME, e.g. JSON Schema or Avro].$body$,
+  $body$A correct response includes: explicit event schemas/contracts for every listed event (with a versioning approach for future changes), the producer and at least one consumer wired to the real queue (not an in-memory stub), the actual ordering guarantee of the chosen queue stated and matched against the stated requirement, a dead-letter path and alerting for repeatedly-failing messages, and a note on idempotent consumption (since most queues offer at-least-once delivery, not exactly-once).$body$
+)
+on conflict (slug) do nothing;
+
+insert into public.tags (name, slug)
+select unnest(array['api', 'aws']::text[]), unnest(array['api', 'aws']::text[])
+on conflict (slug) do nothing;
+
+insert into public.prompt_tags (prompt_id, tag_id)
+select pr.id, t.id from public.prompts pr, public.tags t
+where pr.slug = 'design-an-event-driven-architecture-with-a-message-queue' and t.slug = any(array['api', 'aws']::text[])
 on conflict do nothing;

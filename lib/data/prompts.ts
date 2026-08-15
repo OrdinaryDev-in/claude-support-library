@@ -36,18 +36,29 @@ async function attachTags(supabase: Client, prompts: PromptRow[]): Promise<Promp
   return prompts.map((p) => ({ ...p, tags: tagsByPrompt.get(p.id) ?? [] }));
 }
 
+export const PROMPTS_PAGE_SIZE = 20;
+
+export interface PromptListPage {
+  offset?: number;
+  limit?: number;
+}
+
 /** Filtered results for the Browse page grid — goes through the
- * `search_prompts` RPC so filter logic lives in one tested place. */
+ * `search_prompts` RPC so filter logic lives in one tested place.
+ * Paginated: defaults to the first page of PROMPTS_PAGE_SIZE, used both
+ * for the initial server-rendered page and subsequent infinite-scroll
+ * "load more" calls (see app/actions/prompts.ts's loadMorePrompts). */
 export async function searchPrompts(
   supabase: Client,
-  filters: PromptListFilters
+  filters: PromptListFilters,
+  page: PromptListPage = {}
 ): Promise<PromptWithTags[]> {
   const { data, error } = await supabase.rpc("search_prompts", {
     p_category: filters.category ?? null,
     p_tags: filters.tags && filters.tags.length > 0 ? filters.tags : null,
     p_query: filters.q ?? null,
-    p_limit: 20,
-    p_offset: 0,
+    p_limit: page.limit ?? PROMPTS_PAGE_SIZE,
+    p_offset: page.offset ?? 0,
   });
   if (error || !data) return [];
   return attachTags(supabase, data);

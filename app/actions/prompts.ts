@@ -4,6 +4,12 @@ import { redirect } from "next/navigation";
 import { revalidatePath } from "next/cache";
 import { createClient } from "@/lib/supabase/server";
 import {
+  searchPrompts,
+  PROMPTS_PAGE_SIZE,
+  type PromptListFilters,
+  type PromptWithTags,
+} from "@/lib/data/prompts";
+import {
   promptSchema,
   parseTagsInput,
   slugify,
@@ -210,6 +216,21 @@ export async function deletePrompt(
 
   revalidatePath("/library/prompts");
   return { ok: true };
+}
+
+/** Fetches the next page of the Browse grid for infinite scroll.
+ * `offset` is the number of prompts already loaded (initialPrompts.length,
+ * then bumped by each successful call) — see components/library/PromptsGrid.tsx. */
+export async function loadMorePrompts(
+  filters: PromptListFilters,
+  offset: number
+): Promise<{ prompts: PromptWithTags[] }> {
+  const supabase = await createClient();
+  const prompts = await searchPrompts(supabase, filters, {
+    offset,
+    limit: PROMPTS_PAGE_SIZE,
+  });
+  return { prompts };
 }
 
 export async function duplicatePrompt(
