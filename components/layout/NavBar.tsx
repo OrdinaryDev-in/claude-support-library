@@ -55,8 +55,11 @@ export function NavBar({ user }: { user: NavBarUser | null }) {
   async function handleSignOut() {
     const supabase = createClient();
     await supabase.auth.signOut();
-    router.push("/login");
-    router.refresh();
+    // Hard navigation, same reasoning as AuthForm's post-login redirect:
+    // a client-router push+refresh can race proxy.ts's session check
+    // against the just-cleared auth cookie.
+    // eslint-disable-next-line @next/next/no-location-assign-relative-destination -- intentional, see comment above
+    window.location.assign("/login");
   }
 
   const linkClass = (active: boolean) =>

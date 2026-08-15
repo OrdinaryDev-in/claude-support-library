@@ -16,6 +16,12 @@ jobs:
     permissions:
       security-events: write
       contents: read
+      # codeql-action/analyze fetches the triggering workflow run (for its
+      # diff-range/telemetry features) via the REST API — without this it
+      # 403s on that call and logs a noisy (but non-fatal) error; the SARIF
+      # scan and upload complete fine either way since they only need
+      # security-events: write.
+      actions: read
     steps:
       - uses: actions/checkout@v5
 
