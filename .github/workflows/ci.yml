@@ -43,6 +43,22 @@ jobs:
       - name: Build
         run: npm run build
 
+  test:
+    name: Unit tests
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v5
+
+      - uses: actions/setup-node@v5
+        with:
+          node-version: 22
+          cache: npm
+
+      - run: npm ci
+
+      - name: Run unit tests
+        run: npm run test
+
   dependency-audit:
     name: Dependency vulnerability audit
     runs-on: ubuntu-latest

@@ -134,10 +134,10 @@ stack, so signups get a session immediately — no inbox needed.
 Two GitHub Actions workflows run on every push/PR to `main`
 (`.github/workflows/`), plus a third that doesn't:
 
-- **`ci.yml`** — installs deps, `npm run lint`, `tsc --noEmit`, `npm run test`,
-  `next build`, and an `npm audit` pass for known-vulnerable dependencies
-  (advisory only — it reports rather than blocks, since transitive
-  advisories are outside this repo's control).
+- **`ci.yml`** — three parallel jobs: lint + type-check + `next build`;
+  `npm run test` (Vitest, blocking); and an `npm audit` pass for
+  known-vulnerable dependencies (advisory only — it reports rather than
+  blocks, since transitive advisories are outside this repo's control).
 - **`codeql.yml`** — GitHub CodeQL static analysis for the JS/TypeScript
   code, also on a weekly schedule so new advisory patterns get caught
   between pushes.
