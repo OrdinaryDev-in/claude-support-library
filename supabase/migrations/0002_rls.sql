@@ -17,6 +17,28 @@ create policy "profiles_select_all" on public.profiles
 create policy "profiles_update_own" on public.profiles
   for update using (auth.uid() = id);
 
+-- Postgres reuses a policy's USING clause as its WITH CHECK when none is
+-- given, so the policy above only constrains *which row* can be updated
+-- (auth.uid() = id) — it does not stop the owner from changing any column
+-- on that row, including `role`. Without this trigger, any signed-in user
+-- could self-escalate to admin via a direct PostgREST call
+-- (`update profiles set role = 'admin' where id = auth.uid()`), bypassing
+-- the app UI entirely. A BEFORE UPDATE trigger (with OLD/NEW access,
+-- unlike a policy's WITH CHECK) is the reliable way to pin this column.
+create or replace function public.prevent_role_self_escalation()
+returns trigger as $$
+begin
+  if new.role is distinct from old.role and not public.is_admin(auth.uid()) then
+    new.role := old.role;
+  end if;
+  return new;
+end;
+$$ language plpgsql security definer set search_path = public;
+
+create trigger profiles_prevent_role_self_escalation
+  before update on public.profiles
+  for each row execute procedure public.prevent_role_self_escalation();
+
 -- ─── prompts ─────────────────────────────────────────────────────────
 -- select: any signed-in user sees published prompts; authors also see
 -- their own unpublished drafts.

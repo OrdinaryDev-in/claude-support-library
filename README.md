@@ -1,5 +1,8 @@
 # DevAtlas — Phase 1: Prompt Library
 
+[![CI](https://github.com/Mubashir-Mohamed/claude-prompt-library/actions/workflows/ci.yml/badge.svg)](https://github.com/Mubashir-Mohamed/claude-prompt-library/actions/workflows/ci.yml)
+[![CodeQL](https://github.com/Mubashir-Mohamed/claude-prompt-library/actions/workflows/codeql.yml/badge.svg)](https://github.com/Mubashir-Mohamed/claude-prompt-library/actions/workflows/codeql.yml)
+
 A library of elaborate, structured AI-coding prompt templates for developers
 — for building new apps, adding a module/feature, debugging, and frontend-
 or backend-only work. Every prompt is written to be copy-pasted and filled
@@ -102,6 +105,31 @@ scripts/seed-prompts.ts              — loads them via Supabase (npm run seed)
 - Create a prompt, view its detail page, use **Copy prompt**.
 - Sign in as a second account and confirm you can't edit/delete the first account's prompt (RLS-enforced, not just hidden in the UI) — then promote that second account to admin via the SQL above and confirm it now can.
 - Filter by category and tag on `/library/prompts`, and try the `/` keyboard shortcut to jump to search.
+
+## CI & security
+
+Two GitHub Actions workflows run on every push/PR to `main`
+(`.github/workflows/`):
+
+- **`ci.yml`** — installs deps, `npm run lint`, `tsc --noEmit`, `next build`,
+  and an `npm audit` pass for known-vulnerable dependencies (advisory only —
+  it reports rather than blocks, since transitive advisories are outside
+  this repo's control).
+- **`codeql.yml`** — GitHub CodeQL static analysis for the JS/TypeScript
+  code, also on a weekly schedule so new advisory patterns get caught
+  between pushes.
+
+This app's authorization model leans on Postgres Row Level Security, not
+just app-layer checks — every table's policies live in
+`supabase/migrations/0002_rls.sql`. One thing worth calling out from a
+security review of that file: `profiles_update_own`'s `USING (auth.uid() =
+id)` clause, on its own, only restricts *which row* a user can update, not
+*which columns* — without the accompanying
+`prevent_role_self_escalation` trigger in the same migration, any signed-in
+user could set their own `role` to `'admin'` via a direct PostgREST call,
+bypassing the app UI entirely. That trigger (not just the RLS policy) is
+what actually blocks it, since a policy's implicit `WITH CHECK` can't
+compare old vs. new column values the way a `BEFORE UPDATE` trigger can.
 
 ## Future phases
 
