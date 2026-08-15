@@ -127,6 +127,15 @@ export interface Database {
         Args: { uid: string };
         Returns: boolean;
       };
+      check_rate_limit: {
+        Args: {
+          p_bucket: string;
+          p_identity: string;
+          p_max_hits: number;
+          p_window_seconds: number;
+        };
+        Returns: boolean;
+      };
     };
   };
 }

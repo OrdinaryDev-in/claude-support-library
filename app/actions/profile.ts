@@ -4,6 +4,7 @@ import { redirect } from "next/navigation";
 import { revalidatePath } from "next/cache";
 import { createClient } from "@/lib/supabase/server";
 import { toSafeActionError } from "@/lib/errors/action-error";
+import { checkRateLimit } from "@/lib/rate-limit";
 
 /** Called right after a session is established (password login or the
  * OAuth/email-confirm callback) so `profiles.last_login_at` stays current. */
@@ -69,6 +70,13 @@ export async function updatePassword(
     data: { user },
   } = await supabase.auth.getUser();
   if (!user?.email) redirect("/login");
+
+  // This re-authenticates with the current password below, making it the
+  // closest thing to an in-app login attempt — rate limit it accordingly.
+  const withinLimit = await checkRateLimit("update_password", user.id, 5, 900);
+  if (!withinLimit) {
+    return { ok: false, error: "Too many attempts. Please wait a few minutes and try again." };
+  }
 
   // Re-authenticate with the current password before allowing the change.
   const { error: reauthError } = await supabase.auth.signInWithPassword({

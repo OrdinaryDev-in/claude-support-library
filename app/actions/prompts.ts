@@ -4,6 +4,7 @@ import { revalidatePath } from "next/cache";
 import { createClient } from "@/lib/supabase/server";
 import { requireUser, isAuthorOrAdmin } from "@/lib/auth/require-user";
 import { toSafeActionError } from "@/lib/errors/action-error";
+import { checkRateLimit } from "@/lib/rate-limit";
 import {
   searchPrompts,
   PROMPTS_PAGE_SIZE,
@@ -20,6 +21,14 @@ import {
 export type PromptActionResult =
   | { ok: true; slug: string }
   | { ok: false; error: string };
+
+/** Shared mutation-spam guard for create/update/delete/duplicate — one
+ * bucket per user across all four, since they're equally cheap to abuse. */
+async function withinMutationRateLimit(userId: string) {
+  return checkRateLimit("mutate_prompt", userId, 20, 300);
+}
+
+const RATE_LIMIT_MESSAGE = "Too many changes. Please wait a few minutes and try again.";
 
 /** Generates a unique slug, appending -2, -3... on collision. */
 async function uniqueSlug(
@@ -79,6 +88,9 @@ export async function createPrompt(
   values: PromptFormValues
 ): Promise<PromptActionResult> {
   const { supabase, user } = await requireUser();
+  if (!(await withinMutationRateLimit(user.id))) {
+    return { ok: false, error: RATE_LIMIT_MESSAGE };
+  }
 
   const parsed = promptSchema.safeParse(values);
   if (!parsed.success) {
@@ -124,6 +136,9 @@ export async function updatePrompt(
   values: PromptFormValues
 ): Promise<PromptActionResult> {
   const { supabase, user } = await requireUser();
+  if (!(await withinMutationRateLimit(user.id))) {
+    return { ok: false, error: RATE_LIMIT_MESSAGE };
+  }
 
   const { data: existing, error: fetchError } = await supabase
     .from("prompts")
@@ -183,6 +198,9 @@ export async function deletePrompt(
   promptId: string
 ): Promise<{ ok: true } | { ok: false; error: string }> {
   const { supabase, user } = await requireUser();
+  if (!(await withinMutationRateLimit(user.id))) {
+    return { ok: false, error: RATE_LIMIT_MESSAGE };
+  }
 
   const { data: existing, error: fetchError } = await supabase
     .from("prompts")
@@ -229,6 +247,9 @@ export async function duplicatePrompt(
   promptId: string
 ): Promise<PromptActionResult> {
   const { supabase, user } = await requireUser();
+  if (!(await withinMutationRateLimit(user.id))) {
+    return { ok: false, error: RATE_LIMIT_MESSAGE };
+  }
 
   const { data: source, error: fetchError } = await supabase
     .from("prompts")
