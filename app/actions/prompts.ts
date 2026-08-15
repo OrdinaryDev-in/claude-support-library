@@ -3,6 +3,7 @@
 import { revalidatePath } from "next/cache";
 import { createClient } from "@/lib/supabase/server";
 import { requireUser, isAuthorOrAdmin } from "@/lib/auth/require-user";
+import { toSafeActionError } from "@/lib/errors/action-error";
 import {
   searchPrompts,
   PROMPTS_PAGE_SIZE,
@@ -105,7 +106,11 @@ export async function createPrompt(
     .single();
 
   if (error || !data) {
-    return { ok: false, error: error?.message ?? "Could not create the prompt." };
+    return toSafeActionError(
+      error,
+      { action: "createPrompt", userId: user.id },
+      "Could not create the prompt. Please try again."
+    );
   }
 
   await syncTags(supabase, data.id, fields.tagsInput ?? "");
@@ -160,7 +165,11 @@ export async function updatePrompt(
     .eq("id", promptId);
 
   if (error) {
-    return { ok: false, error: error.message };
+    return toSafeActionError(
+      error,
+      { action: "updatePrompt", promptId },
+      "Could not save your changes. Please try again."
+    );
   }
 
   await syncTags(supabase, promptId, fields.tagsInput ?? "");
@@ -189,7 +198,13 @@ export async function deletePrompt(
   }
 
   const { error } = await supabase.from("prompts").delete().eq("id", promptId);
-  if (error) return { ok: false, error: error.message };
+  if (error) {
+    return toSafeActionError(
+      error,
+      { action: "deletePrompt", promptId },
+      "Could not delete the prompt. Please try again."
+    );
+  }
 
   revalidatePath("/library/prompts");
   return { ok: true };
@@ -257,7 +272,11 @@ export async function duplicatePrompt(
     .single();
 
   if (error || !created) {
-    return { ok: false, error: error?.message ?? "Could not duplicate the prompt." };
+    return toSafeActionError(
+      error,
+      { action: "duplicatePrompt", promptId },
+      "Could not duplicate the prompt. Please try again."
+    );
   }
 
   await syncTags(supabase, created.id, tagsInput);
