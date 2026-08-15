@@ -131,6 +131,33 @@ bypassing the app UI entirely. That trigger (not just the RLS policy) is
 what actually blocks it, since a policy's implicit `WITH CHECK` can't
 compare old vs. new column values the way a `BEFORE UPDATE` trigger can.
 
+### Pre-push security gate
+
+`npm install` wires up a **husky `pre-push` hook**
+(`.husky/pre-push` → `scripts/check-supabase-security.sh`) that runs
+`supabase db advisors --linked --type security --level warn` against the
+live linked project — the same check that powers the dashboard's Advisors
+tab and the MCP `get_advisors` tool — and pipes the JSON output through
+`scripts/filter-supabase-advisors.mjs`. Any security advisory at `warn`
+level or above (RLS gaps, `SECURITY DEFINER` functions callable by `anon`,
+missing `to authenticated` clauses, etc.) blocks the push, **except**
+findings explicitly listed in `scripts/supabase-security-allowlist.json`
+(currently one: `is_admin`'s `authenticated` EXECUTE grant, which RLS
+policies require — every allowlist entry must carry a `reason`). It **fails
+closed**: if the check can't run at all (CLI missing, no access token,
+unparseable output), the push is blocked too, not silently allowed.
+
+One-time setup per machine:
+
+```bash
+# https://supabase.com/dashboard/account/tokens
+export SUPABASE_ACCESS_TOKEN=sbp_...   # add to your shell profile
+```
+
+Run it manually any time with `npm run supabase:security-check`. Deliberate
+bypass (e.g. a known false positive not yet allowlisted):
+`git push --no-verify`.
+
 ## Future phases
 
 Skills and Cloud Connectors libraries are not built yet. Adding **Skills**

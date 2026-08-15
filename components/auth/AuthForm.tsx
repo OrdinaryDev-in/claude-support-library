@@ -1,7 +1,7 @@
 "use client";
 
 import { useState } from "react";
-import { useRouter, useSearchParams } from "next/navigation";
+import { useSearchParams } from "next/navigation";
 import Link from "next/link";
 import { createClient } from "@/lib/supabase/client";
 import { touchLastLogin } from "@/app/actions/profile";
@@ -10,7 +10,6 @@ type Mode = "login" | "signup";
 
 export function AuthForm({ mode }: { mode: Mode }) {
   const isLogin = mode === "login";
-  const router = useRouter();
   const searchParams = useSearchParams();
   const next = searchParams.get("next") || "/library";
 
@@ -45,15 +44,26 @@ export function AuthForm({ mode }: { mode: Mode }) {
         return;
       }
       await touchLastLogin();
-      router.push(next);
-      router.refresh();
+      // A hard navigation, not router.push()+refresh(): the client router
+      // can serve `next` from a cache populated before signInWithPassword
+      // set the auth cookie, so proxy.ts's session check on that navigation
+      // still sees no user and the redirect doesn't visibly apply until a
+      // manual reload. A full navigation always re-runs proxy.ts fresh.
+      window.location.assign(next);
       return;
     }
 
     const { data, error } = await supabase.auth.signUp({
       email,
       password,
-      options: { data: { full_name: fullName } },
+      options: {
+        data: { full_name: fullName },
+        // Without this, the confirmation email redirects to the project's
+        // default Site URL (its bare origin), landing on `/` or `/login`
+        // instead of `/callback` — the code then never gets exchanged for
+        // a session via app/(auth)/callback/route.ts.
+        emailRedirectTo: `${window.location.origin}/callback?next=${encodeURIComponent(next)}`,
+      },
     });
     if (error) {
       setError(error.message);
@@ -67,8 +77,7 @@ export function AuthForm({ mode }: { mode: Mode }) {
       return;
     }
     await touchLastLogin();
-    router.push(next);
-    router.refresh();
+    window.location.assign(next);
   }
 
   if (checkEmail) {
