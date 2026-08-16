@@ -3,6 +3,7 @@
 import { redirect } from "next/navigation";
 import { revalidatePath } from "next/cache";
 import { createClient } from "@/lib/supabase/server";
+import { safeActionError } from "@/lib/errors";
 
 /** Called right after a session is established (password login or the
  * OAuth/email-confirm callback) so `profiles.last_login_at` stays current. */
@@ -36,7 +37,7 @@ export async function updateFullName(
     .update({ full_name: trimmed })
     .eq("id", user.id);
 
-  if (error) return { ok: false, error: error.message };
+  if (error) return { ok: false, error: safeActionError("updateFullName", error, "Could not save your name.") };
 
   revalidatePath("/account");
   return { ok: true };
@@ -73,7 +74,7 @@ export async function updatePassword(
   }
 
   const { error } = await supabase.auth.updateUser({ password: newPassword });
-  if (error) return { ok: false, error: error.message };
+  if (error) return { ok: false, error: safeActionError("updatePassword", error, "Could not update your password.") };
 
   return { ok: true };
 }

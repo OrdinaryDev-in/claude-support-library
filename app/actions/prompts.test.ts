@@ -43,6 +43,9 @@ function setUser(supabase: SupabaseMock, id: string | null) {
 describe("app/actions/prompts.ts — authorization boundary", () => {
   beforeEach(() => {
     vi.clearAllMocks();
+    // safeActionError() (lib/errors.ts) logs server-side on error paths —
+    // not exercised by the tests below today, but silenced defensively.
+    vi.spyOn(console, "error").mockImplementation(() => {});
   });
 
   describe("createPrompt", () => {

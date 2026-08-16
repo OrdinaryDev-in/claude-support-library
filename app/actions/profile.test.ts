@@ -26,6 +26,10 @@ describe("app/actions/profile.ts", () => {
 
   beforeEach(() => {
     vi.clearAllMocks();
+    // safeActionError() (lib/errors.ts) intentionally logs server-side on
+    // every error path exercised below — silence it so test output isn't
+    // dominated by expected logs.
+    vi.spyOn(console, "error").mockImplementation(() => {});
     supabase = createSupabaseMock();
     mockCreateClient.mockResolvedValue(supabase);
   });
@@ -83,15 +87,21 @@ describe("app/actions/profile.ts", () => {
       expect(supabase.from).toHaveBeenCalledWith("profiles");
     });
 
-    it("surfaces a Supabase error", async () => {
-      supabase = createSupabaseMock([{ data: null, error: { message: "db unavailable" } }]);
+    it("surfaces a generic message on a Supabase error, not the raw error text", async () => {
+      supabase = createSupabaseMock([
+        { data: null, error: { message: "duplicate key value violates unique constraint" } },
+      ]);
       supabase.auth.getUser.mockResolvedValue({ data: { user: { id: USER_ID } } });
       mockCreateClient.mockResolvedValue(supabase);
       const { updateFullName } = await import("./profile");
 
       const result = await updateFullName("Jane Doe");
 
-      expect(result).toEqual({ ok: false, error: "db unavailable" });
+      // Raw Postgres/Supabase error text must never reach the client — see
+      // lib/errors.ts. Only assert it's *not* the internal message; the
+      // exact generic wording is an implementation detail.
+      expect(result.ok).toBe(false);
+      expect((result as { error: string }).error).not.toMatch(/constraint|duplicate key/i);
     });
   });
 

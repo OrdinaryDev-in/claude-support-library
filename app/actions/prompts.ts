@@ -3,6 +3,7 @@
 import { redirect } from "next/navigation";
 import { revalidatePath } from "next/cache";
 import { createClient } from "@/lib/supabase/server";
+import { safeActionError } from "@/lib/errors";
 import {
   searchPrompts,
   PROMPTS_PAGE_SIZE,
@@ -128,7 +129,7 @@ export async function createPrompt(
     .single();
 
   if (error || !data) {
-    return { ok: false, error: error?.message ?? "Could not create the prompt." };
+    return { ok: false, error: safeActionError("createPrompt", error, "Could not create the prompt.") };
   }
 
   await syncTags(supabase, data.id, fields.tagsInput ?? "");
@@ -183,7 +184,7 @@ export async function updatePrompt(
     .eq("id", promptId);
 
   if (error) {
-    return { ok: false, error: error.message };
+    return { ok: false, error: safeActionError("updatePrompt", error, "Could not save your changes.") };
   }
 
   await syncTags(supabase, promptId, fields.tagsInput ?? "");
@@ -212,7 +213,7 @@ export async function deletePrompt(
   }
 
   const { error } = await supabase.from("prompts").delete().eq("id", promptId);
-  if (error) return { ok: false, error: error.message };
+  if (error) return { ok: false, error: safeActionError("deletePrompt", error, "Could not delete the prompt.") };
 
   revalidatePath("/library/prompts");
   return { ok: true };
@@ -280,7 +281,7 @@ export async function duplicatePrompt(
     .single();
 
   if (error || !created) {
-    return { ok: false, error: error?.message ?? "Could not duplicate the prompt." };
+    return { ok: false, error: safeActionError("duplicatePrompt", error, "Could not duplicate the prompt.") };
   }
 
   await syncTags(supabase, created.id, tagsInput);
