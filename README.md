@@ -107,22 +107,17 @@ npm run test        # unit tests (Vitest) — the authorization boundary:
 
 # E2E (Playwright) — needs a local Supabase stack:
 supabase start && supabase db reset
-
-# Loads the env vars via `source`, not `export $(...)` — `source` is what
-# actually parses supabase status's shell-quoted KEY="value" output as
-# assignment syntax; capturing it another way (e.g. `export $(cat ...)`,
-# a naive `cut`) tends to leave the quote characters embedded literally
-# in the value, which crashes proxy.ts's CSP builder on every request
-# with `TypeError: Invalid URL`.
-set -a
-source <(supabase status -o env \
-  --override-name api.url=NEXT_PUBLIC_SUPABASE_URL \
-  --override-name auth.anon_key=NEXT_PUBLIC_SUPABASE_ANON_KEY \
-  --override-name auth.service_role_key=SUPABASE_SERVICE_ROLE_KEY)
-set +a
-
 npm run test:e2e
 ```
+
+No manual env var wrangling needed for `test:e2e` — `playwright.config.ts`'s
+`webServer` runs `scripts/write-e2e-env.sh` (regenerates `.env.test.local`
+straight from the running local stack) and forces `NODE_ENV=test` (so
+Next.js skips your real `.env.local` entirely — see
+[Next's docs](https://nextjs.org/docs/app/guides/environment-variables#test-environment-variables))
+before every build. Relying on the invoking shell's own exported env vars
+here used to be the approach and turned out to be unreliable in practice
+across a couple of rounds of debugging — this sidesteps it completely.
 
 `test/integration/role-escalation.test.ts` (part of `npm run test`) is a
 real-database test of the `prevent_role_self_escalation` trigger — it
