@@ -6,17 +6,27 @@ on:
   pull_request:
     branches: [main]
 
-# Placeholder values only — the build never contacts Supabase (all data-
-# fetching routes are dynamic due to cookies()/auth checks and are skipped
-# during static generation), so these just need to be present strings.
-env:
-  NEXT_PUBLIC_SUPABASE_URL: https://placeholder.supabase.co
-  NEXT_PUBLIC_SUPABASE_ANON_KEY: placeholder-anon-key
-
 jobs:
   lint-typecheck-build:
     name: Lint, type-check, build
     runs-on: ubuntu-latest
+    # Placeholder values only — the build never contacts Supabase (all
+    # data-fetching routes are dynamic due to cookies()/auth checks and
+    # are skipped during static generation), so these just need to be
+    # present strings. Scoped to this job (and `test` below) specifically
+    # — NOT a workflow-level `env:` block. A workflow-level block applies
+    # to every job, test-e2e included, and since GitHub Actions sets it
+    # as a real process env var before any step runs, it would silently
+    # beat scripts/write-e2e-env.sh's .env.test.local every single time —
+    # Next's (and Node's) env loading always treats an already-set
+    # process.env value as final, never overridden by a `.env*` file.
+    # That's exactly what was happening: the E2E browser was POSTing to
+    # https://placeholder.supabase.co instead of the local stack, despite
+    # .env.test.local having the right value the whole time, because this
+    # block used to be workflow-level and pre-empted it in every job.
+    env:
+      NEXT_PUBLIC_SUPABASE_URL: https://placeholder.supabase.co
+      NEXT_PUBLIC_SUPABASE_ANON_KEY: placeholder-anon-key
     steps:
       - uses: actions/checkout@v5
 
@@ -87,6 +97,13 @@ jobs:
   test:
     name: Unit tests
     runs-on: ubuntu-latest
+    # Same placeholder rationale as lint-typecheck-build above — some
+    # imported modules construct a Supabase client with these values
+    # present (even though the actual client calls are mocked in tests),
+    # so they need to be *some* well-formed string, not real credentials.
+    env:
+      NEXT_PUBLIC_SUPABASE_URL: https://placeholder.supabase.co
+      NEXT_PUBLIC_SUPABASE_ANON_KEY: placeholder-anon-key
     steps:
       - uses: actions/checkout@v5
 
