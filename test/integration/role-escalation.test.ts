@@ -59,9 +59,12 @@ describe.skipIf(!isLocalSupabase)("prevent_role_self_escalation trigger", () => 
       .update({ role: "admin" })
       .eq("id", userId);
 
-    // The trigger raises an exception (not a silent no-op) — see
-    // prevent_role_self_escalation() in 0002_rls.sql.
-    expect(error).not.toBeNull();
+    // The trigger silently pins the column back to its old value (`new.role
+    // := old.role`) rather than raising — RLS's WITH CHECK still passes
+    // (auth.uid() = id is untouched), so the UPDATE itself succeeds with no
+    // error. What actually proves the guard worked is that the row's role
+    // never changed — see prevent_role_self_escalation() in 0002_rls.sql.
+    expect(error).toBeNull();
 
     const { data } = await supabase.from("profiles").select("role").eq("id", userId).single();
     expect(data?.role).toBe("user");
