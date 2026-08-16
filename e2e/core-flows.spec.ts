@@ -196,9 +196,16 @@ test("promoting that account to admin lifts the denial", async ({ page }) => {
   await page.getByRole("button", { name: "Sign in" }).click();
   await expect(page).toHaveURL(/\/library/);
 
+  // The edit page's server component does 4 sequential DB round-trips
+  // before it can render anything (getUser, select prompts, select
+  // profiles for the admin check, select+join prompt_tags) — the
+  // heaviest single page load in this suite, and observed timing out at
+  // the default 5s under CI resource contention (matches this file's
+  // existing precedent: the post-submit assertion in "owner can create a
+  // prompt" above already uses a 10s timeout for the same reason).
   await page.goto(`/library/prompts/${promptSlug}/edit`);
-  await expect(page).toHaveURL(new RegExp(`/library/prompts/${promptSlug}/edit$`));
-  await expect(page.getByRole("heading", { name: "Edit prompt" })).toBeVisible();
+  await expect(page).toHaveURL(new RegExp(`/library/prompts/${promptSlug}/edit$`), { timeout: 10_000 });
+  await expect(page.getByRole("heading", { name: "Edit prompt" })).toBeVisible({ timeout: 10_000 });
 });
 
 test("category filtering narrows the browse grid", async ({ page }) => {
