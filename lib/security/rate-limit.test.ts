@@ -48,6 +48,18 @@ describe("getClientIp", () => {
     expect(getClientIp(headers)).toBe("203.0.113.5");
   });
 
+  // x-forwarded-for is only trustworthy when Vercel's edge is the first
+  // hop (Vercel overwrites it there) — x-vercel-forwarded-for stays
+  // accurate even behind an extra proxy layer, so it must win when both
+  // are present, otherwise a spoofed x-forwarded-for could shadow it.
+  it("prefers x-vercel-forwarded-for over x-forwarded-for when both are present", () => {
+    const headers = new Headers({
+      "x-forwarded-for": "203.0.113.66, 10.0.0.1", // attacker-controlled in a behind-an-extra-proxy setup
+      "x-vercel-forwarded-for": "198.51.100.23",
+    });
+    expect(getClientIp(headers)).toBe("198.51.100.23");
+  });
+
   it("falls back to x-real-ip when x-forwarded-for is absent", () => {
     const headers = new Headers({ "x-real-ip": "203.0.113.9" });
     expect(getClientIp(headers)).toBe("203.0.113.9");
