@@ -8,6 +8,13 @@ import { touchLastLogin } from "@/app/actions/profile";
 
 type Mode = "login" | "signup";
 
+// Google/GitHub aren't enabled in the Supabase dashboard yet (clicking
+// these currently hits a live "provider is not enabled" error) — hidden
+// for launch. signInWithOAuth wiring below is left in place; flip this
+// back to true once the providers are configured with production
+// callback URLs (see README's OAuth setup notes).
+const OAUTH_ENABLED = false;
+
 export function AuthForm({ mode }: { mode: Mode }) {
   const isLogin = mode === "login";
   const searchParams = useSearchParams();
@@ -96,28 +103,32 @@ export function AuthForm({ mode }: { mode: Mode }) {
 
   return (
     <>
-      <div className="flex flex-col gap-2.5 mb-5">
-        <button
-          type="button"
-          onClick={() => handleOAuth("google")}
-          className="flex items-center justify-center gap-2 py-2.5 rounded-md border border-[var(--border)] text-[var(--text)] text-[13px] hover:bg-white/[0.03] transition-colors"
-        >
-          Continue with Google
-        </button>
-        <button
-          type="button"
-          onClick={() => handleOAuth("github")}
-          className="flex items-center justify-center gap-2 py-2.5 rounded-md border border-[var(--border)] text-[var(--text)] text-[13px] hover:bg-white/[0.03] transition-colors"
-        >
-          Continue with GitHub
-        </button>
-      </div>
+      {OAUTH_ENABLED && (
+        <>
+          <div className="flex flex-col gap-2.5 mb-5">
+            <button
+              type="button"
+              onClick={() => handleOAuth("google")}
+              className="flex items-center justify-center gap-2 py-2.5 rounded-md border border-[var(--border)] text-[var(--text)] text-[13px] hover:bg-white/[0.03] transition-colors"
+            >
+              Continue with Google
+            </button>
+            <button
+              type="button"
+              onClick={() => handleOAuth("github")}
+              className="flex items-center justify-center gap-2 py-2.5 rounded-md border border-[var(--border)] text-[var(--text)] text-[13px] hover:bg-white/[0.03] transition-colors"
+            >
+              Continue with GitHub
+            </button>
+          </div>
 
-      <div className="flex items-center gap-2.5 mb-5">
-        <div className="flex-1 h-px bg-[var(--border)]" />
-        <span className="font-[family-name:var(--font-mono)] text-[10px] text-[var(--muted)]">OR</span>
-        <div className="flex-1 h-px bg-[var(--border)]" />
-      </div>
+          <div className="flex items-center gap-2.5 mb-5">
+            <div className="flex-1 h-px bg-[var(--border)]" />
+            <span className="font-[family-name:var(--font-mono)] text-[10px] text-[var(--muted)]">OR</span>
+            <div className="flex-1 h-px bg-[var(--border)]" />
+          </div>
+        </>
+      )}
 
       <form onSubmit={handleSubmit} className="flex flex-col gap-3.5">
         {!isLogin && (
@@ -165,6 +176,20 @@ export function AuthForm({ mode }: { mode: Mode }) {
         >
           {pending ? (isLogin ? "Signing in…" : "Creating account…") : isLogin ? "Sign in" : "Create account"}
         </button>
+
+        {!isLogin && (
+          <p className="text-[11px] text-[var(--muted)] text-center leading-relaxed">
+            By creating an account you agree to the{" "}
+            <Link href="/terms" className="text-[var(--brass)] no-underline">
+              Terms
+            </Link>{" "}
+            and{" "}
+            <Link href="/privacy" className="text-[var(--brass)] no-underline">
+              Privacy Policy
+            </Link>
+            .
+          </p>
+        )}
       </form>
 
       <div className="text-center mt-5 text-xs text-[var(--muted)]">

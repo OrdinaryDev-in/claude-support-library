@@ -61,3 +61,88 @@ jobs:
       - name: npm audit (high/critical)
         run: npm audit --audit-level=high
         continue-on-error: true
+
+  supabase-security-gate:
+    name: Supabase security gate
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v5
+
+      - uses: actions/setup-node@v5
+        with:
+          node-version: 22
+          cache: npm
+
+      - run: npm ci
+
+      # Same check as the local pre-push hook (.husky/pre-push), mirrored
+      # into CI so it can't be skipped by --no-verify, a GitHub web-UI
+      # merge, or a clone that never ran `npm install`. Fails closed if
+      # SUPABASE_ACCESS_TOKEN is missing — see scripts/check-supabase-security.sh.
+      - name: Run Supabase security advisors
+        run: npm run supabase:security-check
+        env:
+          SUPABASE_ACCESS_TOKEN: ${{ secrets.SUPABASE_ACCESS_TOKEN }}
+
+  test:
+    name: Unit tests
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v5
+
+      - uses: actions/setup-node@v5
+        with:
+          node-version: 22
+          cache: npm
+
+      - run: npm ci
+
+      - name: Run unit tests
+        run: npm run test
+
+  test-e2e:
+    name: E2E tests
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v5
+
+      - uses: actions/setup-node@v5
+        with:
+          node-version: 22
+          cache: npm
+
+      - run: npm ci
+
+      - name: Install Playwright browsers
+        run: npx playwright install --with-deps chromium
+
+      # Runs against a real local Supabase stack (Docker, pre-installed on
+      # ubuntu-latest runners) rather than a shared remote project — E2E
+      # tests exercise real auth/signup/RLS flows, which the placeholder
+      # env vars used by the other CI jobs can't support, and a local
+      # throwaway stack avoids polluting or racing against production data.
+      - name: Start local Supabase
+        run: npx supabase start
+
+      # Applies supabase/migrations/ and seeds supabase/seed/prompts.sql —
+      # same command a developer runs locally (see README's local-dev docs).
+      - name: Reset database (migrations + seed)
+        run: npx supabase db reset
+
+      - name: Write Supabase env vars
+        run: |
+          npx supabase status -o env \
+            --override-name api.url=NEXT_PUBLIC_SUPABASE_URL \
+            --override-name anon_key=NEXT_PUBLIC_SUPABASE_ANON_KEY \
+            --override-name service_role_key=SUPABASE_SERVICE_ROLE_KEY \
+            >> "$GITHUB_ENV"
+
+      - name: Build app
+        run: npm run build
+
+      - name: Run E2E tests
+        run: npm run test:e2e
+
+      - name: Stop local Supabase
+        if: always()
+        run: npx supabase stop

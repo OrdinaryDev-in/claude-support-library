@@ -2,6 +2,9 @@
   "name": "claude-prompt-library",
   "version": "0.1.0",
   "private": true,
+  "engines": {
+    "node": ">=22"
+  },
   "scripts": {
     "dev": "next dev",
     "build": "next build",
@@ -10,6 +13,9 @@
     "seed": "node --env-file=.env.local --import tsx scripts/seed-prompts.ts",
     "generate-seed-sql": "npx tsx scripts/generate-seed-sql.ts",
     "supabase:security-check": "bash scripts/check-supabase-security.sh",
+    "test": "vitest run",
+    "test:watch": "vitest",
+    "test:e2e": "playwright test",
     "prepare": "husky"
   },
   "dependencies": {
@@ -23,16 +29,18 @@
     "zod": "^4.4.3"
   },
   "devDependencies": {
+    "@playwright/test": "^1.56.1",
     "@tailwindcss/postcss": "^4",
-    "@types/node": "^20",
+    "@types/node": "^22",
     "@types/react": "^19",
     "@types/react-dom": "^19",
     "eslint": "^9",
     "eslint-config-next": "16.3.1",
     "husky": "^9.1.7",
-    "supabase": "^2.114.0",
+    "supabase": "2.114.0",
     "tailwindcss": "^4",
     "tsx": "^4.23.12",
-    "typescript": "^5"
+    "typescript": "^5",
+    "vitest": "^3.2.4"
   }
 }

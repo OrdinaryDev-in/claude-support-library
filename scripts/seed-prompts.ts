@@ -81,7 +81,7 @@ async function ensureSeedAuthor(
     email: SEED_AUTHOR_EMAIL,
     email_confirm: true,
     password: crypto.randomUUID(),
-    user_metadata: { full_name: "DevAtlas Seed" },
+    user_metadata: { full_name: "DevAtlas Team" },
   });
   if (error || !created.user) {
     throw new Error(`Could not create seed author: ${error?.message}`);

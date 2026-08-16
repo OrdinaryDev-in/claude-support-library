@@ -20,6 +20,10 @@ see the "Future phases" note at the bottom of this file.
 Next.js 16 (App Router, TypeScript, Server Components + Server Actions) ·
 Supabase (Postgres + Auth + Row Level Security) · Tailwind CSS v4.
 
+Requires **Node 22+** (see `.nvmrc`/`package.json`'s `engines`) — matches
+what CI runs; `@supabase/supabase-js` warns and will eventually drop
+support for older versions.
+
 ## Setup
 
 ### 1. Create a Supabase project
@@ -61,7 +65,7 @@ npm run dev
 
 ### 4. Load the starter library
 
-Seeds 18 hand-written prompts across all five categories (idempotent —
+Seeds 48 hand-written prompts across all five categories (idempotent —
 safe to re-run):
 
 ```bash
@@ -85,18 +89,53 @@ project settings (`SUPABASE_SERVICE_ROLE_KEY` isn't needed there unless
 you'll run the seed script against prod from CI), and update the Supabase
 **Site URL**/redirect allow-list to your production domain.
 
+Before real users sign up: configure **custom SMTP** in the Supabase
+dashboard (Authentication → Emails) — the built-in mailer's rate limit
+will otherwise block signups almost immediately — and add a
+`SUPABASE_ACCESS_TOKEN` GitHub Actions secret (Dashboard → Account →
+Access Tokens) so the CI security gate and backup workflow
+(`.github/workflows/{ci,backup}.yml`) can run. Google/GitHub OAuth
+buttons are currently hidden (`OAUTH_ENABLED` in
+`components/auth/AuthForm.tsx`) until those providers are configured with
+production callback URLs.
+
+## Testing
+
+```bash
+npm run test        # unit tests (Vitest) — the authorization boundary:
+                     # app/actions/{prompts,profile}.ts
+npm run test:e2e     # E2E (Playwright) — needs a local Supabase stack:
+                     #   supabase start && supabase db reset
+                     # then export NEXT_PUBLIC_SUPABASE_URL /
+                     # NEXT_PUBLIC_SUPABASE_ANON_KEY / SUPABASE_SERVICE_ROLE_KEY
+                     # from `supabase status -o env` (see ci.yml's test-e2e
+                     # job for the exact commands)
+```
+
+`test/integration/role-escalation.test.ts` (part of `npm run test`) is a
+real-database test of the `prevent_role_self_escalation` trigger — it
+only runs against a `127.0.0.1`/`localhost` Supabase URL, so it's a no-op
+against your normal dev `.env.local`.
+
 ## Project structure
 
 ```
-app/(auth)/{login,signup,callback}   — sign in/up, OAuth + email-confirm callback
+app/(auth)/{login,signup,callback}   — sign in/up, OAuth (currently hidden) + email-confirm callback
+app/{privacy,terms}                  — legal pages (draft placeholder content — replace before relying on it)
 app/(app)/layout.tsx                 — authenticated shell (NavBar + gating backstop)
 app/(app)/library                    — hub, browse/filter, detail, create/edit
 app/(app)/account                    — profile + password reset
 app/actions/{prompts,profile}.ts     — server actions (the real CRUD authorization boundary, alongside RLS)
-proxy.ts                             — session refresh + auth redirect (Next 16's renamed middleware.ts)
+proxy.ts                             — session refresh, auth redirect, per-request CSP nonce (Next 16's renamed middleware.ts)
+lib/security/csp.ts                  — Content-Security-Policy builder used by proxy.ts
+next.config.ts                       — static security headers (HSTS, X-Frame-Options, etc.)
 supabase/migrations/                 — schema + RLS
-scripts/seed-data.ts                 — the 18 starter prompts (source of truth)
+supabase/config.toml                 — local Supabase stack config (`supabase start`)
+scripts/seed-data.ts                 — the 48 starter prompts (source of truth)
 scripts/seed-prompts.ts              — loads them via Supabase (npm run seed)
+app/actions/*.test.ts, test/         — Vitest unit + integration tests
+e2e/                                 — Playwright E2E tests
+.github/workflows/backup.yml         — scheduled Supabase dump (Free-tier backup workaround)
 ```
 
 ## Verifying it works

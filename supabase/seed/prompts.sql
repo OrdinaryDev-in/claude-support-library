@@ -14,8 +14,8 @@ values (
   '00000000-0000-0000-0000-000000000000',
   '00000000-0000-0000-0000-000000000001',
   'authenticated', 'authenticated', 'seed@devatlas.internal',
-  crypt('0f7174ea-3295-45b0-8d4a-b496b442b114', gen_salt('bf')),
-  now(), '{"provider":"email","providers":["email"]}', '{"full_name":"DevAtlas Seed"}',
+  crypt('f5e3c122-4788-42cc-9356-ebc1d92a25db', gen_salt('bf')),
+  now(), '{"provider":"email","providers":["email"]}', '{"full_name":"DevAtlas Team"}',
   now(), now()
 )
 on conflict (id) do nothing;

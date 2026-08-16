@@ -1,0 +1,65 @@
+name: Supabase Backup
+
+# Free-tier Supabase has no Point-in-Time-Recovery and no daily backups —
+# Supabase's own recommendation at this tier is to run `supabase db dump`
+# regularly and store it off-site (docs: guides/platform/backups). This is
+# that: a scheduled full (schema + data) dump. A real pg_dump connects to
+# and queries the live database, which also counts as project activity —
+# so this job doubles as the keep-alive that prevents Free-tier
+# auto-pausing after ~7 days of low activity, with no separate job needed.
+#
+# The real fix for both (no auto-pause, native daily backups + PITR) is
+# upgrading to the Supabase Pro plan — see the production-readiness plan.
+# This workflow is the interim floor until/unless that happens.
+
+on:
+  schedule:
+    # Daily, off-peak UTC time (avoids GitHub's top-of-hour scheduling load).
+    - cron: "17 3 * * *"
+  workflow_dispatch: {}
+
+jobs:
+  backup:
+    name: Database dump
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v5
+
+      - uses: actions/setup-node@v5
+        with:
+          node-version: 22
+          cache: npm
+
+      - run: npm ci
+
+      # Same project-ref-from-.mcp.json pattern as
+      # scripts/check-supabase-security.sh, so there's one source of truth
+      # for which project this repo targets.
+      - name: Determine project ref
+        id: project
+        run: |
+          REF=$(node -pe "require('./.mcp.json').mcpServers.supabase.url.match(/project_ref=([^&]+)/)[1]")
+          echo "ref=$REF" >> "$GITHUB_OUTPUT"
+
+      - name: Link project
+        run: npx supabase link --project-ref "${{ steps.project.outputs.ref }}" --yes
+        env:
+          SUPABASE_ACCESS_TOKEN: ${{ secrets.SUPABASE_ACCESS_TOKEN }}
+
+      - name: Dump database (schema + data)
+        run: npx supabase db dump --linked -f "backup-$(date -u +%Y-%m-%d).sql"
+        env:
+          SUPABASE_ACCESS_TOKEN: ${{ secrets.SUPABASE_ACCESS_TOKEN }}
+
+      # Interim only — a GitHub Actions artifact isn't durable enough for
+      # real disaster recovery (90-day retention, same-repo blast radius:
+      # if this repo/account is compromised or deleted, the backups go
+      # with it). TODO(production): once a bucket is provisioned
+      # (S3/GCS/Backblaze), replace this step with an upload to it and add
+      # the bucket's credentials as GitHub secrets.
+      - name: Upload dump as build artifact (interim)
+        uses: actions/upload-artifact@v4
+        with:
+          name: supabase-backup-${{ github.run_id }}
+          path: backup-*.sql
+          retention-days: 90

@@ -41,7 +41,7 @@ lines.push(
   `  '${SEED_AUTHOR_ID}',`,
   `  'authenticated', 'authenticated', '${SEED_AUTHOR_EMAIL}',`,
   `  crypt('${crypto.randomUUID()}', gen_salt('bf')),`,
-  `  now(), '{"provider":"email","providers":["email"]}', '{"full_name":"DevAtlas Seed"}',`,
+  `  now(), '{"provider":"email","providers":["email"]}', '{"full_name":"DevAtlas Team"}',`,
   `  now(), now()`,
   `)`,
   `on conflict (id) do nothing;`,
