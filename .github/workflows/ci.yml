@@ -129,12 +129,19 @@ jobs:
       - name: Reset database (migrations + seed)
         run: npx supabase db reset
 
+      # Key paths confirmed against the CLI's actual source
+      # (apps/cli-go/internal/status/status.go's CustomName struct) — not
+      # guessed. auth.anon_key/auth.service_role_key are the deprecated-
+      # but-still-present legacy JWT-format keys, matching what this app's
+      # client code (lib/supabase/{client,server}.ts) is built around; the
+      # newer auth.publishable_key/auth.secret_key are a different key
+      # format this app doesn't use.
       - name: Write Supabase env vars
         run: |
           npx supabase status -o env \
             --override-name api.url=NEXT_PUBLIC_SUPABASE_URL \
-            --override-name anon_key=NEXT_PUBLIC_SUPABASE_ANON_KEY \
-            --override-name service_role_key=SUPABASE_SERVICE_ROLE_KEY \
+            --override-name auth.anon_key=NEXT_PUBLIC_SUPABASE_ANON_KEY \
+            --override-name auth.service_role_key=SUPABASE_SERVICE_ROLE_KEY \
             >> "$GITHUB_ENV"
 
       - name: Build app

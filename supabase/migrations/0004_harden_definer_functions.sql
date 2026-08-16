@@ -27,4 +27,24 @@ alter function public.set_updated_at() set search_path = '';
 
 revoke execute on function public.handle_new_user() from public, anon, authenticated;
 revoke execute on function public.prevent_role_self_escalation() from public, anon, authenticated;
-revoke execute on function public.rls_auto_enable() from public, anon, authenticated;
+
+-- rls_auto_enable() is Supabase's own platform-installed event trigger
+-- function (the hosted control plane adds it; our migrations don't
+-- create it) — present on the remote/hosted project this migration was
+-- originally applied against, but NOT on a fresh local stack
+-- (`supabase start` / `supabase db reset`, used by local dev and the
+-- test-e2e CI job). An unconditional revoke on a function that doesn't
+-- exist yet aborts the whole migration replay with
+-- "function ... does not exist" (SQLSTATE 42883), which is exactly what
+-- broke CI. Guarded so this migration replays cleanly on both: a no-op
+-- locally, the same revoke it always was on remote.
+do $$
+begin
+  if exists (
+    select 1 from pg_proc p
+    join pg_namespace n on n.oid = p.pronamespace
+    where n.nspname = 'public' and p.proname = 'rls_auto_enable'
+  ) then
+    revoke execute on function public.rls_auto_enable() from public, anon, authenticated;
+  end if;
+end $$;
