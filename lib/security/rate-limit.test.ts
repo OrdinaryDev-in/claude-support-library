@@ -44,21 +44,25 @@ describe("checkRateLimit", () => {
 
 describe("getClientIp", () => {
   it("reads the first address from x-forwarded-for", () => {
-    const request = new Request("http://localhost", {
-      headers: { "x-forwarded-for": "203.0.113.5, 10.0.0.1" },
-    });
-    expect(getClientIp(request)).toBe("203.0.113.5");
+    const headers = new Headers({ "x-forwarded-for": "203.0.113.5, 10.0.0.1" });
+    expect(getClientIp(headers)).toBe("203.0.113.5");
   });
 
   it("falls back to x-real-ip when x-forwarded-for is absent", () => {
-    const request = new Request("http://localhost", {
-      headers: { "x-real-ip": "203.0.113.9" },
-    });
-    expect(getClientIp(request)).toBe("203.0.113.9");
+    const headers = new Headers({ "x-real-ip": "203.0.113.9" });
+    expect(getClientIp(headers)).toBe("203.0.113.9");
   });
 
   it("falls back to a constant, not an unbounded bucket, when neither header is present", () => {
-    const request = new Request("http://localhost");
-    expect(getClientIp(request)).toBe("unknown");
+    expect(getClientIp(new Headers())).toBe("unknown");
+  });
+
+  // Takes any object structurally shaped like { get(name): string | null },
+  // not literally a `Headers` instance — this is what actually lets
+  // app/actions/auth.ts reuse it with next/headers' `headers()` (a
+  // Server Action has no `Request` to pull a real Headers object off).
+  it("works with a plain object shaped like Pick<Headers, 'get'>, not just a real Headers instance", () => {
+    const headersLike = { get: (name: string) => (name === "x-forwarded-for" ? "203.0.113.7" : null) };
+    expect(getClientIp(headersLike)).toBe("203.0.113.7");
   });
 });

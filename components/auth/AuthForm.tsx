@@ -5,6 +5,7 @@ import { useSearchParams } from "next/navigation";
 import Link from "next/link";
 import { createClient } from "@/lib/supabase/client";
 import { touchLastLogin } from "@/app/actions/profile";
+import { checkAuthRateLimit } from "@/app/actions/auth";
 
 type Mode = "login" | "signup";
 
@@ -41,6 +42,14 @@ export function AuthForm({ mode }: { mode: Mode }) {
     e.preventDefault();
     setError(null);
     setPending(true);
+
+    const { allowed } = await checkAuthRateLimit(isLogin ? "login" : "signup");
+    if (!allowed) {
+      setError("Too many attempts. Please wait a minute and try again.");
+      setPending(false);
+      return;
+    }
+
     const supabase = createClient();
 
     if (isLogin) {

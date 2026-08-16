@@ -46,9 +46,16 @@ export function checkRateLimit(
 /** Best-effort client IP from standard proxy headers (Vercel sets
  * x-forwarded-for). Falls back to a shared bucket rather than "no
  * limit at all" when the header's missing, so failure mode is more
- * restrictive, not less. */
-export function getClientIp(request: Request): string {
-  const forwardedFor = request.headers.get("x-forwarded-for");
+ * restrictive, not less.
+ *
+ * Takes a headers object directly (not a `Request`) so the same helper
+ * works from both a Route Handler (`request.headers`, e.g.
+ * app/(auth)/callback/route.ts) and a Server Action, which only has
+ * `next/headers`' `headers()` — there's no `Request` to pull headers off
+ * in that context. `Pick<Headers, "get">` is the minimal shape both
+ * `Headers` and Next's `ReadonlyHeaders` structurally satisfy. */
+export function getClientIp(headers: Pick<Headers, "get">): string {
+  const forwardedFor = headers.get("x-forwarded-for");
   if (forwardedFor) return forwardedFor.split(",")[0].trim();
-  return request.headers.get("x-real-ip") ?? "unknown";
+  return headers.get("x-real-ip") ?? "unknown";
 }
