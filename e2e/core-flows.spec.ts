@@ -60,6 +60,20 @@ test.beforeEach(async ({ page }) => {
   page.on("requestfailed", (req) => {
     console.log(`[browser:requestfailed] ${req.method()} ${req.url()} — ${req.failure()?.errorText}`);
   });
+  // None of the three hooks above fire for this: Supabase Auth rejecting
+  // a request (bad password, disallowed redirect, rate limit, whatever)
+  // is a completed HTTP response with a non-2xx status, not a network
+  // failure — and AuthForm.tsx never console.errors on it, just sets
+  // component state. That's the one class of failure the hooks above are
+  // structurally blind to, and it's exactly the shape a rejected
+  // signup/login takes. This is the only way to see what Auth actually
+  // said, short of pulling down trace.zip by hand.
+  page.on("response", async (res) => {
+    if (res.url().includes("/auth/v1/") && !res.ok()) {
+      const body = await res.text().catch(() => "<unreadable body>");
+      console.log(`[browser:auth-error] ${res.status()} ${res.url()} — ${body}`);
+    }
+  });
 });
 
 test("sign up creates an account and lands in the library", async ({ page }, testInfo) => {
@@ -76,7 +90,22 @@ test("sign up creates an account and lands in the library", async ({ page }, tes
   // Local stack has email confirmation disabled (supabase/config.toml
   // [auth.email] enable_confirmations = false) so this lands in the app
   // directly, no inbox to check.
-  await expect(page).toHaveURL(/\/library/);
+  try {
+    await expect(page).toHaveURL(/\/library/);
+  } catch (err) {
+    // A 2xx signup response with no session (confirmation silently still
+    // required despite enable_confirmations=false) wouldn't show up as an
+    // [browser:auth-error] above either — it's not an error response at
+    // all. Whatever AuthForm actually rendered instead of redirecting
+    // (the "Almost there, confirm your account..." text, or a rendered
+    // {error} message) is the ground truth here, so dump it directly.
+    const bodyText = await page
+      .locator("body")
+      .innerText()
+      .catch(() => "<page text unreadable>");
+    console.log(`[browser:page-state-on-failure] ${bodyText.replace(/\s+/g, " ").trim().slice(0, 500)}`);
+    throw err;
+  }
 });
 
 test("owner can create a prompt", async ({ page }) => {
