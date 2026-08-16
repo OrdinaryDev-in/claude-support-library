@@ -129,14 +129,15 @@ jobs:
       - name: Reset database (migrations + seed)
         run: npx supabase db reset
 
-      # No separate "write env vars" or "build" step needed — Playwright's
-      # webServer (playwright.config.ts) runs scripts/write-e2e-env.sh
-      # (regenerates .env.test.local from the local stack above) then
-      # `npm run build && npm run start` itself, every time, so the build
-      # always happens immediately after — and with — fresh values, never
-      # against a stale/mismatched prior build. Passing env vars through
-      # this job's own shell (e.g. via $GITHUB_ENV) turned out to be
-      # unreliable in practice; write-e2e-env.sh sidesteps that entirely.
+      # No separate "write env vars" or "build" step needed — the
+      # `test:e2e` script (package.json) runs scripts/write-e2e-env.sh
+      # (regenerates .env.test.local from the local stack above) *before*
+      # `playwright test` starts, then webServer rebuilds
+      # (`npm run build && npm run start`) against those same fresh
+      # values, every time — never against a stale/mismatched prior build.
+      # Passing env vars through this job's own shell (e.g. via
+      # $GITHUB_ENV) turned out to be unreliable in practice;
+      # write-e2e-env.sh sidesteps that entirely.
       - name: Run E2E tests
         run: npm run test:e2e
 

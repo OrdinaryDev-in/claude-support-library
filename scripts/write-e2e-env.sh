@@ -1,30 +1,28 @@
 #!/usr/bin/env bash
 # Regenerates .env.test.local from the running local Supabase stack.
-# Run automatically by playwright.config.ts's webServer, every time,
-# before build+start — not something you run manually.
+# Run by `npm run test:e2e` (package.json) BEFORE `playwright test` even
+# starts — not something you run manually, and not run from inside
+# playwright.config.ts or webServer.command. That placement matters: two
+# separate things need what this writes —
+#  1. playwright.config.ts loads .env.test.local into its own process (via
+#     @next/env's loadEnvConfig) so e2e/core-flows.spec.ts's own
+#     process.env reads (NEXT_PUBLIC_SUPABASE_URL, SUPABASE_SERVICE_ROLE_KEY
+#     — it builds its own admin supabase-js client) actually see it. That
+#     only works if the file already exists before playwright.config.ts's
+#     top-level code runs, i.e. before `playwright test` starts at all.
+#  2. webServer's `npm run build && npm run start`, via NODE_ENV=test,
+#     picks up the same file for the Next.js app itself.
 #
-# Why this exists instead of relying on the shell that runs
-# `npm run test:e2e` having the right vars exported: that turned out to
-# be unreliable in practice across two separate debugging rounds (a
-# quoted value, then a value that plain didn't survive into the actual
-# `next build` process no matter how it was sourced). Writing a real
-# .env.test.local file and forcing NODE_ENV=test (set in
-# playwright.config.ts's webServer.env) makes Next.js skip .env.local
-# ENTIRELY rather than trying to out-prioritize it — see
+# Why a real file instead of relying on the invoking shell's own exported
+# vars: that turned out to be unreliable in practice across two separate
+# earlier debugging rounds (a quoted value, then a value that plainly
+# didn't survive into the actual `next build` process no matter how it was
+# sourced). NODE_ENV=test makes Next.js skip .env.local ENTIRELY rather
+# than trying to out-prioritize it — see
 # https://nextjs.org/docs/app/guides/environment-variables#test-environment-variables.
 # This removes the current shell's environment from the equation
 # completely; the only prerequisite left is `supabase start` actually
 # running, checked directly below.
-#
-# This check used to live in a Playwright `globalSetup` file instead, on
-# the theory that globalSetup runs before webServer starts. That's wrong
-# for the installed Playwright version — its task runner starts the
-# webServer plugin (which runs *this* script) before running globalSetup
-# (confirmed by reading node_modules/playwright/lib/runner/index.js's
-# createGlobalSetupTasks: plugin-setup tasks precede globalSetups). So the
-# check has to live here, at the actual first thing webServer runs, to
-# fail fast with an actionable message instead of a cryptic CLI error deep
-# in `supabase status` or a 60-180s webServer timeout.
 set -euo pipefail
 
 cd "$(dirname "${BASH_SOURCE[0]}")/.."

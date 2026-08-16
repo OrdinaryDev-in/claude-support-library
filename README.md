@@ -110,14 +110,16 @@ supabase start && supabase db reset
 npm run test:e2e
 ```
 
-No manual env var wrangling needed for `test:e2e` — `playwright.config.ts`'s
-`webServer` runs `scripts/write-e2e-env.sh` (regenerates `.env.test.local`
-straight from the running local stack) and forces `NODE_ENV=test` (so
-Next.js skips your real `.env.local` entirely — see
+No manual env var wrangling needed for `test:e2e` — the script (`package.json`)
+runs `scripts/write-e2e-env.sh` first (regenerates `.env.test.local` straight
+from the running local stack) and then runs Playwright itself under
+`NODE_ENV=test`, so Next.js skips your real `.env.local` entirely (see
 [Next's docs](https://nextjs.org/docs/app/guides/environment-variables#test-environment-variables))
-before every build. Relying on the invoking shell's own exported env vars
-here used to be the approach and turned out to be unreliable in practice
-across a couple of rounds of debugging — this sidesteps it completely.
+both when `playwright.config.ts` loads those values for its own use and
+when `webServer` rebuilds the app. Relying on the invoking shell's own
+exported env vars here used to be the approach and turned out to be
+unreliable in practice across a couple of rounds of debugging — this
+sidesteps it completely.
 
 `test/integration/role-escalation.test.ts` (part of `npm run test`) is a
 real-database test of the `prevent_role_self_escalation` trigger — it
