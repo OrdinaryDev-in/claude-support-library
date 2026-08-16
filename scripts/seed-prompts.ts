@@ -48,7 +48,13 @@ async function main() {
           reference_projects_guidance: prompt.reference_projects_guidance,
           reference_links_guidance: prompt.reference_links_guidance,
           expected_output_notes: prompt.expected_output_notes,
-          is_published: true,
+          // Starter library content ships pre-reviewed — see
+          // guard_prompt_review_state() (0009_prompt_review_workflow.sql):
+          // on a re-run this only sticks if the row's content is
+          // unchanged from what's already stored, since editing an
+          // approved row's content flips it back to pending_review same
+          // as any other edit would.
+          status: "approved",
         },
         { onConflict: "slug" }
       )

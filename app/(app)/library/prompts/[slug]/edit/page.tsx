@@ -43,6 +43,7 @@ export default async function EditPromptPage({
   const initialValues: PromptFormInitialValues = {
     id: prompt.id,
     slug: prompt.slug,
+    status: prompt.status,
     title: prompt.title,
     description: prompt.description,
     category: prompt.category,

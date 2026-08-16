@@ -74,9 +74,11 @@ npm run seed
 
 ### 5. Promote yourself to admin (optional)
 
-Admins can edit/delete any prompt, not just their own. There's no self-serve
-promotion UI in Phase 1 — after signing up once, run this in the Supabase
-SQL editor:
+Admins can edit/delete any prompt (not just their own) and approve/reject
+prompt submissions at `/admin/review` — every new prompt starts
+`pending_review` and only appears in the public library once an admin
+approves it (see "Prompt review workflow" below). There's no self-serve
+promotion UI — after signing up once, run this in the Supabase SQL editor:
 
 ```sql
 update public.profiles set role = 'admin' where email = 'you@example.com';
@@ -147,12 +149,33 @@ e2e/                                 — Playwright E2E tests
 .github/workflows/backup.yml         — scheduled Supabase dump (Free-tier backup workaround)
 ```
 
+## Prompt review workflow
+
+New submissions never go straight to the public library. A prompt starts
+`pending_review` on creation, is invisible to everyone but its author and
+admins (RLS: `prompts_select_signed_in`), and only becomes visible once an
+admin approves it at `/admin/review` — reject instead and the author sees
+the reason on their own submission (and their "My Submissions" list on
+`/account`). Editing an already-approved or -rejected prompt's content
+automatically resubmits it for review. See
+`supabase/migrations/0009_prompt_review_workflow.sql` for the schema/RLS
+and `app/actions/review.ts` for the approve/reject actions.
+
 ## Verifying it works
 
 - Sign up, sign in, sign out; confirm `/library` redirects to `/login` when signed out.
-- Create a prompt, view its detail page, use **Copy prompt**.
-- Sign in as a second account and confirm you can't edit/delete the first account's prompt (RLS-enforced, not just hidden in the UI) — then promote that second account to admin via the SQL above and confirm it now can.
+- Create a prompt, view its detail page (shows a "Pending Review" pill to
+  you as the author), use **Copy prompt**.
+- Promote yourself to admin via the SQL above, approve the prompt at
+  `/admin/review`, and confirm it now shows up in the public `/library/prompts`
+  grid with no pill.
+- Sign in as a second account and confirm you can't see a still-pending
+  prompt at all (404, not just hidden UI), and can't edit an approved
+  prompt you don't own (RLS-enforced, redirected server-side) — then
+  promote that second account to admin via the SQL above and confirm it
+  now can.
 - Filter by category and tag on `/library/prompts`, and try the `/` keyboard shortcut to jump to search.
+- `npm run test:e2e` covers this whole flow end-to-end against a local Supabase stack (`supabase start` first) — see `e2e/core-flows.spec.ts`.
 
 ## CI & security
 

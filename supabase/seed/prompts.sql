@@ -14,14 +14,14 @@ values (
   '00000000-0000-0000-0000-000000000000',
   '00000000-0000-0000-0000-000000000001',
   'authenticated', 'authenticated', 'seed@devatlas.internal',
-  crypt('f5e3c122-4788-42cc-9356-ebc1d92a25db', gen_salt('bf')),
+  crypt('045f646c-4aa9-46f2-ada5-ed087f815e28', gen_salt('bf')),
   now(), '{"provider":"email","providers":["email"]}', '{"full_name":"DevAtlas Team"}',
   now(), now()
 )
 on conflict (id) do nothing;
 
 insert into public.prompts (
-  author_id, title, slug, description, category, is_published,
+  author_id, title, slug, description, category, status,
   base_instructions, fill_in_details_guidance, reference_projects_guidance,
   reference_links_guidance, expected_output_notes
 )
@@ -31,7 +31,7 @@ values (
   'greenfield-saas-bootstrap',
   $body$Scaffold a new SaaS product end-to-end: auth, billing-ready structure, and a deployable skeleton from a blank repo.$body$,
   'new_app',
-  true,
+  'approved',
   $body$You are a senior full-stack engineer bootstrapping a new SaaS product from an empty repository. Set up the project structure, authentication, a database schema for the core domain, and a deployable skeleton — a thin vertical slice that runs end-to-end, not a pile of unconnected scaffolding. Do not build the full feature set; the goal is a correct, deployable foundation others can build on.$body$,
   $body$Product: [ONE-SENTENCE DESCRIPTION OF WHAT THE SAAS DOES]. Target users: [WHO USES THIS]. Preferred stack: [FRAMEWORK, LANGUAGE, DATABASE — or 'no preference, recommend one']. Core domain objects: [THE 2-4 MAIN THINGS THE APP MANAGES, e.g. 'projects and tasks']. Auth requirements: [EMAIL/PASSWORD, OAUTH PROVIDERS, OR BOTH]. Hosting target: [VERCEL/AWS/OTHER].$body$,
   $body$[PASTE A LINK OR DESCRIPTION OF A PRIOR PROJECT WITH A SIMILAR STRUCTURE YOU'D LIKE MIRRORED — e.g. a repo whose folder layout, auth setup, or deployment pipeline worked well]. If none, say so and the response should propose a structure from scratch.$body$,
@@ -50,7 +50,7 @@ where pr.slug = 'greenfield-saas-bootstrap' and t.slug = any(array['nextjs', 'su
 on conflict do nothing;
 
 insert into public.prompts (
-  author_id, title, slug, description, category, is_published,
+  author_id, title, slug, description, category, status,
   base_instructions, fill_in_details_guidance, reference_projects_guidance,
   reference_links_guidance, expected_output_notes
 )
@@ -60,7 +60,7 @@ values (
   'cross-platform-mobile-app-bootstrap',
   $body$Bootstrap a cross-platform mobile app with navigation, state management, and a CI pipeline in place from day one.$body$,
   'new_app',
-  true,
+  'approved',
   $body$You are a senior mobile engineer setting up a new cross-platform mobile app from scratch. Establish the navigation structure, a state-management pattern, and a CI pipeline that lints, type-checks, and runs tests on every push — before any real feature work begins, since retrofitting these later is expensive.$body$,
   $body$App purpose: [ONE-SENTENCE DESCRIPTION]. Target platforms: [IOS, ANDROID, OR BOTH]. Preferred framework: [REACT NATIVE / EXPO / OTHER — or 'no preference']. Initial screens needed: [LIST 3-5 SCREENS, e.g. 'onboarding, home feed, profile']. State management preference: [REDUX/ZUSTAND/CONTEXT/OTHER — or 'recommend one']. CI provider: [GITHUB ACTIONS/OTHER].$body$,
   $body$[PASTE A LINK OR DESCRIPTION OF A MOBILE APP YOU'VE BUILT OR ADMIRE WHOSE NAVIGATION/STATE PATTERN SHOULD BE MIRRORED].$body$,
@@ -79,7 +79,7 @@ where pr.slug = 'cross-platform-mobile-app-bootstrap' and t.slug = any(array['re
 on conflict do nothing;
 
 insert into public.prompts (
-  author_id, title, slug, description, category, is_published,
+  author_id, title, slug, description, category, status,
   base_instructions, fill_in_details_guidance, reference_projects_guidance,
   reference_links_guidance, expected_output_notes
 )
@@ -89,7 +89,7 @@ values (
   'cli-tool-from-scratch',
   $body$Build a command-line tool with proper argument parsing, help text, and a packaging setup ready to publish.$body$,
   'new_app',
-  true,
+  'approved',
   $body$You are a senior engineer building a new command-line tool from scratch. Implement proper argument/flag parsing, clear help text, sensible exit codes, and a packaging/build setup so the tool can be installed and run like any other CLI. Prioritize a good first-run experience: a user should be able to run `--help` and understand exactly what the tool does.$body$,
   $body$Tool purpose: [WHAT THE CLI DOES, ONE SENTENCE]. Commands/subcommands needed: [LIST THEM, e.g. 'init, build, deploy']. Language/runtime: [NODE/PYTHON/GO/OTHER]. Distribution target: [NPM/HOMEBREW/PYPI/OTHER]. Config file support needed: [YES/NO — AND WHAT FORMAT].$body$,
   $body$[PASTE A LINK OR DESCRIPTION OF A CLI TOOL WHOSE UX (HELP TEXT, FLAG NAMING, OUTPUT FORMATTING) YOU WANT MIRRORED].$body$,
@@ -108,7 +108,7 @@ where pr.slug = 'cli-tool-from-scratch' and t.slug = any(array['typescript', 'te
 on conflict do nothing;
 
 insert into public.prompts (
-  author_id, title, slug, description, category, is_published,
+  author_id, title, slug, description, category, status,
   base_instructions, fill_in_details_guidance, reference_projects_guidance,
   reference_links_guidance, expected_output_notes
 )
@@ -118,7 +118,7 @@ values (
   'full-stack-api-frontend-starter',
   $body$Stand up a REST or GraphQL API alongside its frontend, sharing types end-to-end from a blank repo.$body$,
   'new_app',
-  true,
+  'approved',
   $body$You are a senior full-stack engineer setting up a new project with a separate API layer and frontend, sharing types between them so a change to the API's shape is a compile error in the frontend, not a runtime surprise. Stand up one real endpoint and the frontend view that consumes it, end-to-end, as proof the wiring works — not two disconnected halves.$body$,
   $body$App purpose: [ONE-SENTENCE DESCRIPTION]. API style: [REST OR GRAPHQL]. Backend framework: [FRAMEWORK — or 'recommend one']. Frontend framework: [FRAMEWORK — or 'recommend one']. First resource to model: [e.g. 'users' or 'posts']. Type-sharing approach: [MONOREPO WITH SHARED PACKAGE / CODEGEN / OTHER — or 'recommend one'].$body$,
   $body$[PASTE A LINK OR DESCRIPTION OF A PRIOR PROJECT WITH A TYPE-SHARING SETUP YOU LIKED].$body$,
@@ -137,7 +137,7 @@ where pr.slug = 'full-stack-api-frontend-starter' and t.slug = any(array['api', 
 on conflict do nothing;
 
 insert into public.prompts (
-  author_id, title, slug, description, category, is_published,
+  author_id, title, slug, description, category, status,
   base_instructions, fill_in_details_guidance, reference_projects_guidance,
   reference_links_guidance, expected_output_notes
 )
@@ -147,7 +147,7 @@ values (
   'add-notification-system',
   $body$Add an in-app and email notification system with preferences, batching, and delivery tracking to an existing app.$body$,
   'module_feature',
-  true,
+  'approved',
   $body$You are a senior full-stack engineer adding a notification system to an existing application. Support both in-app and email notifications, let users configure per-type preferences, batch high-frequency notifications instead of spamming, and track delivery status. Integrate with the app's existing user and event model rather than inventing a parallel one.$body$,
   $body$Stack: [YOUR APP'S TECH STACK]. Database: [YOUR DATABASE + ORM]. Notification types needed: [LIST EVENTS THAT SHOULD NOTIFY, e.g. 'comment reply, mention, weekly digest']. Email provider: [YOUR EMAIL SENDING SERVICE, e.g. Resend/SendGrid]. Existing user/preferences model: [DESCRIBE, IF ANY].$body$,
   $body$[PASTE LINKS OR DESCRIPTIONS OF A NOTIFICATION SYSTEM YOU'VE BUILT OR SEEN THAT HANDLED BATCHING/PREFERENCES WELL].$body$,
@@ -166,7 +166,7 @@ where pr.slug = 'add-notification-system' and t.slug = any(array['postgres', 'ap
 on conflict do nothing;
 
 insert into public.prompts (
-  author_id, title, slug, description, category, is_published,
+  author_id, title, slug, description, category, status,
   base_instructions, fill_in_details_guidance, reference_projects_guidance,
   reference_links_guidance, expected_output_notes
 )
@@ -176,7 +176,7 @@ values (
   'add-role-based-access-control-rbac',
   $body$Introduce roles, permissions, and route/UI gating to an app that currently treats all users the same.$body$,
   'module_feature',
-  true,
+  'approved',
   $body$You are a senior full-stack engineer. Implement role-based access control (RBAC) in an existing application. Add a roles/permissions model, gate both API routes and UI elements by role, and ensure the change is backward-compatible for existing users (who should default to the lowest-privilege role). Do not modify unrelated features.$body$,
   $body$Stack: [YOUR APP'S TECH STACK]. Database: [YOUR DATABASE + ORM]. Roles needed: [LIST ROLES, e.g. admin, editor, viewer]. Current auth system: [DESCRIBE YOUR AUTH SETUP]. Areas to gate: [LIST ROUTES/UI ELEMENTS THAT NEED RESTRICTING].$body$,
   $body$[PASTE LINKS OR DESCRIPTIONS OF 1-2 PRIOR PROJECTS WITH A SIMILAR PERMISSIONS MODEL, e.g. a repo with a working roles table or middleware you want mirrored].$body$,
@@ -195,7 +195,7 @@ where pr.slug = 'add-role-based-access-control-rbac' and t.slug = any(array['aut
 on conflict do nothing;
 
 insert into public.prompts (
-  author_id, title, slug, description, category, is_published,
+  author_id, title, slug, description, category, status,
   base_instructions, fill_in_details_guidance, reference_projects_guidance,
   reference_links_guidance, expected_output_notes
 )
@@ -205,7 +205,7 @@ values (
   'add-a-stripe-billing-module',
   $body$Add subscription billing to an existing app: pricing tiers, checkout, webhooks, and access gating by plan.$body$,
   'module_feature',
-  true,
+  'approved',
   $body$You are a senior full-stack engineer implementing subscription billing with Stripe in an existing application. Add pricing-tier plans, a checkout flow, webhook handling that keeps the app's own subscription state in sync with Stripe (not just trusting the client), and feature/access gating based on plan. Treat the webhook handler as the source of truth for subscription state, not the checkout redirect.$body$,
   $body$Stack: [YOUR APP'S TECH STACK]. Existing user/auth model: [DESCRIBE YOUR AUTH SETUP]. Subscription tiers/pricing: [LIST TIERS AND WHAT EACH UNLOCKS]. Billing cadence: [MONTHLY/ANNUAL/BOTH]. Features to gate by plan: [LIST THEM].$body$,
   $body$[PASTE LINKS OR DESCRIPTIONS OF A PRIOR BILLING INTEGRATION YOU'VE SHIPPED OR A REPO WITH A WORKING STRIPE WEBHOOK HANDLER YOU WANT MIRRORED].$body$,
@@ -224,7 +224,7 @@ where pr.slug = 'add-a-stripe-billing-module' and t.slug = any(array['api', 'pos
 on conflict do nothing;
 
 insert into public.prompts (
-  author_id, title, slug, description, category, is_published,
+  author_id, title, slug, description, category, status,
   base_instructions, fill_in_details_guidance, reference_projects_guidance,
   reference_links_guidance, expected_output_notes
 )
@@ -234,7 +234,7 @@ values (
   'add-search-filters-to-existing-data-model',
   $body$Add free-text search combined with structured filters to an existing list view, backed by proper indexes.$body$,
   'module_feature',
-  true,
+  'approved',
   $body$You are a senior backend engineer adding search and filtering to an existing list view. Combine free-text search with structured filters (category, date range, status, etc. as applicable), back it with proper database indexes so it stays fast as data grows, and keep filter state in the URL so results are shareable and bookmarkable.$body$,
   $body$Stack: [YOUR APP'S TECH STACK]. Database: [YOUR DATABASE]. The data model being searched: [DESCRIBE THE TABLE/FIELDS, e.g. 'products: name, description, category, price']. Filters needed: [LIST THEM]. Expected data volume: [ROUGH ROW COUNT, NOW AND PROJECTED].$body$,
   $body$[PASTE A LINK OR DESCRIPTION OF A SEARCH/FILTER IMPLEMENTATION YOU'VE BUILT THAT PERFORMED WELL AT SCALE].$body$,
@@ -253,7 +253,7 @@ where pr.slug = 'add-search-filters-to-existing-data-model' and t.slug = any(arr
 on conflict do nothing;
 
 insert into public.prompts (
-  author_id, title, slug, description, category, is_published,
+  author_id, title, slug, description, category, status,
   base_instructions, fill_in_details_guidance, reference_projects_guidance,
   reference_links_guidance, expected_output_notes
 )
@@ -263,7 +263,7 @@ values (
   'root-cause-a-flaky-bug',
   $body$Systematically isolate and fix a test or feature that fails intermittently, with a reproducible root cause.$body$,
   'debugging',
-  true,
+  'approved',
   $body$You are a senior engineer debugging a flaky test or feature — one that fails intermittently rather than consistently. Do not patch around the symptom (e.g. adding a retry or a sleep) until you've identified the actual root cause. Form a hypothesis, verify it with evidence (logs, a minimal reproduction, or added instrumentation), then fix the real cause.$body$,
   $body$Stack: [YOUR APP'S TECH STACK]. What's flaky: [DESCRIBE THE TEST/FEATURE AND HOW OFTEN IT FAILS]. Failure symptom: [PASTE THE ERROR MESSAGE OR STACK TRACE]. Recent changes: [ANYTHING THAT CHANGED AROUND WHEN THE FLAKINESS STARTED, IF KNOWN]. Environment it happens in: [CI ONLY / LOCAL ONLY / BOTH].$body$,
   $body$[PASTE A LINK OR DESCRIPTION OF A SIMILAR FLAKY-TEST ROOT CAUSE YOU'VE SEEN BEFORE, e.g. a race condition pattern that's shown up in this codebase before].$body$,
@@ -282,7 +282,7 @@ where pr.slug = 'root-cause-a-flaky-bug' and t.slug = any(array['testing', 'ci-c
 on conflict do nothing;
 
 insert into public.prompts (
-  author_id, title, slug, description, category, is_published,
+  author_id, title, slug, description, category, status,
   base_instructions, fill_in_details_guidance, reference_projects_guidance,
   reference_links_guidance, expected_output_notes
 )
@@ -292,7 +292,7 @@ values (
   'diagnose-a-production-performance-regression',
   $body$Find and fix a performance regression in production using metrics, tracing, and targeted profiling.$body$,
   'debugging',
-  true,
+  'approved',
   $body$You are a senior engineer diagnosing a performance regression in production. Use available metrics and tracing to narrow down where time is being lost before proposing a fix — do not guess at optimizations without evidence. Once the bottleneck is identified, propose the smallest change that fixes it, and note how to confirm the fix worked in production.$body$,
   $body$Stack: [YOUR APP'S TECH STACK]. What got slower: [DESCRIBE THE ENDPOINT/PAGE/JOB AND THE SYMPTOM, e.g. 'p95 latency went from 200ms to 2s']. When it started: [TIMEFRAME, AND ANY DEPLOYS AROUND THEN]. Available observability tools: [e.g. 'CloudWatch, Datadog, application logs']. Traffic pattern: [DID TRAFFIC/DATA VOLUME CHANGE TOO?].$body$,
   $body$[PASTE A LINK OR DESCRIPTION OF A SIMILAR PERFORMANCE ISSUE YOU'VE DIAGNOSED BEFORE IN THIS OR A SIMILAR SYSTEM].$body$,
@@ -311,7 +311,7 @@ where pr.slug = 'diagnose-a-production-performance-regression' and t.slug = any(
 on conflict do nothing;
 
 insert into public.prompts (
-  author_id, title, slug, description, category, is_published,
+  author_id, title, slug, description, category, status,
   base_instructions, fill_in_details_guidance, reference_projects_guidance,
   reference_links_guidance, expected_output_notes
 )
@@ -321,7 +321,7 @@ values (
   'debug-a-failing-ci-suite',
   $body$Diagnose why CI is red — dependency drift, environment difference, or a genuine regression — and fix it correctly.$body$,
   'debugging',
-  true,
+  'approved',
   $body$You are a senior engineer debugging a CI pipeline that started failing. First determine whether this is a genuine code regression, an environment/dependency difference between CI and local, or a CI configuration problem — each needs a different fix. Do not disable or skip the failing check as a shortcut unless that is explicitly the right call and you say so explicitly.$body$,
   $body$CI provider: [e.g. GITHUB ACTIONS, CIRCLECI]. What's failing: [PASTE THE FAILING STEP'S NAME AND ERROR OUTPUT]. Does it fail locally too: [YES/NO/HAVEN'T TRIED]. Recent changes to the repo or CI config: [DESCRIBE, IF KNOWN]. Does it fail consistently or intermittently: [CONSISTENT/FLAKY — if flaky, this may be the 'Root-Cause a Flaky Bug' prompt instead].$body$,
   $body$[PASTE A LINK OR DESCRIPTION OF A SIMILAR CI FAILURE (E.G. A LOCKFILE/DEPENDENCY MISMATCH) YOU'VE RESOLVED BEFORE].$body$,
@@ -340,7 +340,7 @@ where pr.slug = 'debug-a-failing-ci-suite' and t.slug = any(array['ci-cd', 'test
 on conflict do nothing;
 
 insert into public.prompts (
-  author_id, title, slug, description, category, is_published,
+  author_id, title, slug, description, category, status,
   base_instructions, fill_in_details_guidance, reference_projects_guidance,
   reference_links_guidance, expected_output_notes
 )
@@ -350,7 +350,7 @@ values (
   'investigate-and-fix-a-data-integrity-issue',
   $body$Track down how bad data got into the database, contain the damage, and fix both the data and its root cause.$body$,
   'debugging',
-  true,
+  'approved',
   $body$You are a senior engineer investigating a data integrity issue in production — records that are missing, duplicated, or inconsistent with each other. Find how the bad data was introduced before deciding how to clean it up; a cleanup script without a root-cause fix just needs to be run again later. Be explicit about blast radius: how many records are affected and how you'll verify the fix doesn't miss or over-correct any of them.$body$,
   $body$Stack: [YOUR APP'S TECH STACK]. Database: [YOUR DATABASE]. What's wrong with the data: [DESCRIBE THE INCONSISTENCY, e.g. 'orders with no matching customer_id']. Scale of the problem: [HOW MANY RECORDS, IF KNOWN]. Suspected cause: [ANY HYPOTHESIS, e.g. 'a migration that ran without a transaction'].$body$,
   $body$[PASTE A LINK OR DESCRIPTION OF A SIMILAR DATA-INTEGRITY INCIDENT YOU'VE HANDLED BEFORE AND HOW IT WAS RESOLVED].$body$,
@@ -369,7 +369,7 @@ where pr.slug = 'investigate-and-fix-a-data-integrity-issue' and t.slug = any(ar
 on conflict do nothing;
 
 insert into public.prompts (
-  author_id, title, slug, description, category, is_published,
+  author_id, title, slug, description, category, status,
   base_instructions, fill_in_details_guidance, reference_projects_guidance,
   reference_links_guidance, expected_output_notes
 )
@@ -379,7 +379,7 @@ values (
   'responsive-dashboard-from-design-spec',
   $body$Turn a design spec into a responsive, accessible dashboard UI with real data binding.$body$,
   'frontend',
-  true,
+  'approved',
   $body$You are a senior frontend engineer implementing a dashboard UI from a design spec. Build it responsive across mobile/tablet/desktop, accessible (semantic markup, keyboard navigation, sufficient contrast), and wired to real data rather than hardcoded placeholder content. Match the spec's layout and component states (loading, empty, error) exactly rather than approximating.$body$,
   $body$Stack: [YOUR FRONTEND FRAMEWORK + STYLING APPROACH]. Design spec: [PASTE A LINK TO THE DESIGN FILE/SCREENS, OR DESCRIBE THE LAYOUT IN DETAIL]. Data source: [WHERE THE DASHBOARD'S DATA COMES FROM — API ENDPOINT, HOOK, ETC.]. Breakpoints to support: [LIST THEM, e.g. 'mobile 375px, tablet 768px, desktop 1280px+'].$body$,
   $body$[PASTE A LINK OR DESCRIPTION OF A DASHBOARD YOU'VE BUILT WITH A SIMILAR COMPONENT/STATE PATTERN YOU WANT MIRRORED].$body$,
@@ -398,7 +398,7 @@ where pr.slug = 'responsive-dashboard-from-design-spec' and t.slug = any(array['
 on conflict do nothing;
 
 insert into public.prompts (
-  author_id, title, slug, description, category, is_published,
+  author_id, title, slug, description, category, status,
   base_instructions, fill_in_details_guidance, reference_projects_guidance,
   reference_links_guidance, expected_output_notes
 )
@@ -408,7 +408,7 @@ values (
   'implement-complex-client-side-form-validation',
   $body$Build a multi-field form with interdependent validation rules, inline errors, and a good keyboard/a11y experience.$body$,
   'frontend',
-  true,
+  'approved',
   $body$You are a senior frontend engineer implementing a complex form with interdependent field validation (where one field's valid values depend on another's), inline per-field error messages, and a submit flow that surfaces errors clearly. Validate on blur, not just on submit, and don't block typing itself. Ensure the form is fully usable by keyboard and that error messages are announced to assistive technology.$body$,
   $body$Stack: [YOUR FRONTEND FRAMEWORK]. Form library preference: [e.g. REACT HOOK FORM, FORMIK, OR 'RECOMMEND ONE']. Fields and their validation rules: [LIST EACH FIELD AND ITS RULES, INCLUDING ANY CROSS-FIELD DEPENDENCIES]. Submit behavior: [WHAT HAPPENS ON SUCCESSFUL SUBMIT — API CALL, REDIRECT, ETC.].$body$,
   $body$[PASTE A LINK OR DESCRIPTION OF A FORM WITH SIMILAR VALIDATION COMPLEXITY YOU'VE BUILT BEFORE].$body$,
@@ -427,7 +427,7 @@ where pr.slug = 'implement-complex-client-side-form-validation' and t.slug = any
 on conflict do nothing;
 
 insert into public.prompts (
-  author_id, title, slug, description, category, is_published,
+  author_id, title, slug, description, category, status,
   base_instructions, fill_in_details_guidance, reference_projects_guidance,
   reference_links_guidance, expected_output_notes
 )
@@ -437,7 +437,7 @@ values (
   'accessibility-audit-and-remediation',
   $body$Audit an existing UI against WCAG, then fix the issues found — not just list them.$body$,
   'frontend',
-  true,
+  'approved',
   $body$You are a senior frontend engineer performing an accessibility audit of an existing UI against WCAG 2.1 AA, then fixing what you find. Go beyond automated-scanner-catchable issues (missing alt text, contrast) to also check keyboard operability, focus order, and screen-reader announcement of dynamic content. Prioritize fixes by real user impact, not by how easy each is to fix.$body$,
   $body$Stack: [YOUR FRONTEND FRAMEWORK]. Pages/components in scope: [LIST WHAT'S BEING AUDITED]. Known pain points, if any: [ANYTHING ALREADY FLAGGED BY USERS OR A PRIOR SCAN]. Target conformance level: [WCAG 2.1 AA — OR STATE A DIFFERENT TARGET].$body$,
   $body$[PASTE A LINK OR DESCRIPTION OF A PRIOR ACCESSIBILITY REMEDIATION YOU'VE DONE, ESPECIALLY ANY REUSABLE FIXES LIKE A FOCUS-TRAP UTILITY].$body$,
@@ -456,7 +456,7 @@ where pr.slug = 'accessibility-audit-and-remediation' and t.slug = any(array['te
 on conflict do nothing;
 
 insert into public.prompts (
-  author_id, title, slug, description, category, is_published,
+  author_id, title, slug, description, category, status,
   base_instructions, fill_in_details_guidance, reference_projects_guidance,
   reference_links_guidance, expected_output_notes
 )
@@ -466,7 +466,7 @@ values (
   'design-and-implement-a-rest-api',
   $body$Design and implement a REST API with proper resource modeling, validation, and auth from scratch.$body$,
   'backend',
-  true,
+  'approved',
   $body$You are a senior backend engineer designing and implementing a new REST API. Model resources properly (correct nouns, nesting, and HTTP verbs), validate input at the boundary, return consistent error shapes, and wire in authentication/authorization from the start rather than bolting it on later. Favor a small number of well-designed endpoints over a sprawling ad-hoc set.$body$,
   $body$Stack: [YOUR BACKEND FRAMEWORK + LANGUAGE]. Database: [YOUR DATABASE + ORM]. Resources to model: [LIST THE MAIN RESOURCES AND THEIR RELATIONSHIPS]. Auth requirements: [WHO CAN DO WHAT — PUBLIC READ? AUTHENTICATED WRITE? ROLES?]. Expected consumers: [WEB APP / MOBILE APP / THIRD-PARTY INTEGRATIONS].$body$,
   $body$[PASTE A LINK OR DESCRIPTION OF AN API YOU'VE DESIGNED BEFORE WHOSE RESOURCE MODELING OR ERROR-SHAPE CONVENTIONS YOU WANT MIRRORED].$body$,
@@ -485,7 +485,7 @@ where pr.slug = 'design-and-implement-a-rest-api' and t.slug = any(array['api', 
 on conflict do nothing;
 
 insert into public.prompts (
-  author_id, title, slug, description, category, is_published,
+  author_id, title, slug, description, category, status,
   base_instructions, fill_in_details_guidance, reference_projects_guidance,
   reference_links_guidance, expected_output_notes
 )
@@ -495,7 +495,7 @@ values (
   'add-background-job-queue-processing',
   $body$Move slow or unreliable work off the request path into a queue, with retries and failure visibility.$body$,
   'backend',
-  true,
+  'approved',
   $body$You are a senior backend engineer moving slow or unreliable work (emails, file processing, third-party API calls) off the synchronous request path and into a background job queue. Implement retries with backoff for transient failures, a dead-letter path for jobs that fail permanently, and visibility into job status so failures don't go unnoticed.$body$,
   $body$Stack: [YOUR BACKEND FRAMEWORK]. Queue/job infrastructure: [e.g. SQS, BULLMQ+REDIS, OR 'RECOMMEND ONE']. Work to move to the background: [LIST THE SLOW/UNRELIABLE OPERATIONS]. Current behavior: [IS THIS WORK CURRENTLY DONE SYNCHRONOUSLY IN THE REQUEST? DESCRIBE]. Failure tolerance: [WHAT SHOULD HAPPEN IF A JOB FAILS PERMANENTLY — ALERT? RETRY FOREVER? DROP?].$body$,
   $body$[PASTE A LINK OR DESCRIPTION OF A QUEUE SETUP YOU'VE BUILT BEFORE WITH A RETRY/DEAD-LETTER PATTERN YOU WANT MIRRORED].$body$,
@@ -514,7 +514,7 @@ where pr.slug = 'add-background-job-queue-processing' and t.slug = any(array['ap
 on conflict do nothing;
 
 insert into public.prompts (
-  author_id, title, slug, description, category, is_published,
+  author_id, title, slug, description, category, status,
   base_instructions, fill_in_details_guidance, reference_projects_guidance,
   reference_links_guidance, expected_output_notes
 )
@@ -524,7 +524,7 @@ values (
   'implement-rate-limiting-and-api-auth',
   $body$Add request authentication and per-client rate limiting to an API that currently has neither.$body$,
   'backend',
-  true,
+  'approved',
   $body$You are a senior backend engineer adding authentication and rate limiting to an existing API. Implement a token-based auth scheme appropriate for the stated consumers, then add per-client rate limiting with clear `429` responses and standard rate-limit headers, so well-behaved clients can back off correctly instead of guessing.$body$,
   $body$Stack: [YOUR BACKEND FRAMEWORK]. API consumers: [WHO CALLS THIS API — INTERNAL SERVICES, THIRD-PARTY DEVELOPERS, ETC.]. Auth scheme preference: [API KEYS / OAUTH / JWT — OR 'RECOMMEND ONE']. Rate limit requirements: [REQUESTS PER MINUTE/HOUR, AND WHETHER LIMITS DIFFER BY PLAN/TIER]. Storage available for limit counters: [REDIS / IN-MEMORY / OTHER].$body$,
   $body$[PASTE A LINK OR DESCRIPTION OF AN AUTH/RATE-LIMITING IMPLEMENTATION YOU'VE SHIPPED BEFORE].$body$,
@@ -543,7 +543,7 @@ where pr.slug = 'implement-rate-limiting-and-api-auth' and t.slug = any(array['a
 on conflict do nothing;
 
 insert into public.prompts (
-  author_id, title, slug, description, category, is_published,
+  author_id, title, slug, description, category, status,
   base_instructions, fill_in_details_guidance, reference_projects_guidance,
   reference_links_guidance, expected_output_notes
 )
@@ -553,7 +553,7 @@ values (
   'realtime-chat-app-bootstrap',
   $body$Bootstrap a real-time chat app from scratch: message delivery, presence, and reconnect handling wired end-to-end.$body$,
   'new_app',
-  true,
+  'approved',
   $body$You are a senior full-stack engineer bootstrapping a real-time chat application from an empty repository. Stand up message persistence, a WebSocket (or equivalent real-time) transport, online-presence tracking, and reconnect/resume handling so a dropped connection doesn't lose or duplicate messages. Prove the transport works end-to-end with one real conversation thread, not a mocked demo.$body$,
   $body$Product: [ONE-SENTENCE DESCRIPTION, e.g. '1:1 and group chat for a support tool']. Preferred stack: [FRAMEWORK, REAL-TIME LIBRARY — e.g. Supabase Realtime, Socket.IO, Pusher — OR 'recommend one']. Database: [YOUR DATABASE]. Message features needed: [e.g. 'read receipts, typing indicators, attachments — list what applies']. Expected concurrent users: [ROUGH SCALE, IF KNOWN].$body$,
   $body$[PASTE A LINK OR DESCRIPTION OF A REAL-TIME APP YOU'VE BUILT WHOSE RECONNECT/PRESENCE HANDLING WORKED WELL].$body$,
@@ -572,7 +572,7 @@ where pr.slug = 'realtime-chat-app-bootstrap' and t.slug = any(array['websockets
 on conflict do nothing;
 
 insert into public.prompts (
-  author_id, title, slug, description, category, is_published,
+  author_id, title, slug, description, category, status,
   base_instructions, fill_in_details_guidance, reference_projects_guidance,
   reference_links_guidance, expected_output_notes
 )
@@ -582,7 +582,7 @@ values (
   'browser-extension-from-scratch',
   $body$Build a browser extension with a background service worker, content script, and popup UI wired together correctly.$body$,
   'new_app',
-  true,
+  'approved',
   $body$You are a senior engineer building a browser extension (Manifest V3) from scratch. Set up the background service worker, any content scripts, and the popup/options UI, with correct message-passing between them — this is where most extension bugs live, so be explicit about which context each piece of code runs in and how they communicate. Request the minimum permissions the stated functionality actually needs.$body$,
   $body$Extension purpose: [WHAT IT DOES, ONE SENTENCE]. Target browser(s): [CHROME/FIREFOX/BOTH — Manifest V3 compatibility]. Pages it needs to interact with: [SPECIFIC SITES, OR 'all sites']. Permissions likely needed: [e.g. 'storage, activeTab, scripting — or unsure, ask']. Build tooling preference: [e.g. Vite/CRXJS — or 'recommend one'].$body$,
   $body$[PASTE A LINK OR DESCRIPTION OF AN EXTENSION WITH A SIMILAR CONTENT-SCRIPT/BACKGROUND MESSAGING PATTERN YOU WANT MIRRORED].$body$,
@@ -601,7 +601,7 @@ where pr.slug = 'browser-extension-from-scratch' and t.slug = any(array['typescr
 on conflict do nothing;
 
 insert into public.prompts (
-  author_id, title, slug, description, category, is_published,
+  author_id, title, slug, description, category, status,
   base_instructions, fill_in_details_guidance, reference_projects_guidance,
   reference_links_guidance, expected_output_notes
 )
@@ -611,7 +611,7 @@ values (
   'ecommerce-storefront-bootstrap',
   $body$Stand up a storefront skeleton: product catalog, cart, and a checkout flow ready to wire to a payment provider.$body$,
   'new_app',
-  true,
+  'approved',
   $body$You are a senior full-stack engineer bootstrapping an e-commerce storefront from scratch. Build the product catalog schema and listing/detail pages, a persistent cart (survives refresh, and ideally login), and a checkout flow structured to plug into a payment provider next — get the state machine and data model right even if payment itself is stubbed. Handle inventory/stock correctly: don't let two carts oversell the last unit without at least flagging it.$body$,
   $body$Store type: [WHAT'S BEING SOLD, ONE SENTENCE]. Stack: [FRAMEWORK, DATABASE]. Payment provider (even if stubbed for now): [e.g. Stripe — or 'undecided']. Cart persistence requirement: [GUEST CART / MUST BE LOGGED IN / BOTH]. Inventory tracking needed: [YES/NO, AND HOW STRICT — e.g. 'hard stock limit' vs 'soft, backorder allowed'].$body$,
   $body$[PASTE A LINK OR DESCRIPTION OF A STOREFRONT WHOSE CART/CHECKOUT STATE MACHINE YOU WANT MIRRORED].$body$,
@@ -630,7 +630,7 @@ where pr.slug = 'ecommerce-storefront-bootstrap' and t.slug = any(array['nextjs'
 on conflict do nothing;
 
 insert into public.prompts (
-  author_id, title, slug, description, category, is_published,
+  author_id, title, slug, description, category, status,
   base_instructions, fill_in_details_guidance, reference_projects_guidance,
   reference_links_guidance, expected_output_notes
 )
@@ -640,7 +640,7 @@ values (
   'internal-admin-tool-bootstrap',
   $body$Bootstrap an internal admin tool for staff to manage the app's data, with auth gating from day one.$body$,
   'new_app',
-  true,
+  'approved',
   $body$You are a senior full-stack engineer bootstrapping an internal admin/back-office tool for staff to view and manage the main application's data. Gate the entire tool behind staff-only auth from the start (never ship an admin tool with a TODO to add auth later), build data tables with sort/filter/pagination for the core entities, and make destructive actions (delete, bulk-edit) require explicit confirmation.$body$,
   $body$Main app it's administering: [ONE-SENTENCE DESCRIPTION]. Entities staff need to manage: [LIST THEM, e.g. 'users, orders, support tickets']. Staff auth approach: [SEPARATE ADMIN LOGIN / REUSE MAIN APP AUTH WITH A ROLE CHECK]. Actions needed beyond viewing: [e.g. 'edit user role, refund an order, ban a user — list them'].$body$,
   $body$[PASTE A LINK OR DESCRIPTION OF AN INTERNAL TOOL WITH A DATA-TABLE/ACTIONS PATTERN YOU WANT MIRRORED].$body$,
@@ -659,7 +659,7 @@ where pr.slug = 'internal-admin-tool-bootstrap' and t.slug = any(array['react', 
 on conflict do nothing;
 
 insert into public.prompts (
-  author_id, title, slug, description, category, is_published,
+  author_id, title, slug, description, category, status,
   base_instructions, fill_in_details_guidance, reference_projects_guidance,
   reference_links_guidance, expected_output_notes
 )
@@ -669,7 +669,7 @@ values (
   'content-docs-site-bootstrap',
   $body$Stand up a statically-generated content or documentation site with a content pipeline that's easy to add pages to.$body$,
   'new_app',
-  true,
+  'approved',
   $body$You are a senior frontend engineer bootstrapping a statically-generated content or documentation site from scratch. Set up the content pipeline (MDX or a headless CMS, per what's specified), navigation/sidebar generation that stays in sync with actual content instead of being hand-maintained, and search. Optimize for a low-friction authoring experience — adding a new page should not require touching routing code.$body$,
   $body$Site purpose: [DOCS / BLOG / MARKETING CONTENT — ONE SENTENCE]. Content source: [MDX FILES IN-REPO / HEADLESS CMS — NAME IT, OR 'recommend one']. Framework: [e.g. Next.js, Astro — or 'recommend one']. Search requirement: [YES/NO, AND WHETHER CLIENT-SIDE (e.g. FlexSearch) OR HOSTED (e.g. Algolia) IS PREFERRED]. Initial page count/structure: [ROUGH OUTLINE, IF KNOWN].$body$,
   $body$[PASTE A LINK OR DESCRIPTION OF A DOCS/CONTENT SITE WITH A NAVIGATION/AUTHORING PATTERN YOU WANT MIRRORED].$body$,
@@ -688,7 +688,7 @@ where pr.slug = 'content-docs-site-bootstrap' and t.slug = any(array['nextjs', '
 on conflict do nothing;
 
 insert into public.prompts (
-  author_id, title, slug, description, category, is_published,
+  author_id, title, slug, description, category, status,
   base_instructions, fill_in_details_guidance, reference_projects_guidance,
   reference_links_guidance, expected_output_notes
 )
@@ -698,7 +698,7 @@ values (
   'multi-tenant-saas-bootstrap',
   $body$Bootstrap a multi-tenant SaaS with tenant isolation built into the data model and every query from day one.$body$,
   'new_app',
-  true,
+  'approved',
   $body$You are a senior full-stack engineer bootstrapping a multi-tenant SaaS product from an empty repository. Bake tenant isolation into the data model and every query from the start (a shared `tenant_id` column plus row-level security or an equivalent enforced-at-the-database layer, not just app-code discipline) — retrofitting isolation after data exists across tenants is high-risk. Prove isolation with a concrete test: two tenants' data, one query, confirm no cross-tenant leakage.$body$,
   $body$Product: [ONE-SENTENCE DESCRIPTION]. Tenancy model: [ONE ORG PER TENANT / ONE USER PER TENANT / OTHER]. Stack: [FRAMEWORK, DATABASE]. Isolation approach preference: [SHARED SCHEMA WITH ROW-LEVEL SECURITY / SCHEMA-PER-TENANT / DATABASE-PER-TENANT — or 'recommend one for the expected scale']. Expected tenant count and scale: [ROUGH NUMBERS, IF KNOWN].$body$,
   $body$[PASTE A LINK OR DESCRIPTION OF A MULTI-TENANT SYSTEM WHOSE ISOLATION APPROACH YOU WANT MIRRORED].$body$,
@@ -717,7 +717,7 @@ where pr.slug = 'multi-tenant-saas-bootstrap' and t.slug = any(array['postgres',
 on conflict do nothing;
 
 insert into public.prompts (
-  author_id, title, slug, description, category, is_published,
+  author_id, title, slug, description, category, status,
   base_instructions, fill_in_details_guidance, reference_projects_guidance,
   reference_links_guidance, expected_output_notes
 )
@@ -727,7 +727,7 @@ values (
   'add-real-time-collaboration',
   $body$Add live presence and real-time synced updates (e.g. multiplayer editing or live dashboards) to an existing view.$body$,
   'module_feature',
-  true,
+  'approved',
   $body$You are a senior full-stack engineer adding real-time collaboration to an existing view — live presence (who else is here) and synced updates when data changes, without requiring a manual refresh. Handle the conflict case explicitly: what happens when two users change the same thing near-simultaneously. Degrade gracefully if the real-time connection drops (fall back to the last-known state, don't crash the view).$body$,
   $body$Stack: [YOUR APP'S TECH STACK]. Real-time transport available/preferred: [e.g. Supabase Realtime, Pusher, custom WebSocket server — or 'recommend one']. The view being made collaborative: [DESCRIBE IT, e.g. 'a shared kanban board']. Conflict scenario to handle: [e.g. 'two users drag the same card at once — describe the desired resolution, or ask for a recommendation']. Presence info needed: [e.g. 'avatar + cursor position', or just 'online/offline'].$body$,
   $body$[PASTE A LINK OR DESCRIPTION OF A COLLABORATIVE FEATURE YOU'VE BUILT WITH A CONFLICT-RESOLUTION APPROACH YOU WANT MIRRORED].$body$,
@@ -746,7 +746,7 @@ where pr.slug = 'add-real-time-collaboration' and t.slug = any(array['websockets
 on conflict do nothing;
 
 insert into public.prompts (
-  author_id, title, slug, description, category, is_published,
+  author_id, title, slug, description, category, status,
   base_instructions, fill_in_details_guidance, reference_projects_guidance,
   reference_links_guidance, expected_output_notes
 )
@@ -756,7 +756,7 @@ values (
   'add-file-upload-storage-pipeline',
   $body$Add secure file/image upload to an existing app: validation, storage, and access-controlled serving.$body$,
   'module_feature',
-  true,
+  'approved',
   $body$You are a senior full-stack engineer adding a file/image upload pipeline to an existing application. Validate file type and size before accepting an upload (not just at the client, since that's trivially bypassed), store files in object storage rather than the database, and serve them with access control matching the app's existing permission model — don't make every uploaded file publicly guessable by URL unless that's explicitly intended.$body$,
   $body$Stack: [YOUR APP'S TECH STACK]. Storage backend: [e.g. S3, Supabase Storage, Cloudinary — or 'recommend one']. What's being uploaded: [e.g. 'user avatars and document attachments — list allowed types and max size']. Access model needed: [PUBLIC / PRIVATE-PER-OWNER / PRIVATE-PER-TEAM]. Processing needed on upload: [e.g. 'image resizing/thumbnails' — or 'none'].$body$,
   $body$[PASTE A LINK OR DESCRIPTION OF AN UPLOAD PIPELINE YOU'VE BUILT WITH A VALIDATION/ACCESS-CONTROL PATTERN YOU WANT MIRRORED].$body$,
@@ -775,7 +775,7 @@ where pr.slug = 'add-file-upload-storage-pipeline' and t.slug = any(array['api',
 on conflict do nothing;
 
 insert into public.prompts (
-  author_id, title, slug, description, category, is_published,
+  author_id, title, slug, description, category, status,
   base_instructions, fill_in_details_guidance, reference_projects_guidance,
   reference_links_guidance, expected_output_notes
 )
@@ -785,7 +785,7 @@ values (
   'add-multi-factor-authentication-mfa',
   $body$Add TOTP-based multi-factor authentication to an existing app, including enrollment, verification, and recovery.$body$,
   'module_feature',
-  true,
+  'approved',
   $body$You are a senior full-stack engineer adding multi-factor authentication (TOTP-based, e.g. authenticator apps) to an existing application. Implement enrollment (QR code + verification before it's activated, so a typo'd setup can't lock a user out), the login-time challenge, and a recovery path (backup codes) for when the user loses their authenticator device — MFA without a recovery path turns a security feature into a support-ticket generator.$body$,
   $body$Stack: [YOUR APP'S TECH STACK]. Auth provider/library: [YOUR CURRENT AUTH SETUP — e.g. Supabase Auth, custom, Auth0]. MFA requirement: [OPTIONAL PER-USER / MANDATORY FOR ALL / MANDATORY FOR ADMIN ROLES ONLY]. Recovery approach preference: [BACKUP CODES / SMS FALLBACK / SUPPORT-ASSISTED RESET — or 'recommend one'].$body$,
   $body$[PASTE A LINK OR DESCRIPTION OF AN MFA IMPLEMENTATION YOU'VE SHIPPED OR SEEN WITH A GOOD ENROLLMENT/RECOVERY UX].$body$,
@@ -804,7 +804,7 @@ where pr.slug = 'add-multi-factor-authentication-mfa' and t.slug = any(array['au
 on conflict do nothing;
 
 insert into public.prompts (
-  author_id, title, slug, description, category, is_published,
+  author_id, title, slug, description, category, status,
   base_instructions, fill_in_details_guidance, reference_projects_guidance,
   reference_links_guidance, expected_output_notes
 )
@@ -814,7 +814,7 @@ values (
   'add-internationalization-i18n',
   $body$Add multi-language support to an existing app: string extraction, a translation pipeline, and locale-aware formatting.$body$,
   'module_feature',
-  true,
+  'approved',
   $body$You are a senior frontend engineer adding internationalization to an existing application that currently has hardcoded English strings. Extract strings into a translation-key structure, wire up an i18n library with locale detection and switching, and make sure dates/numbers/currency are locale-formatted, not just the copy text. Don't stop at the happy-path screens — cover error messages and empty states too, since those are the ones teams usually forget.$body$,
   $body$Stack: [YOUR FRONTEND FRAMEWORK]. i18n library preference: [e.g. next-intl, react-i18next — or 'recommend one']. Target locales: [LIST THEM, e.g. 'en, es, ja']. Locale detection/switching requirement: [AUTO-DETECT FROM BROWSER / URL-BASED (e.g. /es/...) / USER PREFERENCE SETTING]. Scope: [WHICH SCREENS/FLOWS NEED TRANSLATING FIRST, IF NOT THE WHOLE APP].$body$,
   $body$[PASTE A LINK OR DESCRIPTION OF AN I18N SETUP YOU'VE BUILT WITH A STRING-EXTRACTION/TRANSLATION-KEY CONVENTION YOU WANT MIRRORED].$body$,
@@ -833,7 +833,7 @@ where pr.slug = 'add-internationalization-i18n' and t.slug = any(array['react', 
 on conflict do nothing;
 
 insert into public.prompts (
-  author_id, title, slug, description, category, is_published,
+  author_id, title, slug, description, category, status,
   base_instructions, fill_in_details_guidance, reference_projects_guidance,
   reference_links_guidance, expected_output_notes
 )
@@ -843,7 +843,7 @@ values (
   'add-feature-flag-gradual-rollout-system',
   $body$Add a feature-flagging system so new features can ship to a subset of users and be killed instantly if something breaks.$body$,
   'module_feature',
-  true,
+  'approved',
   $body$You are a senior backend engineer adding a feature-flag system to an existing application, so new features can be enabled for a subset of users (by percentage, user list, or attribute) and disabled instantly without a deploy if something goes wrong. Make flag evaluation fast (no per-request round trip to an external service on the hot path unless that's explicitly acceptable) and make the kill-switch path genuinely instant — not gated behind the same deploy pipeline as the feature itself.$body$,
   $body$Stack: [YOUR APP'S TECH STACK]. Approach preference: [BUILD IN-HOUSE (SIMPLE) / USE A PROVIDER, e.g. LaunchDarkly, Statsig, Unleash]. Targeting needed: [PERCENTAGE ROLLOUT / SPECIFIC USER LIST / USER ATTRIBUTE, e.g. 'beta testers' — list what's needed]. Where flags need to be checked: [e.g. 'backend API and frontend UI, or just one'].$body$,
   $body$[PASTE A LINK OR DESCRIPTION OF A FEATURE-FLAG SETUP YOU'VE BUILT OR USED WITH A TARGETING/KILL-SWITCH PATTERN YOU WANT MIRRORED].$body$,
@@ -862,7 +862,7 @@ where pr.slug = 'add-feature-flag-gradual-rollout-system' and t.slug = any(array
 on conflict do nothing;
 
 insert into public.prompts (
-  author_id, title, slug, description, category, is_published,
+  author_id, title, slug, description, category, status,
   base_instructions, fill_in_details_guidance, reference_projects_guidance,
   reference_links_guidance, expected_output_notes
 )
@@ -872,7 +872,7 @@ values (
   'add-audit-logging-for-compliance',
   $body$Add an immutable audit trail of who changed what and when, for the actions that need one for compliance or trust.$body$,
   'module_feature',
-  true,
+  'approved',
   $body$You are a senior backend engineer adding audit logging to an existing application for compliance and internal trust. Record who performed an action, what changed (before/after where applicable), when, and from where (IP/user agent if relevant) — for the specific actions that need it, not indiscriminately every request. Make the audit log append-only and inaccessible to normal application code paths that could tamper with it.$body$,
   $body$Stack: [YOUR APP'S TECH STACK]. Database: [YOUR DATABASE]. Actions that need auditing: [LIST THEM, e.g. 'role changes, data deletion, billing plan changes']. Retention requirement: [HOW LONG AUDIT RECORDS MUST BE KEPT, IF KNOWN]. Who needs to view the audit log: [ADMINS ONLY / THE AFFECTED USER TOO / EXTERNAL COMPLIANCE EXPORT].$body$,
   $body$[PASTE A LINK OR DESCRIPTION OF AN AUDIT-LOGGING IMPLEMENTATION YOU'VE BUILT WITH A SCHEMA/TAMPER-RESISTANCE APPROACH YOU WANT MIRRORED].$body$,
@@ -891,7 +891,7 @@ where pr.slug = 'add-audit-logging-for-compliance' and t.slug = any(array['postg
 on conflict do nothing;
 
 insert into public.prompts (
-  author_id, title, slug, description, category, is_published,
+  author_id, title, slug, description, category, status,
   base_instructions, fill_in_details_guidance, reference_projects_guidance,
   reference_links_guidance, expected_output_notes
 )
@@ -901,7 +901,7 @@ values (
   'diagnose-and-fix-a-memory-leak',
   $body$Confirm, isolate, and fix a memory leak using heap snapshots or profiling rather than guessing at the cause.$body$,
   'debugging',
-  true,
+  'approved',
   $body$You are a senior engineer diagnosing a suspected memory leak. Confirm it's real (memory growing unboundedly over time, not just normal working-set fluctuation) using a heap snapshot, profiler, or memory-over-time metric before proposing a fix. Identify the specific retained-reference pattern (e.g. an uncleared interval, an event listener never removed, a growing cache with no eviction) rather than a vague 'reduce memory usage' fix.$body$,
   $body$Stack/runtime: [YOUR APP'S TECH STACK, e.g. Node.js, browser, a specific mobile runtime]. Symptom: [DESCRIBE HOW MEMORY GROWTH SHOWS UP, e.g. 'server RSS climbs steadily over 24h until OOM']. Available tooling: [e.g. 'Chrome DevTools heap snapshots', '--inspect + clinic.js', 'nothing set up yet']. Suspected area, if any: [A COMPONENT/MODULE YOU SUSPECT, OR 'unknown'].$body$,
   $body$[PASTE A LINK OR DESCRIPTION OF A SIMILAR MEMORY-LEAK PATTERN YOU'VE DIAGNOSED BEFORE IN THIS OR A SIMILAR CODEBASE].$body$,
@@ -920,7 +920,7 @@ where pr.slug = 'diagnose-and-fix-a-memory-leak' and t.slug = any(array['perform
 on conflict do nothing;
 
 insert into public.prompts (
-  author_id, title, slug, description, category, is_published,
+  author_id, title, slug, description, category, status,
   base_instructions, fill_in_details_guidance, reference_projects_guidance,
   reference_links_guidance, expected_output_notes
 )
@@ -930,7 +930,7 @@ values (
   'track-down-an-n-plus-1-query-problem',
   $body$Find and fix an N+1 query pattern using query logs or an ORM query counter, not guesswork.$body$,
   'debugging',
-  true,
+  'approved',
   $body$You are a senior backend engineer diagnosing a suspected N+1 query problem — one query to fetch a list, then one additional query per item to fetch related data. Confirm it with actual query logs or an ORM's query-count tooling before fixing, then resolve it with eager loading, a join, or a batching/dataloader pattern appropriate to the stack — pick the fix that fits the access pattern rather than reflexively eager-loading everything.$body$,
   $body$Stack: [YOUR APP'S TECH STACK]. ORM/query layer: [e.g. Prisma, Drizzle, raw SQL]. The slow endpoint/view: [DESCRIBE IT AND WHAT DATA IT RETURNS]. Evidence so far: [PASTE QUERY LOGS OR A QUERY COUNT, IF ALREADY GATHERED — OR 'none yet, need help gathering it']. Relationship shape causing the suspected N+1: [e.g. 'posts, each needing its author and comment count'].$body$,
   $body$[PASTE A LINK OR DESCRIPTION OF A SIMILAR N+1 PATTERN YOU'VE FIXED BEFORE IN THIS CODEBASE, e.g. a reusable eager-loading helper].$body$,
@@ -949,7 +949,7 @@ where pr.slug = 'track-down-an-n-plus-1-query-problem' and t.slug = any(array['p
 on conflict do nothing;
 
 insert into public.prompts (
-  author_id, title, slug, description, category, is_published,
+  author_id, title, slug, description, category, status,
   base_instructions, fill_in_details_guidance, reference_projects_guidance,
   reference_links_guidance, expected_output_notes
 )
@@ -959,7 +959,7 @@ values (
   'debug-a-race-condition-in-concurrent-code',
   $body$Isolate a race condition between concurrent operations and fix it with proper synchronization, not a sleep/retry hack.$body$,
   'debugging',
-  true,
+  'approved',
   $body$You are a senior engineer debugging a race condition — a bug that depends on the relative timing of two or more concurrent operations. Identify the specific shared state or resource both operations touch and the exact interleaving that causes the bug, then fix it with proper synchronization (a lock, a transaction with the right isolation level, an atomic operation, or a queue serializing the conflicting work) — not a `sleep()`, retry loop, or other timing-dependent workaround that just makes the bug rarer.$body$,
   $body$Stack: [YOUR APP'S TECH STACK]. The concurrent operations involved: [DESCRIBE BOTH/ALL OPERATIONS AND WHAT SHARED STATE THEY TOUCH]. Symptom: [WHAT GOES WRONG, e.g. 'duplicate orders created', 'a counter ends up wrong under load']. How it's been reproduced so far: [DESCRIBE, OR 'only seen in production, not yet reproduced locally'].$body$,
   $body$[PASTE A LINK OR DESCRIPTION OF A SIMILAR RACE CONDITION YOU'VE FIXED BEFORE, e.g. a locking pattern already used elsewhere in this codebase].$body$,
@@ -978,7 +978,7 @@ where pr.slug = 'debug-a-race-condition-in-concurrent-code' and t.slug = any(arr
 on conflict do nothing;
 
 insert into public.prompts (
-  author_id, title, slug, description, category, is_published,
+  author_id, title, slug, description, category, status,
   base_instructions, fill_in_details_guidance, reference_projects_guidance,
   reference_links_guidance, expected_output_notes
 )
@@ -988,7 +988,7 @@ values (
   'diagnose-intermittent-third-party-api-failures',
   $body$Determine whether intermittent failures calling a third-party API are your bug, their instability, or a rate limit — and fix accordingly.$body$,
   'debugging',
-  true,
+  'approved',
   $body$You are a senior engineer diagnosing intermittent failures when calling a third-party API. Distinguish between three different root causes — a bug on your side (bad payload, timeout too short, connection pool exhaustion), genuine instability on their side, or you hitting a rate limit — since each needs a different fix. Once diagnosed, implement the right mitigation: retries with backoff for transient failures, a circuit breaker if their instability is sustained, or respecting their stated rate limits if that's the cause.$body$,
   $body$Stack: [YOUR APP'S TECH STACK]. Third-party API involved: [NAME IT]. Failure pattern: [DESCRIBE — e.g. 'fails roughly 1 in 20 calls, mostly 502s', PASTE ANY ERROR RESPONSES/HEADERS RECEIVED]. Current retry/timeout behavior, if any: [DESCRIBE]. Their documented rate limits, if known: [PASTE OR 'not sure, need to check'].$body$,
   $body$[PASTE A LINK OR DESCRIPTION OF A SIMILAR THIRD-PARTY-API RELIABILITY ISSUE YOU'VE HANDLED BEFORE AND HOW].$body$,
@@ -1007,7 +1007,7 @@ where pr.slug = 'diagnose-intermittent-third-party-api-failures' and t.slug = an
 on conflict do nothing;
 
 insert into public.prompts (
-  author_id, title, slug, description, category, is_published,
+  author_id, title, slug, description, category, status,
   base_instructions, fill_in_details_guidance, reference_projects_guidance,
   reference_links_guidance, expected_output_notes
 )
@@ -1017,7 +1017,7 @@ values (
   'bisect-a-regression-to-its-introducing-commit',
   $body$Use git bisect (or an equivalent binary search) to find the exact commit that introduced a regression, then fix it.$body$,
   'debugging',
-  true,
+  'approved',
   $body$You are a senior engineer tracking down a regression whose cause isn't obvious from the symptom alone. Use `git bisect` (or an equivalent binary search over deploys/versions if the history isn't git-bisectable) with a reliable pass/fail check at each step, to find the exact commit that introduced it — don't jump straight to guessing based on 'what changed recently' if the range of candidate commits is more than a handful. Once found, explain why that commit caused the regression before fixing it, since the fix should address the actual mechanism, not just revert blindly.$body$,
   $body$Stack: [YOUR APP'S TECH STACK]. The regression: [DESCRIBE THE SYMPTOM AND WHEN IT WAS FIRST NOTICED]. Known-good and known-bad reference points: [A COMMIT/TAG/DATE THAT DEFINITELY WORKED, AND ONE THAT DEFINITELY DOESN'T]. A reliable pass/fail check: [A TEST, SCRIPT, OR MANUAL STEP THAT CAN CONFIRM GOOD/BAD AT ANY GIVEN COMMIT — this is required for bisect to work].$body$,
   $body$[PASTE A LINK OR DESCRIPTION OF A SIMILAR BISECT-FOUND REGRESSION IN THIS CODEBASE, IF ANY, FOR CONTEXT ON HOW CHANGES HERE TEND TO CAUSE REGRESSIONS].$body$,
@@ -1036,7 +1036,7 @@ where pr.slug = 'bisect-a-regression-to-its-introducing-commit' and t.slug = any
 on conflict do nothing;
 
 insert into public.prompts (
-  author_id, title, slug, description, category, is_published,
+  author_id, title, slug, description, category, status,
   base_instructions, fill_in_details_guidance, reference_projects_guidance,
   reference_links_guidance, expected_output_notes
 )
@@ -1046,7 +1046,7 @@ values (
   'diagnose-database-lock-contention-deadlocks',
   $body$Identify the queries and lock ordering causing contention or deadlocks, then fix the access pattern that causes them.$body$,
   'debugging',
-  true,
+  'approved',
   $body$You are a senior backend engineer diagnosing database lock contention or deadlocks. Use the database's own lock/deadlock diagnostics (not application-level guessing) to identify which queries are holding and waiting on which locks, and in what order — a deadlock specifically requires two transactions acquiring the same locks in a different order. Fix the actual access pattern (consistent lock ordering, shorter transactions, a less restrictive isolation level, or `SELECT ... FOR UPDATE SKIP LOCKED` where appropriate) rather than adding a blind retry-on-deadlock wrapper as the only fix.$body$,
   $body$Database: [YOUR DATABASE, e.g. Postgres]. Symptom: [DESCRIBE — e.g. 'random `deadlock detected` errors under load', 'queries pile up waiting on a lock during peak traffic']. Transactions/queries suspected of being involved: [DESCRIBE THE OPERATIONS THAT RUN CONCURRENTLY AND TOUCH THE SAME ROWS/TABLES]. Diagnostics already available: [e.g. deadlock log output, `pg_locks` query results — PASTE IF AVAILABLE].$body$,
   $body$[PASTE A LINK OR DESCRIPTION OF A SIMILAR LOCK-CONTENTION ISSUE YOU'VE RESOLVED BEFORE IN THIS OR A SIMILAR SYSTEM].$body$,
@@ -1065,7 +1065,7 @@ where pr.slug = 'diagnose-database-lock-contention-deadlocks' and t.slug = any(a
 on conflict do nothing;
 
 insert into public.prompts (
-  author_id, title, slug, description, category, is_published,
+  author_id, title, slug, description, category, status,
   base_instructions, fill_in_details_guidance, reference_projects_guidance,
   reference_links_guidance, expected_output_notes
 )
@@ -1075,7 +1075,7 @@ values (
   'optimize-core-web-vitals-page-load-performance',
   $body$Diagnose and fix poor Core Web Vitals scores (LCP, CLS, INP) using real measurement, not guesswork.$body$,
   'frontend',
-  true,
+  'approved',
   $body$You are a senior frontend engineer improving Core Web Vitals (LCP, CLS, INP) on a page with poor scores. Start by measuring — real field data (e.g. CrUX/RUM) if available, otherwise Lighthouse/PageSpeed Insights — to see which metric is actually failing and why, before making changes. Fix the specific cause (an unoptimized hero image for LCP, layout shift from late-loading content for CLS, a long main-thread task for INP) rather than applying generic 'performance best practices' that may not address the measured problem.$body$,
   $body$Stack: [YOUR FRONTEND FRAMEWORK]. The page in question: [URL OR DESCRIPTION]. Current scores, if measured: [PASTE LIGHTHOUSE/PSI/CRUX NUMBERS, OR 'not measured yet, need help running this']. Suspected culprits, if any: [e.g. 'a large above-the-fold image', 'a third-party script', 'client-side data fetching blocking render'].$body$,
   $body$[PASTE A LINK OR DESCRIPTION OF A PRIOR PERFORMANCE OPTIMIZATION YOU'VE DONE ON A SIMILAR PAGE TYPE].$body$,
@@ -1094,7 +1094,7 @@ where pr.slug = 'optimize-core-web-vitals-page-load-performance' and t.slug = an
 on conflict do nothing;
 
 insert into public.prompts (
-  author_id, title, slug, description, category, is_published,
+  author_id, title, slug, description, category, status,
   base_instructions, fill_in_details_guidance, reference_projects_guidance,
   reference_links_guidance, expected_output_notes
 )
@@ -1104,7 +1104,7 @@ values (
   'build-a-design-system-component-library',
   $body$Build a reusable component library with consistent design tokens, variants, and documentation for a design system.$body$,
   'frontend',
-  true,
+  'approved',
   $body$You are a senior frontend engineer building a reusable component library to back a design system. Define design tokens (color, spacing, typography) as the single source of truth components consume rather than hardcoding values per-component, implement each component's stated variants and states (including disabled/loading/error where applicable), and make each accessible by default (correct semantics, keyboard support) rather than accessible-as-an-afterthought.$body$,
   $body$Stack: [YOUR FRONTEND FRAMEWORK + STYLING APPROACH]. Components needed first: [LIST THEM, e.g. 'Button, Input, Select, Modal']. Design tokens source: [A DESIGN FILE/SPEC TO PULL VALUES FROM, OR 'define reasonable defaults']. Documentation/preview tooling: [e.g. Storybook — or 'recommend one']. Theming requirement: [SINGLE THEME / LIGHT+DARK / MULTI-BRAND].$body$,
   $body$[PASTE A LINK OR DESCRIPTION OF A COMPONENT LIBRARY WHOSE TOKEN/VARIANT STRUCTURE YOU WANT MIRRORED].$body$,
@@ -1123,7 +1123,7 @@ where pr.slug = 'build-a-design-system-component-library' and t.slug = any(array
 on conflict do nothing;
 
 insert into public.prompts (
-  author_id, title, slug, description, category, is_published,
+  author_id, title, slug, description, category, status,
   base_instructions, fill_in_details_guidance, reference_projects_guidance,
   reference_links_guidance, expected_output_notes
 )
@@ -1133,7 +1133,7 @@ values (
   'implement-optimistic-ui-updates',
   $body$Make a mutating action feel instant with an optimistic UI update, with correct rollback if the server call fails.$body$,
   'frontend',
-  true,
+  'approved',
   $body$You are a senior frontend engineer implementing an optimistic UI update for a mutating action (e.g. liking a post, reordering a list, toggling a setting) so the UI responds instantly instead of waiting on a round trip. Update local state immediately, fire the request in the background, and — this is the part that's usually missed — correctly roll back to the prior state and surface an error if the request actually fails, rather than leaving the UI in a now-incorrect optimistic state.$body$,
   $body$Stack: [YOUR FRONTEND FRAMEWORK + DATA-FETCHING LIBRARY, e.g. React Query, SWR, or custom]. The action being made optimistic: [DESCRIBE IT]. Current behavior: [WAITS FOR THE SERVER RESPONSE BEFORE UPDATING UI — CONFIRM THIS IS THE STARTING POINT]. Failure UX preference: [SILENT ROLLBACK + TOAST / INLINE ERROR STATE / OTHER].$body$,
   $body$[PASTE A LINK OR DESCRIPTION OF AN OPTIMISTIC-UPDATE IMPLEMENTATION YOU'VE BUILT BEFORE WITH A ROLLBACK PATTERN YOU WANT MIRRORED].$body$,
@@ -1152,7 +1152,7 @@ where pr.slug = 'implement-optimistic-ui-updates' and t.slug = any(array['react'
 on conflict do nothing;
 
 insert into public.prompts (
-  author_id, title, slug, description, category, is_published,
+  author_id, title, slug, description, category, status,
   base_instructions, fill_in_details_guidance, reference_projects_guidance,
   reference_links_guidance, expected_output_notes
 )
@@ -1162,7 +1162,7 @@ values (
   'build-a-command-palette-interface',
   $body$Add a keyboard-driven command palette for fast navigation and actions, with fuzzy search and full keyboard operability.$body$,
   'frontend',
-  true,
+  'approved',
   $body$You are a senior frontend engineer adding a command palette (Cmd/Ctrl+K) for fast keyboard-driven navigation and actions. Implement fuzzy search over the registered commands, full keyboard operability (open, navigate results, select, close — no mouse required at any step), and a way for new commands/pages to register themselves without hand-editing a giant central list. Make sure it doesn't intercept the shortcut while the user is typing in an unrelated text field.$body$,
   $body$Stack: [YOUR FRONTEND FRAMEWORK]. Commands/actions to include first: [LIST THEM, e.g. 'navigate to X, create new Y, toggle dark mode']. Search behavior preference: [FUZZY MATCH / EXACT PREFIX / RECOMMEND ONE]. Extensibility need: [DOES A NEW PAGE/FEATURE NEED TO SELF-REGISTER A COMMAND, OR IS A FIXED LIST FINE FOR NOW].$body$,
   $body$[PASTE A LINK OR DESCRIPTION OF A COMMAND PALETTE WHOSE UX/REGISTRATION PATTERN YOU WANT MIRRORED].$body$,
@@ -1181,7 +1181,7 @@ where pr.slug = 'build-a-command-palette-interface' and t.slug = any(array['reac
 on conflict do nothing;
 
 insert into public.prompts (
-  author_id, title, slug, description, category, is_published,
+  author_id, title, slug, description, category, status,
   base_instructions, fill_in_details_guidance, reference_projects_guidance,
   reference_links_guidance, expected_output_notes
 )
@@ -1191,7 +1191,7 @@ values (
   'implement-infinite-scroll-virtualized-list',
   $body$Render a large or unbounded list performantly with virtualization and correct infinite-scroll pagination.$body$,
   'frontend',
-  true,
+  'approved',
   $body$You are a senior frontend engineer implementing a large or unbounded list view. Virtualize rendering so only visible (plus a small buffer of) rows are actually in the DOM at once — rendering thousands of real DOM nodes is the usual cause of jank here — and implement infinite-scroll pagination fetching the next page before the user hits the bottom, not after (a visible loading gap). Handle variable-height rows correctly if the data isn't uniform height, and preserve scroll position on navigating back to the list.$body$,
   $body$Stack: [YOUR FRONTEND FRAMEWORK]. The data being listed: [DESCRIBE IT AND ROUGH EXPECTED SIZE, e.g. '50k+ rows, variable height cards']. Virtualization library preference: [e.g. TanStack Virtual, react-window — or 'recommend one']. Pagination source: [API SHAPE — CURSOR-BASED OR OFFSET-BASED]. Scroll-position requirement: [MUST BE PRESERVED WHEN NAVIGATING BACK TO THE LIST / NOT NEEDED].$body$,
   $body$[PASTE A LINK OR DESCRIPTION OF A VIRTUALIZED LIST YOU'VE BUILT BEFORE THAT HANDLED VARIABLE-HEIGHT ROWS OR SCROLL RESTORATION WELL].$body$,
@@ -1210,7 +1210,7 @@ where pr.slug = 'implement-infinite-scroll-virtualized-list' and t.slug = any(ar
 on conflict do nothing;
 
 insert into public.prompts (
-  author_id, title, slug, description, category, is_published,
+  author_id, title, slug, description, category, status,
   base_instructions, fill_in_details_guidance, reference_projects_guidance,
   reference_links_guidance, expected_output_notes
 )
@@ -1220,7 +1220,7 @@ values (
   'fix-cross-browser-rendering-inconsistencies',
   $body$Diagnose and fix a UI that renders differently across browsers, isolating the actual CSS/JS feature gap causing it.$body$,
   'frontend',
-  true,
+  'approved',
   $body$You are a senior frontend engineer fixing a UI that renders inconsistently across browsers. Isolate the specific CSS property, layout behavior, or JS API causing the divergence (check caniuse.com/MDN browser-support tables rather than guessing) before applying a fix, and prefer a standards-based fix (a supported CSS fallback, a feature-detected code path) over a browser-sniffing hack, which breaks again the next time a browser updates.$body$,
   $body$Stack: [YOUR FRONTEND FRAMEWORK]. Browsers affected vs. working correctly: [LIST WHICH BROWSERS/VERSIONS SHOW THE PROBLEM AND WHICH DON'T]. The visual/behavioral difference: [DESCRIBE OR ATTACH A SCREENSHOT COMPARISON]. Browser support requirement: [WHICH BROWSERS/VERSIONS THE APP MUST SUPPORT, e.g. 'last 2 versions of major browsers'].$body$,
   $body$[PASTE A LINK OR DESCRIPTION OF A SIMILAR CROSS-BROWSER ISSUE YOU'VE RESOLVED BEFORE AND HOW].$body$,
@@ -1239,7 +1239,7 @@ where pr.slug = 'fix-cross-browser-rendering-inconsistencies' and t.slug = any(a
 on conflict do nothing;
 
 insert into public.prompts (
-  author_id, title, slug, description, category, is_published,
+  author_id, title, slug, description, category, status,
   base_instructions, fill_in_details_guidance, reference_projects_guidance,
   reference_links_guidance, expected_output_notes
 )
@@ -1249,7 +1249,7 @@ values (
   'design-a-multi-tenant-database-schema',
   $body$Design a database schema for a multi-tenant system with enforced, not just assumed, tenant isolation.$body$,
   'backend',
-  true,
+  'approved',
   $body$You are a senior backend/database engineer designing a schema for a multi-tenant system. Choose an isolation strategy appropriate to the expected scale and compliance needs (shared tables with a `tenant_id` plus row-level security, schema-per-tenant, or database-per-tenant), and enforce isolation at the database layer rather than relying solely on every application query remembering to filter by tenant. State the tradeoffs of the chosen approach explicitly (cross-tenant query capability, migration complexity, blast radius of a bug).$body$,
   $body$Domain: [WHAT THE APP MANAGES PER TENANT]. Expected scale: [TENANT COUNT AND ROUGH DATA VOLUME PER TENANT]. Compliance requirements, if any: [e.g. 'some enterprise customers require data never share physical storage']. Cross-tenant needs, if any: [DOES ANY FEATURE NEED TO QUERY ACROSS TENANTS, e.g. platform-wide admin reporting — or 'none'].$body$,
   $body$[PASTE A LINK OR DESCRIPTION OF A MULTI-TENANT SCHEMA YOU'VE DESIGNED OR SEEN THAT MADE THE RIGHT ISOLATION TRADEOFF FOR A SIMILAR SCALE].$body$,
@@ -1268,7 +1268,7 @@ where pr.slug = 'design-a-multi-tenant-database-schema' and t.slug = any(array['
 on conflict do nothing;
 
 insert into public.prompts (
-  author_id, title, slug, description, category, is_published,
+  author_id, title, slug, description, category, status,
   base_instructions, fill_in_details_guidance, reference_projects_guidance,
   reference_links_guidance, expected_output_notes
 )
@@ -1278,7 +1278,7 @@ values (
   'implement-idempotent-api-endpoints',
   $body$Make mutating API endpoints safely retryable with idempotency keys, so a client retry never double-processes a request.$body$,
   'backend',
-  true,
+  'approved',
   $body$You are a senior backend engineer making mutating endpoints (especially ones with real-world side effects like charging a card or sending an email) safely retryable via idempotency keys. Accept a client-supplied idempotency key, store the result of the first successful processing keyed by it, and return that stored result (not reprocess) on any retry with the same key — including the case where the original request is still in flight when the retry arrives.$body$,
   $body$Stack: [YOUR APP'S TECH STACK]. Database: [YOUR DATABASE]. Endpoints that need this: [LIST THE MUTATING ENDPOINTS WITH REAL SIDE EFFECTS]. Idempotency key source: [CLIENT-GENERATED HEADER / SERVER-ISSUED — or 'recommend one, e.g. following Stripe's convention']. Key retention window: [HOW LONG A KEY SHOULD BE HONORED, e.g. '24 hours'].$body$,
   $body$[PASTE A LINK OR DESCRIPTION OF AN IDEMPOTENCY-KEY IMPLEMENTATION YOU'VE BUILT OR SEEN THAT YOU WANT MIRRORED, e.g. Stripe's API].$body$,
@@ -1297,7 +1297,7 @@ where pr.slug = 'implement-idempotent-api-endpoints' and t.slug = any(array['api
 on conflict do nothing;
 
 insert into public.prompts (
-  author_id, title, slug, description, category, is_published,
+  author_id, title, slug, description, category, status,
   base_instructions, fill_in_details_guidance, reference_projects_guidance,
   reference_links_guidance, expected_output_notes
 )
@@ -1307,7 +1307,7 @@ values (
   'set-up-zero-downtime-database-migrations',
   $body$Establish a migration workflow (expand/contract pattern) so schema changes ship without locking tables or breaking live traffic.$body$,
   'backend',
-  true,
+  'approved',
   $body$You are a senior backend engineer establishing a zero-downtime database migration workflow. Use the expand/contract pattern for breaking changes (add the new column/table alongside the old, backfill, switch reads/writes over, only then drop the old one in a later migration) rather than a single migration that renames or drops columns the running application still references. Flag any migration that would take a long-held lock on a large table and propose a non-blocking alternative (e.g. `CREATE INDEX CONCURRENTLY`).$body$,
   $body$Database: [YOUR DATABASE]. Migration tool: [e.g. Prisma Migrate, a custom SQL migration runner]. The change being made: [DESCRIBE THE SCHEMA CHANGE, e.g. 'renaming a column', 'splitting a table']. Table size/traffic: [ROUGH ROW COUNT AND WHETHER IT'S HIT BY LIVE TRAFFIC DURING DEPLOYS]. Deployment process: [HOW MIGRATIONS CURRENTLY GET APPLIED RELATIVE TO CODE DEPLOYS].$body$,
   $body$[PASTE A LINK OR DESCRIPTION OF A ZERO-DOWNTIME MIGRATION YOU'VE DONE BEFORE FOR A SIMILAR CHANGE, e.g. a prior column rename via expand/contract].$body$,
@@ -1326,7 +1326,7 @@ where pr.slug = 'set-up-zero-downtime-database-migrations' and t.slug = any(arra
 on conflict do nothing;
 
 insert into public.prompts (
-  author_id, title, slug, description, category, is_published,
+  author_id, title, slug, description, category, status,
   base_instructions, fill_in_details_guidance, reference_projects_guidance,
   reference_links_guidance, expected_output_notes
 )
@@ -1336,7 +1336,7 @@ values (
   'build-a-webhook-delivery-system-with-retries',
   $body$Build outbound webhook delivery to customer endpoints with signing, retry-with-backoff, and delivery visibility.$body$,
   'backend',
-  true,
+  'approved',
   $body$You are a senior backend engineer building an outbound webhook delivery system to notify customer endpoints of events. Sign every payload (e.g. HMAC) so receivers can verify authenticity, retry failed deliveries with exponential backoff up to a sensible limit, and give customers (or internal ops) visibility into delivery status and a way to inspect/replay a failed delivery. Treat a customer endpoint being slow or down as an expected case, not an exception to crash the sender.$body$,
   $body$Stack: [YOUR APP'S TECH STACK]. Events that trigger webhooks: [LIST THEM]. Expected webhook volume: [ROUGH SCALE]. Signing convention preference: [e.g. HMAC-SHA256 IN A HEADER, FOLLOWING A CONVENTION LIKE STRIPE'S — or 'recommend one']. Retry/give-up policy: [MAX RETRIES AND BACKOFF SHAPE, OR 'recommend one'].$body$,
   $body$[PASTE A LINK OR DESCRIPTION OF A WEBHOOK SYSTEM YOU'VE BUILT OR INTEGRATED WITH WHOSE SIGNING/RETRY CONVENTION YOU WANT MIRRORED, e.g. Stripe or GitHub webhooks].$body$,
@@ -1355,7 +1355,7 @@ where pr.slug = 'build-a-webhook-delivery-system-with-retries' and t.slug = any(
 on conflict do nothing;
 
 insert into public.prompts (
-  author_id, title, slug, description, category, is_published,
+  author_id, title, slug, description, category, status,
   base_instructions, fill_in_details_guidance, reference_projects_guidance,
   reference_links_guidance, expected_output_notes
 )
@@ -1365,7 +1365,7 @@ values (
   'implement-a-redis-caching-layer-with-invalidation',
   $body$Add a Redis cache in front of an expensive read path, with an explicit, correct invalidation strategy — the actual hard part.$body$,
   'backend',
-  true,
+  'approved',
   $body$You are a senior backend engineer adding a Redis cache in front of an expensive read path. The caching itself is the easy part; design the invalidation strategy explicitly — what event(s) invalidate which cache keys, and whether a brief staleness window is acceptable (cache-aside with a TTL) or the data must be always-fresh (invalidate-on-write). State the chosen approach and its staleness guarantee rather than leaving it implicit, since a cache with silently-wrong invalidation is worse than no cache at all.$body$,
   $body$Stack: [YOUR APP'S TECH STACK]. The expensive read path being cached: [DESCRIBE IT AND WHY IT'S EXPENSIVE]. Redis (or equivalent) availability: [ALREADY PROVISIONED / NEEDS SETTING UP]. Staleness tolerance: [CAN THE DATA BE UP TO N SECONDS/MINUTES STALE, OR MUST WRITES INVALIDATE IMMEDIATELY]. Write paths that should invalidate the cache: [LIST THE OPERATIONS THAT CHANGE THE CACHED DATA].$body$,
   $body$[PASTE A LINK OR DESCRIPTION OF A CACHING LAYER YOU'VE BUILT BEFORE WITH AN INVALIDATION STRATEGY YOU WANT MIRRORED].$body$,
@@ -1384,7 +1384,7 @@ where pr.slug = 'implement-a-redis-caching-layer-with-invalidation' and t.slug =
 on conflict do nothing;
 
 insert into public.prompts (
-  author_id, title, slug, description, category, is_published,
+  author_id, title, slug, description, category, status,
   base_instructions, fill_in_details_guidance, reference_projects_guidance,
   reference_links_guidance, expected_output_notes
 )
@@ -1394,7 +1394,7 @@ values (
   'design-an-event-driven-architecture-with-a-message-queue',
   $body$Decouple services with an event/message queue, with clear event contracts, ordering guarantees, and failure handling.$body$,
   'backend',
-  true,
+  'approved',
   $body$You are a senior backend engineer designing an event-driven integration between services using a message queue or event bus. Define explicit event contracts (schema, versioning approach) rather than letting consumers infer the shape from producer code, state the ordering guarantee the chosen queue actually provides (and whether the design needs it), and handle consumer failure explicitly — what happens to a message that fails processing repeatedly (dead-letter queue, alerting) rather than it silently vanishing or blocking the queue forever.$body$,
   $body$Services/components involved: [DESCRIBE THE PRODUCER(S) AND CONSUMER(S)]. Queue/broker preference: [e.g. SQS, Kafka, RabbitMQ, Postgres-backed queue like pgmq — or 'recommend one for this scale']. Events to model first: [LIST THEM]. Ordering requirement: [MUST EVENTS FOR THE SAME ENTITY BE PROCESSED IN ORDER, OR IS ORDER-INDEPENDENT PROCESSING FINE]. Failure tolerance: [WHAT SHOULD HAPPEN TO A MESSAGE THAT REPEATEDLY FAILS TO PROCESS].$body$,
   $body$[PASTE A LINK OR DESCRIPTION OF AN EVENT-DRIVEN INTEGRATION YOU'VE BUILT BEFORE WITH A CONTRACT/DEAD-LETTER PATTERN YOU WANT MIRRORED].$body$,

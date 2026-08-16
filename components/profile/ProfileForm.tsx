@@ -2,6 +2,8 @@
 
 import { useState } from "react";
 import { updateFullName, updatePassword } from "@/app/actions/profile";
+import { MySubmissions } from "@/components/profile/MySubmissions";
+import type { PromptRow } from "@/lib/data/prompts";
 
 export interface ProfileData {
   initials: string;
@@ -12,7 +14,7 @@ export interface ProfileData {
   lastLogin: string;
 }
 
-export function ProfileForm({ profile }: { profile: ProfileData }) {
+export function ProfileForm({ profile, submissions }: { profile: ProfileData; submissions: PromptRow[] }) {
   const [fullName, setFullName] = useState(profile.fullName);
   const [savingProfile, setSavingProfile] = useState(false);
 
@@ -109,6 +111,13 @@ export function ProfileForm({ profile }: { profile: ProfileData }) {
             {savingProfile ? "Saving…" : "Save changes"}
           </button>
         </div>
+      </div>
+
+      <div className="h-px bg-[var(--border)] mb-7" />
+
+      <div className={sectionHeading}>My submissions</div>
+      <div className="mb-8">
+        <MySubmissions submissions={submissions} />
       </div>
 
       <div className="h-px bg-[var(--border)] mb-7" />

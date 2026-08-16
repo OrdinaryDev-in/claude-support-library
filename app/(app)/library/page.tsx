@@ -6,7 +6,7 @@ export default async function LibraryHubPage() {
   const { count } = await supabase
     .from("prompts")
     .select("id", { count: "exact", head: true })
-    .eq("is_published", true);
+    .eq("status", "approved");
 
   return <LibraryHub promptsCharted={count ?? 0} />;
 }

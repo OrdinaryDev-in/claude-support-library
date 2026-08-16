@@ -1,6 +1,7 @@
 import { redirect } from "next/navigation";
 import { createClient } from "@/lib/supabase/server";
 import { ProfileForm, type ProfileData } from "@/components/profile/ProfileForm";
+import { mySubmissions } from "@/lib/data/prompts";
 
 function initialsOf(name: string, email: string) {
   const source = name.trim();
@@ -56,5 +57,7 @@ export default async function AccountPage() {
     lastLogin: formatLastLogin(profile.last_login_at),
   };
 
-  return <ProfileForm profile={data} />;
+  const submissions = await mySubmissions(supabase, user.id);
+
+  return <ProfileForm profile={data} submissions={submissions} />;
 }

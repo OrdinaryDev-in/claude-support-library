@@ -1,5 +1,5 @@
 import type { SupabaseClient } from "@supabase/supabase-js";
-import type { Database, PromptCategory } from "@/lib/types/database.types";
+import type { Database, PromptCategory, PromptStatus } from "@/lib/types/database.types";
 
 type Client = SupabaseClient<Database>;
 export type PromptRow = Database["public"]["Tables"]["prompts"]["Row"];
@@ -76,7 +76,7 @@ export async function categoryCounts(
     frontend: 0,
     backend: 0,
   };
-  const { data } = await supabase.from("prompts").select("category").eq("is_published", true);
+  const { data } = await supabase.from("prompts").select("category").eq("status", "approved");
   for (const row of data ?? []) {
     base[row.category as PromptCategory] += 1;
   }
@@ -87,7 +87,7 @@ export async function totalPublishedCount(supabase: Client): Promise<number> {
   const { count } = await supabase
     .from("prompts")
     .select("id", { count: "exact", head: true })
-    .eq("is_published", true);
+    .eq("status", "approved");
   return count ?? 0;
 }
 
@@ -95,4 +95,59 @@ export async function totalPublishedCount(supabase: Client): Promise<number> {
 export async function allTags(supabase: Client): Promise<string[]> {
   const { data } = await supabase.from("tags").select("name").order("name");
   return (data ?? []).map((t) => t.name);
+}
+
+// ─── Review queue (admin) ──────────────────────────────────────────────
+
+export interface ReviewQueueRow extends PromptRow {
+  author: { full_name: string | null; email: string } | null;
+}
+
+/** Counts per status, for the admin nav badge and queue tab labels. Only
+ * meaningful for an admin caller — RLS hides other users' non-approved
+ * rows from everyone else, so a non-admin gets their own counts only. */
+export async function reviewQueueCounts(
+  supabase: Client
+): Promise<Record<PromptStatus, number>> {
+  const base: Record<PromptStatus, number> = {
+    pending_review: 0,
+    approved: 0,
+    rejected: 0,
+  };
+  const { data } = await supabase.from("prompts").select("status");
+  for (const row of data ?? []) {
+    base[row.status as PromptStatus] += 1;
+  }
+  return base;
+}
+
+/** Prompts in a given review status, with the author attached, for the
+ * admin review queue. Pending prompts are oldest-first (FIFO, so the
+ * queue drains in submission order); decided prompts are most-recently-
+ * reviewed-first (so the newest decisions surface at the top of the
+ * Approved/Rejected tabs). */
+export async function listReviewQueue(
+  supabase: Client,
+  status: PromptStatus
+): Promise<ReviewQueueRow[]> {
+  const { data } = await supabase
+    .from("prompts")
+    .select("*, author:profiles!prompts_author_id_fkey(full_name, email)")
+    .eq("status", status)
+    .order(status === "pending_review" ? "created_at" : "reviewed_at", {
+      ascending: status === "pending_review",
+    });
+  return (data ?? []) as unknown as ReviewQueueRow[];
+}
+
+/** The caller's own prompts across every status, for the "My Submissions"
+ * panel — the one place an author can see their own pending/rejected work,
+ * since the public Browse grid only ever shows approved prompts. */
+export async function mySubmissions(supabase: Client, userId: string): Promise<PromptRow[]> {
+  const { data } = await supabase
+    .from("prompts")
+    .select("*")
+    .eq("author_id", userId)
+    .order("created_at", { ascending: false });
+  return data ?? [];
 }

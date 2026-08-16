@@ -9,6 +9,8 @@ import { LIBRARY_SECTIONS } from "@/lib/constants/library-sections";
 export interface NavBarUser {
   initials: string;
   fullName: string;
+  isAdmin: boolean;
+  pendingReviewCount: number;
 }
 
 export function NavBar({ user }: { user: NavBarUser | null }) {
@@ -20,6 +22,7 @@ export function NavBar({ user }: { user: NavBarUser | null }) {
 
   const onHub = pathname === "/library";
   const onPrompts = pathname.startsWith("/library/prompts");
+  const onReview = pathname.startsWith("/admin/review");
 
   useEffect(() => {
     function onKeyDown(e: KeyboardEvent) {
@@ -85,6 +88,16 @@ export function NavBar({ user }: { user: NavBarUser | null }) {
           <Link href="/library/prompts" className={linkClass(onPrompts)}>
             Prompts
           </Link>
+          {user?.isAdmin && (
+            <Link href="/admin/review" className={`${linkClass(onReview)} inline-flex items-center gap-1.5`}>
+              Review
+              {user.pendingReviewCount > 0 && (
+                <span className="font-[family-name:var(--font-mono)] text-[10px] leading-none px-1.5 py-1 rounded-full bg-[var(--brass)] text-[var(--ink)]">
+                  {user.pendingReviewCount}
+                </span>
+              )}
+            </Link>
+          )}
         </nav>
       </div>
 
@@ -171,6 +184,20 @@ export function NavBar({ user }: { user: NavBarUser | null }) {
           <Link href="/library" onClick={() => setMenuOpen(false)} className="text-[var(--text)] text-sm">
             Library
           </Link>
+          {user?.isAdmin && (
+            <Link
+              href="/admin/review"
+              onClick={() => setMenuOpen(false)}
+              className="text-[var(--text)] text-sm inline-flex items-center gap-1.5"
+            >
+              Review
+              {user.pendingReviewCount > 0 && (
+                <span className="font-[family-name:var(--font-mono)] text-[10px] leading-none px-1.5 py-1 rounded-full bg-[var(--brass)] text-[var(--ink)]">
+                  {user.pendingReviewCount}
+                </span>
+              )}
+            </Link>
+          )}
           {user && (
             <button onClick={handleSignOut} className="text-left text-[var(--muted)] text-sm">
               Sign out

@@ -5,6 +5,7 @@ import Link from "next/link";
 import { useRouter } from "next/navigation";
 import { categoryMeta } from "@/lib/constants/categories/prompts";
 import { CopyButton } from "@/components/prompts/CopyButton";
+import { StatusPill } from "@/components/prompts/StatusPill";
 import { deletePrompt, duplicatePrompt } from "@/app/actions/prompts";
 import type { PromptWithTags } from "@/lib/data/prompts";
 
@@ -83,7 +84,7 @@ export function PromptDetail({
 
       <div className="flex flex-col sm:flex-row sm:justify-between sm:items-start gap-4 sm:gap-6">
         <div>
-          <div className="flex items-center gap-2 mb-2.5">
+          <div className="flex items-center gap-2 mb-2.5 flex-wrap">
             <span className="w-2 h-2 rounded-full" style={{ background: cat.color }} />
             <span
               className="font-[family-name:var(--font-mono)] text-[11px] uppercase tracking-wide"
@@ -91,6 +92,10 @@ export function PromptDetail({
             >
               {cat.label}
             </span>
+            {/* Only the author/admin ever sees this — everyone else can only
+                reach this page for an approved prompt in the first place
+                (RLS: prompts_select_signed_in, 0009_prompt_review_workflow.sql). */}
+            {isOwner && prompt.status !== "approved" && <StatusPill status={prompt.status} />}
           </div>
           <h1 className="font-[family-name:var(--font-display)] font-medium text-[26px] sm:text-[32px] mb-2.5 max-w-[640px]">
             {prompt.title}
@@ -98,6 +103,11 @@ export function PromptDetail({
           <p className="text-sm text-[var(--muted)] max-w-[600px] mb-3 leading-relaxed">
             {prompt.description}
           </p>
+          {isOwner && prompt.status === "rejected" && prompt.rejection_reason && (
+            <p className="text-[13px] text-[var(--danger)] max-w-[600px] mb-3 leading-relaxed">
+              &ldquo;{prompt.rejection_reason}&rdquo;
+            </p>
+          )}
           {prompt.tags.length > 0 && (
             <div className="flex flex-wrap gap-1.5">
               {prompt.tags.map((tag) => (

@@ -1,0 +1,16 @@
+import type { PromptStatus } from "@/lib/types/database.types";
+
+export interface StatusMeta {
+  label: string;
+  /** CSS var name defined in app/globals.css — matches the category legend's convention. */
+  color: string;
+}
+
+// Single source of truth for how a review status renders — shared by
+// StatusPill (author-facing: PromptDetail/account) and the admin review
+// queue, so the two surfaces never drift.
+export const PROMPT_STATUS_META: Record<PromptStatus, StatusMeta> = {
+  pending_review: { label: "Pending Review", color: "var(--brass)" },
+  approved: { label: "Approved", color: "var(--teal)" },
+  rejected: { label: "Rejected", color: "var(--danger)" },
+};

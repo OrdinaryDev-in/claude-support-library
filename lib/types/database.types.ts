@@ -4,6 +4,9 @@
 // Functions). Once a live Supabase project is linked, regenerate with:
 //   supabase gen types typescript --linked > lib/types/database.types.ts
 // and re-apply this file's structure if the generator's shape differs.
+//
+// prompts.status/reviewed_by/reviewed_at/rejection_reason added, is_published
+// removed, by 0009_prompt_review_workflow.sql (prompt review workflow).
 
 export type PromptCategory =
   | "new_app"
@@ -11,6 +14,8 @@ export type PromptCategory =
   | "debugging"
   | "frontend"
   | "backend";
+
+export type PromptStatus = "pending_review" | "approved" | "rejected";
 
 export interface Database {
   public: {
@@ -45,7 +50,10 @@ export interface Database {
           slug: string;
           description: string;
           category: PromptCategory;
-          is_published: boolean;
+          status: PromptStatus;
+          reviewed_by: string | null;
+          reviewed_at: string | null;
+          rejection_reason: string | null;
           created_at: string;
           updated_at: string;
           base_instructions: string;
@@ -62,7 +70,10 @@ export interface Database {
           slug: string;
           description: string;
           category: PromptCategory;
-          is_published?: boolean;
+          status?: PromptStatus;
+          reviewed_by?: string | null;
+          reviewed_at?: string | null;
+          rejection_reason?: string | null;
           created_at?: string;
           updated_at?: string;
           base_instructions: string;
@@ -77,6 +88,13 @@ export interface Database {
           {
             foreignKeyName: "prompts_author_id_fkey";
             columns: ["author_id"];
+            isOneToOne: false;
+            referencedRelation: "profiles";
+            referencedColumns: ["id"];
+          },
+          {
+            foreignKeyName: "prompts_reviewed_by_fkey";
+            columns: ["reviewed_by"];
             isOneToOne: false;
             referencedRelation: "profiles";
             referencedColumns: ["id"];

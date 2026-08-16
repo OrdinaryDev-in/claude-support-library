@@ -6,11 +6,17 @@ import { useRouter } from "next/navigation";
 import { PROMPT_CATEGORIES } from "@/lib/constants/categories/prompts";
 import { promptSchema, assembleTemplate, type PromptFormValues } from "@/lib/validation/prompt-schema";
 import { createPrompt, updatePrompt } from "@/app/actions/prompts";
-import type { PromptCategory } from "@/lib/types/database.types";
+import type { PromptCategory, PromptStatus } from "@/lib/types/database.types";
 
 export interface PromptFormInitialValues extends PromptFormValues {
   id: string;
   slug: string;
+  /** The prompt's status *before* this edit — used only to decide whether
+   * saving will resubmit it for review (see guard_prompt_review_state(),
+   * 0009_prompt_review_workflow.sql: editing an approved/rejected prompt's
+   * content always flips it back to pending_review, so this is knowable
+   * up front without a round trip). */
+  status: PromptStatus;
 }
 
 export function PromptForm({
@@ -45,6 +51,14 @@ export function PromptForm({
   }
 
   const preview = useMemo(() => assembleTemplate(fields), [fields]);
+
+  // Editing an approved/rejected prompt's content always resubmits it for
+  // review (guard_prompt_review_state(), 0009_prompt_review_workflow.sql) —
+  // known from the status this prompt had when the page loaded, no need to
+  // wait for the save to complete.
+  const priorStatus = isEdit ? initialValues?.status : undefined;
+  const willResubmit = priorStatus !== undefined && priorStatus !== "pending_review";
+  const toastText = !isEdit ? "Submitted for review" : willResubmit ? "Saved — resubmitted for review" : "Saved";
 
   async function handleSubmit(e: React.FormEvent) {
     e.preventDefault();
@@ -85,9 +99,21 @@ export function PromptForm({
         </Link>{" "}
         / {isEdit ? "Edit" : "New"}
       </div>
-      <h1 className="font-[family-name:var(--font-display)] font-medium text-2xl sm:text-[28px] mb-6 sm:mb-8">
+      <h1 className="font-[family-name:var(--font-display)] font-medium text-2xl sm:text-[28px] mb-3">
         {isEdit ? "Edit prompt" : "New prompt"}
       </h1>
+      {!isEdit && (
+        <p className="text-[13px] text-[var(--muted)] mb-6 sm:mb-8 max-w-[560px]">
+          New prompts go to an admin for review before they appear in the library.
+        </p>
+      )}
+      {willResubmit && (
+        <p className="text-[13px] text-[var(--brass)] mb-6 sm:mb-8 max-w-[560px]">
+          {priorStatus === "approved"
+            ? "This prompt is currently live. Saving changes will pull it from the library and resubmit it for review."
+            : "Saving changes will resubmit this prompt for review."}
+        </p>
+      )}
 
       <div className="flex flex-col lg:flex-row gap-8 lg:gap-12 items-start">
         <form onSubmit={handleSubmit} className="flex flex-col gap-5 flex-1 w-full lg:max-w-[560px]">
@@ -240,7 +266,7 @@ export function PromptForm({
 
       {savedToast && (
         <div className="fixed bottom-7 left-1/2 -translate-x-1/2 bg-[var(--surface-2)] border border-[var(--border)] rounded-lg px-[18px] py-3 z-[60] shadow-[0_8px_24px_rgba(0,0,0,0.4)]">
-          <span className="text-[13px] font-semibold text-[var(--teal)]">Saved</span>
+          <span className="text-[13px] font-semibold text-[var(--teal)]">{toastText}</span>
         </div>
       )}
     </div>

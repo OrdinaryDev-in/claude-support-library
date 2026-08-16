@@ -51,7 +51,7 @@ lines.push(
 for (const p of SEED_PROMPTS) {
   lines.push(
     `insert into public.prompts (`,
-    `  author_id, title, slug, description, category, is_published,`,
+    `  author_id, title, slug, description, category, status,`,
     `  base_instructions, fill_in_details_guidance, reference_projects_guidance,`,
     `  reference_links_guidance, expected_output_notes`,
     `)`,
@@ -61,7 +61,7 @@ for (const p of SEED_PROMPTS) {
     `  '${p.slug}',`,
     `  ${dq(p.description)},`,
     `  '${p.category}',`,
-    `  true,`,
+    `  'approved',`,
     `  ${dq(p.base_instructions)},`,
     `  ${dq(p.fill_in_details_guidance)},`,
     `  ${dq(p.reference_projects_guidance)},`,
