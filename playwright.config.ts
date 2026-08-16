@@ -2,6 +2,10 @@ import { defineConfig, devices } from "@playwright/test";
 
 export default defineConfig({
   testDir: "./e2e",
+  // Validates required env vars before webServer even starts — see its
+  // header comment for why (fails fast with an actionable message
+  // instead of a 60s webServer timeout hiding an opaque crash).
+  globalSetup: "./e2e/global-setup.ts",
   fullyParallel: false, // e2e/core-flows.spec.ts is a deliberately serial user journey
   forbidOnly: !!process.env.CI,
   retries: process.env.CI ? 1 : 0,
