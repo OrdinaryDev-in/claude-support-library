@@ -83,9 +83,8 @@ what happened, and relevant environment details (Node version, browser).
 ## Reporting a security issue
 
 Please **do not** open a public issue for a security vulnerability
-(especially anything related to auth, RLS, or data exposure). Email
-**mubashir585@gmail.com** with details instead, and allow time for a fix
-before any public disclosure.
+(especially anything related to auth, RLS, or data exposure). See
+[SECURITY.md](SECURITY.md) for how to report it privately.
 
 ## Project structure
 
