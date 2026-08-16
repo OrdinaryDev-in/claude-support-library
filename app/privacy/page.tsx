@@ -15,9 +15,11 @@ export default function PrivacyPage() {
 
         <div className="mt-8 mb-10 p-4 border border-[var(--brass)]/40 rounded-md bg-[var(--brass)]/5">
           <p className="text-[13px] text-[var(--muted)] leading-relaxed m-0">
-            <strong className="text-[var(--brass)]">Draft placeholder.</strong>{" "}
-            This is generic starter text, not reviewed legal advice. Replace it
-            with real policy content (and get it reviewed) before relying on it.
+            <strong className="text-[var(--brass)]">Draft, not reviewed by a lawyer.</strong>{" "}
+            This describes what DevAtlas actually does today, in plain
+            language — it hasn&apos;t had legal review. Get it reviewed before
+            treating it as a binding policy, and update it if what the app
+            collects or does changes.
           </p>
         </div>
 
@@ -25,49 +27,127 @@ export default function PrivacyPage() {
           Privacy Policy
         </h1>
         <p className="text-xs text-[var(--muted)] font-[family-name:var(--font-mono)] mb-8">
-          Last updated: [DATE]
+          Last updated: August 16, 2026
         </p>
 
         <div className="flex flex-col gap-6 text-sm leading-relaxed text-[var(--text)]">
           <section>
+            <h2 className="text-base font-semibold mb-2">Who this covers</h2>
+            <p className="text-[var(--muted)]">
+              DevAtlas is operated by Mubashir Mohamed. This policy explains
+              what information DevAtlas collects when you use it, why, and
+              what your options are.
+            </p>
+          </section>
+
+          <section>
             <h2 className="text-base font-semibold mb-2">What we collect</h2>
             <p className="text-[var(--muted)]">
-              [DESCRIBE: account details (name, email) collected at signup;
-              content you create in the app (e.g. prompts); basic usage data.
-              List anything else DevAtlas actually stores.]
+              At sign-up: your email address and, optionally, your full
+              name. Your password is never stored in plain text — it&apos;s
+              handled and hashed by our authentication provider, Supabase.
+            </p>
+            <p className="text-[var(--muted)] mt-3">
+              As you use the app: the prompts you create (title,
+              description, category, tags, and the template text itself),
+              and basic account metadata like your last sign-in time and
+              account role.
+            </p>
+            <p className="text-[var(--muted)] mt-3">
+              We don&apos;t run analytics or advertising trackers, and we don&apos;t
+              collect anything beyond what&apos;s described above.
             </p>
           </section>
 
           <section>
             <h2 className="text-base font-semibold mb-2">How we use it</h2>
             <p className="text-[var(--muted)]">
-              [DESCRIBE: to operate your account, show your content back to
-              you, and — if applicable — send transactional email like
-              signup confirmation and password resets.]
+              To create and authenticate your account, and to show your
+              prompts to you. Prompts you mark as published are visible to
+              other signed-in DevAtlas users in the shared library — that&apos;s
+              the point of the app, so treat anything you publish as shared,
+              not private.
+            </p>
+            <p className="text-[var(--muted)] mt-3">
+              We send transactional email only: sign-up confirmation and
+              password-reset messages. No marketing email.
+            </p>
+          </section>
+
+          <section>
+            <h2 className="text-base font-semibold mb-2">Cookies</h2>
+            <p className="text-[var(--muted)]">
+              DevAtlas sets one essential cookie (via Supabase Auth) to keep
+              you signed in. It&apos;s required for the app to work and isn&apos;t
+              used for tracking, advertising, or analytics.
             </p>
           </section>
 
           <section>
             <h2 className="text-base font-semibold mb-2">Third parties</h2>
             <p className="text-[var(--muted)]">
-              [LIST: e.g. Supabase (hosting, auth, database), and your email
-              provider once custom SMTP is configured. Note that OAuth
-              sign-in, if enabled, shares basic profile info from the
-              provider you choose.]
+              <strong className="text-[var(--text)]">Supabase</strong>{" "}
+              (supabase.com) hosts our database, authentication, and email
+              delivery — your account and content data lives on their
+              infrastructure. We don&apos;t sell or share your data with
+              advertisers or data brokers, and we don&apos;t use any other
+              third-party service today.
+            </p>
+            <p className="text-[var(--muted)] mt-3">
+              If Google or GitHub sign-in is enabled in the future, choosing
+              one would share basic profile info (name, email) from that
+              provider with us to create your account — this policy will be
+              updated first.
             </p>
           </section>
 
           <section>
-            <h2 className="text-base font-semibold mb-2">Your rights</h2>
+            <h2 className="text-base font-semibold mb-2">Your options</h2>
             <p className="text-[var(--muted)]">
-              [DESCRIBE: how a user can access, export, or delete their
-              account and data, and who to contact to do so.]
+              You can update your display name from{" "}
+              <Link href="/account" className="text-[var(--brass)] no-underline">
+                Account settings
+              </Link>{" "}
+              at any time. There&apos;s no self-serve account deletion or data
+              export yet — email us (below) and we&apos;ll handle it directly.
+            </p>
+          </section>
+
+          <section>
+            <h2 className="text-base font-semibold mb-2">Data retention</h2>
+            <p className="text-[var(--muted)]">
+              We keep your account and content for as long as your account
+              is active. If you ask us to delete your account, we&apos;ll remove
+              your personal data and content within a reasonable time,
+              except where we&apos;re required to keep records for legal
+              reasons.
+            </p>
+          </section>
+
+          <section>
+            <h2 className="text-base font-semibold mb-2">Children</h2>
+            <p className="text-[var(--muted)]">
+              DevAtlas isn&apos;t directed at children, and we don&apos;t knowingly
+              collect information from anyone under 13.
+            </p>
+          </section>
+
+          <section>
+            <h2 className="text-base font-semibold mb-2">Changes to this policy</h2>
+            <p className="text-[var(--muted)]">
+              If what DevAtlas collects or how it&apos;s used changes materially,
+              we&apos;ll update this page and change the date above.
             </p>
           </section>
 
           <section>
             <h2 className="text-base font-semibold mb-2">Contact</h2>
-            <p className="text-[var(--muted)]">[YOUR CONTACT EMAIL]</p>
+            <p className="text-[var(--muted)]">
+              Questions about this policy, or a data request:{" "}
+              <a href="mailto:mubashir585@gmail.com" className="text-[var(--brass)] no-underline">
+                mubashir585@gmail.com
+              </a>
+            </p>
           </section>
         </div>
 
