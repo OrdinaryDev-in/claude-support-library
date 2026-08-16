@@ -15,9 +15,7 @@
  */
 export function buildCsp(): { nonce: string; header: string } {
   const nonce = Buffer.from(crypto.randomUUID()).toString("base64");
-
-  const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL;
-  const supabaseHost = supabaseUrl ? new URL(supabaseUrl).host : null;
+  const supabaseHost = getSupabaseHost();
   const connectSrc = ["'self'", supabaseHost && `https://${supabaseHost}`, supabaseHost && `wss://${supabaseHost}`]
     .filter(Boolean)
     .join(" ");
@@ -37,4 +35,36 @@ export function buildCsp(): { nonce: string; header: string } {
   ];
 
   return { nonce, header: directives.join("; ") };
+}
+
+/**
+ * A malformed NEXT_PUBLIC_SUPABASE_URL (e.g. stray quote characters baked
+ * into the value — easy to end up with when hand-assembling env vars from
+ * `supabase status -o env`'s shell-quoted output via something other than
+ * `source`, which is the one thing that actually parses `KEY="value"`
+ * assignment syntax rather than treating the quotes as literal
+ * characters) must never crash proxy.ts on every single request. Strips
+ * a matching pair of surrounding quotes defensively, and falls back to
+ * omitting the Supabase host from connect-src (CSP just ends up
+ * stricter than intended) rather than throwing, if the value still isn't
+ * a valid URL after that.
+ */
+function getSupabaseHost(): string | null {
+  const raw = process.env.NEXT_PUBLIC_SUPABASE_URL;
+  if (!raw) return null;
+
+  const unquoted =
+    (raw.startsWith('"') && raw.endsWith('"')) || (raw.startsWith("'") && raw.endsWith("'"))
+      ? raw.slice(1, -1)
+      : raw;
+
+  try {
+    return new URL(unquoted).host;
+  } catch {
+    console.warn(
+      `[buildCsp] NEXT_PUBLIC_SUPABASE_URL is not a valid URL (got: ${JSON.stringify(raw)}) — ` +
+        "omitting it from the CSP's connect-src instead of crashing."
+    );
+    return null;
+  }
 }

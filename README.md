@@ -104,12 +104,24 @@ production callback URLs.
 ```bash
 npm run test        # unit tests (Vitest) — the authorization boundary:
                      # app/actions/{prompts,profile}.ts
-npm run test:e2e     # E2E (Playwright) — needs a local Supabase stack:
-                     #   supabase start && supabase db reset
-                     # then export NEXT_PUBLIC_SUPABASE_URL /
-                     # NEXT_PUBLIC_SUPABASE_ANON_KEY / SUPABASE_SERVICE_ROLE_KEY
-                     # from `supabase status -o env` (see ci.yml's test-e2e
-                     # job for the exact commands)
+
+# E2E (Playwright) — needs a local Supabase stack:
+supabase start && supabase db reset
+
+# Loads the env vars via `source`, not `export $(...)` — `source` is what
+# actually parses supabase status's shell-quoted KEY="value" output as
+# assignment syntax; capturing it another way (e.g. `export $(cat ...)`,
+# a naive `cut`) tends to leave the quote characters embedded literally
+# in the value, which crashes proxy.ts's CSP builder on every request
+# with `TypeError: Invalid URL`.
+set -a
+source <(supabase status -o env \
+  --override-name api.url=NEXT_PUBLIC_SUPABASE_URL \
+  --override-name auth.anon_key=NEXT_PUBLIC_SUPABASE_ANON_KEY \
+  --override-name auth.service_role_key=SUPABASE_SERVICE_ROLE_KEY)
+set +a
+
+npm run test:e2e
 ```
 
 `test/integration/role-escalation.test.ts` (part of `npm run test`) is a
