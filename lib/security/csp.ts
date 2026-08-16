@@ -15,10 +15,8 @@
  */
 export function buildCsp(): { nonce: string; header: string } {
   const nonce = Buffer.from(crypto.randomUUID()).toString("base64");
-  const supabaseHost = getSupabaseHost();
-  const connectSrc = ["'self'", supabaseHost && `https://${supabaseHost}`, supabaseHost && `wss://${supabaseHost}`]
-    .filter(Boolean)
-    .join(" ");
+  const supabaseOrigin = getSupabaseOrigin();
+  const connectSrc = ["'self'", supabaseOrigin?.http, supabaseOrigin?.ws].filter(Boolean).join(" ");
 
   const directives = [
     `default-src 'self'`,
@@ -48,8 +46,19 @@ export function buildCsp(): { nonce: string; header: string } {
  * omitting the Supabase host from connect-src (CSP just ends up
  * stricter than intended) rather than throwing, if the value still isn't
  * a valid URL after that.
+ *
+ * The http/ws vs. https/wss scheme is derived from the URL itself, not
+ * hardcoded — a real project URL is always https (wss for Realtime), but
+ * a local/self-hosted Supabase stack (`supabase start`, used by
+ * e2e/core-flows.spec.ts and CI's test-e2e job) is plain http on
+ * 127.0.0.1, whose Realtime endpoint is ws, not wss. Hardcoding https/wss
+ * here previously meant CSP's connect-src never actually matched what the
+ * browser was really connecting to on a local stack (silent no-op while
+ * CSP is Content-Security-Policy-Report-Only, but would have started
+ * genuinely blocking every Supabase request the moment CSP_ENFORCE=true
+ * was ever set against a local/self-hosted target).
  */
-function getSupabaseHost(): string | null {
+function getSupabaseOrigin(): { http: string; ws: string } | null {
   const raw = process.env.NEXT_PUBLIC_SUPABASE_URL;
   if (!raw) return null;
 
@@ -59,7 +68,12 @@ function getSupabaseHost(): string | null {
       : raw;
 
   try {
-    return new URL(unquoted).host;
+    const url = new URL(unquoted);
+    const isHttps = url.protocol === "https:";
+    return {
+      http: `${url.protocol}//${url.host}`,
+      ws: `${isHttps ? "wss:" : "ws:"}//${url.host}`,
+    };
   } catch {
     console.warn(
       `[buildCsp] NEXT_PUBLIC_SUPABASE_URL is not a valid URL (got: ${JSON.stringify(raw)}) — ` +

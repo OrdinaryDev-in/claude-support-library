@@ -35,6 +35,28 @@ test.beforeAll(() => {
   }
 });
 
+// A failed assertion (e.g. "still on /signup, expected /library") only
+// says the *symptom* — it says nothing about *why*: a thrown client-side
+// error, a CSP violation, a failed network request, all look identical
+// from the URL alone. Piping the browser's own console/errors/failed
+// requests into CI's plain stdout (prefixed so they're greppable) means
+// the next failure carries its own root cause in the log the CI job
+// already prints, instead of needing someone to separately pull down and
+// open trace.zip.
+test.beforeEach(async ({ page }) => {
+  page.on("console", (msg) => {
+    if (msg.type() === "error" || msg.type() === "warning") {
+      console.log(`[browser:${msg.type()}] ${msg.text()}`);
+    }
+  });
+  page.on("pageerror", (err) => {
+    console.log(`[browser:uncaught] ${err.message}`);
+  });
+  page.on("requestfailed", (req) => {
+    console.log(`[browser:requestfailed] ${req.method()} ${req.url()} — ${req.failure()?.errorText}`);
+  });
+});
+
 test("sign up creates an account and lands in the library", async ({ page }) => {
   await page.goto("/signup");
   await page.getByPlaceholder("Jane Doe").fill("E2E Owner");

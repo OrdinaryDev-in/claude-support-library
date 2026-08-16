@@ -26,7 +26,24 @@ describe("buildCsp", () => {
 
     const { header } = buildCsp();
 
-    expect(header).toContain("connect-src 'self' https://127.0.0.1:54321 wss://127.0.0.1:54321");
+    // http in, http out (see the next test) — not hardcoded to https.
+    expect(header).toContain("connect-src 'self' http://127.0.0.1:54321 ws://127.0.0.1:54321");
+  });
+
+  it("uses http/ws (not https/wss) for a local/self-hosted Supabase URL", () => {
+    // A local `supabase start` stack (used by e2e/core-flows.spec.ts and
+    // CI's test-e2e job) serves plain HTTP on 127.0.0.1 — connect-src
+    // must match the scheme actually used, or every Supabase request
+    // would be silently dropped the moment CSP_ENFORCE=true is set
+    // against a local/self-hosted target (report-only mode doesn't block,
+    // which is exactly why this had gone unnoticed).
+    process.env.NEXT_PUBLIC_SUPABASE_URL = "http://127.0.0.1:54321";
+
+    const { header } = buildCsp();
+
+    expect(header).toContain("connect-src 'self' http://127.0.0.1:54321 ws://127.0.0.1:54321");
+    expect(header).not.toContain("https://127.0.0.1:54321");
+    expect(header).not.toContain("wss://127.0.0.1:54321");
   });
 
   it("omits the Supabase host, doesn't throw, and logs a warning for a genuinely invalid URL", () => {
