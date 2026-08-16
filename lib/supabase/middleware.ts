@@ -48,6 +48,26 @@ export async function updateSession(request: NextRequest, requestHeaders: Header
     data: { user },
   } = await supabase.auth.getUser();
 
+  // Server Actions POST to whatever page they were called from — e.g.
+  // AuthForm.tsx calls touchLastLogin() while still on /signup, right
+  // after a successful signUp() has already set the session cookie. A
+  // page-level redirect below would apply to that request too (user is
+  // now truthy, path is /signup → "signed-out-only" bounce), but a
+  // Server Action's request isn't a page navigation — it's the app's own
+  // fetch expecting a specific RSC/action response back. Next's
+  // client-side action handler can't parse a bare redirect as a valid
+  // action response, and throws a generic, unhelpful "An unexpected
+  // response was received from the server." with no indication of why
+  // (confirmed by reading node_modules/next/dist/.../server-action-
+  // reducer.js — it falls back to that exact message whenever the
+  // response isn't RSC-shaped and isn't Next's own action-redirect
+  // format). Skip both page-level redirects for these requests
+  // entirely and let the action run — the actions themselves are the
+  // real authorization boundary (see app/actions/*.ts's own auth
+  // checks and RLS), this redirect is only ever a page-navigation UX
+  // nicety, never a security gate.
+  const isServerAction = request.headers.has("next-action");
+
   const isSignedOutOnlyPath = SIGNED_OUT_ONLY_PATHS.some((path) =>
     request.nextUrl.pathname.startsWith(path)
   );
@@ -55,14 +75,14 @@ export async function updateSession(request: NextRequest, requestHeaders: Header
     request.nextUrl.pathname.startsWith(path)
   );
 
-  if (!user && !isSignedOutOnlyPath && !isAlwaysPublicPath) {
+  if (!isServerAction && !user && !isSignedOutOnlyPath && !isAlwaysPublicPath) {
     const loginUrl = request.nextUrl.clone();
     loginUrl.pathname = "/login";
     loginUrl.searchParams.set("next", request.nextUrl.pathname);
     return NextResponse.redirect(loginUrl);
   }
 
-  if (user && isSignedOutOnlyPath) {
+  if (!isServerAction && user && isSignedOutOnlyPath) {
     const libraryUrl = request.nextUrl.clone();
     libraryUrl.pathname = "/library";
     libraryUrl.search = "";
