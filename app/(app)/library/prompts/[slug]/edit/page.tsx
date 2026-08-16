@@ -20,15 +20,20 @@ export default async function EditPromptPage({
     .single();
   if (error || !prompt) notFound();
 
-  let allowed = user.id === prompt.author_id;
-  if (!allowed) {
-    const { data: profile } = await supabase
-      .from("profiles")
-      .select("role")
-      .eq("id", user.id)
-      .single();
-    allowed = profile?.role === "admin";
-  }
+  // Fetched unconditionally (not just when the editor isn't the author) —
+  // guard_prompt_review_state()'s admin exemption (0009/0014) is keyed on
+  // is_admin(auth.uid()), not on authorship, so an admin editing their own
+  // approved prompt still skips the resubmit-for-review reset. PromptForm
+  // needs to know that to avoid showing a "will resubmit" warning that
+  // isn't true for an admin editor.
+  const { data: profile } = await supabase
+    .from("profiles")
+    .select("role")
+    .eq("id", user.id)
+    .single();
+  const isAdmin = profile?.role === "admin";
+
+  const allowed = user.id === prompt.author_id || isAdmin;
   if (!allowed) redirect(`/library/prompts/${prompt.slug}`);
 
   const { data: joins } = await supabase
@@ -44,6 +49,7 @@ export default async function EditPromptPage({
     id: prompt.id,
     slug: prompt.slug,
     status: prompt.status,
+    editorIsAdmin: isAdmin,
     title: prompt.title,
     description: prompt.description,
     category: prompt.category,
