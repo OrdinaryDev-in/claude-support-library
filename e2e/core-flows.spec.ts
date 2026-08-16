@@ -20,8 +20,13 @@ import { createClient } from "@supabase/supabase-js";
 test.describe.configure({ mode: "serial" });
 
 const run = Date.now();
-const ownerEmail = `e2e-owner-${run}@example.com`;
-const otherEmail = `e2e-other-${run}@example.com`;
+// let, not const: reassigned on retry (see the first test) so a retry
+// never reuses the exact same email as the attempt before it — serial
+// mode re-runs the whole file from test 1 on retry, and the same email
+// would otherwise turn an unrelated failure's retry into a spurious
+// "user already registered" instead of a clean re-attempt.
+let ownerEmail = `e2e-owner-${run}@example.com`;
+let otherEmail = `e2e-other-${run}@example.com`;
 const password = "correct-horse-battery-1";
 const promptTitle = `E2E Test Prompt ${run}`;
 let promptSlug = "";
@@ -57,7 +62,11 @@ test.beforeEach(async ({ page }) => {
   });
 });
 
-test("sign up creates an account and lands in the library", async ({ page }) => {
+test("sign up creates an account and lands in the library", async ({ page }, testInfo) => {
+  if (testInfo.retry > 0) {
+    ownerEmail = `e2e-owner-${run}-r${testInfo.retry}@example.com`;
+    otherEmail = `e2e-other-${run}-r${testInfo.retry}@example.com`;
+  }
   await page.goto("/signup");
   await page.getByPlaceholder("Jane Doe").fill("E2E Owner");
   await page.getByPlaceholder("you@company.com").fill(ownerEmail);

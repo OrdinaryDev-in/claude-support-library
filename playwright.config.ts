@@ -45,7 +45,19 @@ export default defineConfig({
   workers: 1,
   reporter: "list",
   use: {
-    baseURL: "http://localhost:3000",
+    // 127.0.0.1, not localhost: supabase/config.toml's [auth] site_url is
+    // http://127.0.0.1:3000, and GoTrue validates signUp()'s
+    // emailRedirectTo (AuthForm.tsx sets it to window.location.origin +
+    // "/callback...") against that exact allow-list — a "localhost"
+    // origin doesn't match "127.0.0.1" as a string even though they
+    // resolve to the same place, so GoTrue rejected every signup with a
+    // redirect-not-allowed error. That's why "sign up creates an account"
+    // failed identically on every run and its retry: not a flake, a fixed
+    // mismatch that fails the exact same way every time. AuthForm just
+    // calls setError() on that response (no throw, no CSP violation, no
+    // failed request) — consistent with the earlier failure's diagnostics
+    // showing nothing at all.
+    baseURL: "http://127.0.0.1:3000",
     trace: "on-first-retry",
   },
   projects: [
@@ -65,7 +77,7 @@ export default defineConfig({
   // (pointed at the real project) is just never consulted.
   webServer: {
     command: "npm run build && npm run start",
-    url: "http://localhost:3000",
+    url: "http://127.0.0.1:3000",
     reuseExistingServer: false,
     timeout: 180_000,
     env: { NODE_ENV: "test" },
