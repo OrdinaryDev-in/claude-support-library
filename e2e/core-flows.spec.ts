@@ -210,14 +210,15 @@ test("a different signed-in account can't see the still-pending prompt at all �
   // branch ever being reached. Asserting on the rendered not-found content
   // rather than response.status() — confirmed via a captured page
   // snapshot that this Next.js version renders the real not-found UI here
-  // (heading "404" / "This page could not be found.") while still
-  // returning HTTP 200 on page.goto()'s response for the initial
-  // navigation, so status() isn't the reliable signal for this check.
+  // (heading "Page not found" — app/not-found.tsx's own copy, not Next's
+  // built-in default) while still returning HTTP 200 on page.goto()'s
+  // response for the initial navigation, so status() isn't the reliable
+  // signal for this check.
   await page.goto(`/library/prompts/${promptSlug}`);
-  await expect(page.getByRole("heading", { name: "This page could not be found." })).toBeVisible();
+  await expect(page.getByRole("heading", { name: "Page not found" })).toBeVisible();
 
   await page.goto(`/library/prompts/${promptSlug}/edit`);
-  await expect(page.getByRole("heading", { name: "This page could not be found." })).toBeVisible();
+  await expect(page.getByRole("heading", { name: "Page not found" })).toBeVisible();
 });
 
 test("promoting that account to admin lifts the denial", async ({ page }) => {

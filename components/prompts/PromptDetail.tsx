@@ -46,13 +46,24 @@ export function PromptDetail({
   const [showDeleteConfirm, setShowDeleteConfirm] = useState(false);
   const [showToast, setShowToast] = useState(false);
   const [duplicating, setDuplicating] = useState(false);
+  const [actionError, setActionError] = useState<string | null>(null);
   const deleteTimer = useRef<ReturnType<typeof setTimeout> | null>(null);
 
   function confirmDelete() {
     setShowDeleteConfirm(false);
+    setActionError(null);
     setShowToast(true);
     deleteTimer.current = setTimeout(async () => {
-      await deletePrompt(prompt.id);
+      const result = await deletePrompt(prompt.id);
+      if (!result.ok) {
+        // Delete failed server-side after the undo window already closed —
+        // the prompt is still here, so don't navigate away as if it
+        // succeeded. Surface the error instead of leaving the user to
+        // discover it's still in the library on their own.
+        setShowToast(false);
+        setActionError(result.error);
+        return;
+      }
       router.push("/library/prompts");
       router.refresh();
     }, 5000);
@@ -65,11 +76,13 @@ export function PromptDetail({
 
   async function handleDuplicate() {
     setDuplicating(true);
+    setActionError(null);
     const result = await duplicatePrompt(prompt.id);
     if (result.ok) {
       router.push(`/library/prompts/${result.slug}/edit`);
     } else {
       setDuplicating(false);
+      setActionError(result.error);
     }
   }
 
@@ -119,6 +132,9 @@ export function PromptDetail({
                 </span>
               ))}
             </div>
+          )}
+          {actionError && (
+            <p className="text-[13px] text-[var(--danger)] max-w-[600px] mt-3">{actionError}</p>
           )}
         </div>
 

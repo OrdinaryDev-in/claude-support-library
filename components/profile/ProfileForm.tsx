@@ -17,6 +17,7 @@ export interface ProfileData {
 export function ProfileForm({ profile, submissions }: { profile: ProfileData; submissions: PromptRow[] }) {
   const [fullName, setFullName] = useState(profile.fullName);
   const [savingProfile, setSavingProfile] = useState(false);
+  const [profileError, setProfileError] = useState<string | null>(null);
 
   const [currentPw, setCurrentPw] = useState("");
   const [newPw, setNewPw] = useState("");
@@ -32,10 +33,15 @@ export function ProfileForm({ profile, submissions }: { profile: ProfileData; su
   }
 
   async function handleSaveProfile() {
+    setProfileError(null);
     setSavingProfile(true);
     const result = await updateFullName(fullName);
     setSavingProfile(false);
-    if (result.ok) showToast("Profile saved");
+    if (!result.ok) {
+      setProfileError(result.error);
+      return;
+    }
+    showToast("Profile saved");
   }
 
   async function handleResetPw() {
@@ -106,6 +112,7 @@ export function ProfileForm({ profile, submissions }: { profile: ProfileData; su
             <div className="font-[family-name:var(--font-mono)] text-[13px]">{profile.lastLogin}</div>
           </div>
         </div>
+        {profileError && <div className="text-xs text-[var(--danger)]">{profileError}</div>}
         <div>
           <button onClick={handleSaveProfile} disabled={savingProfile} className={activeBtn}>
             {savingProfile ? "Saving…" : "Save changes"}

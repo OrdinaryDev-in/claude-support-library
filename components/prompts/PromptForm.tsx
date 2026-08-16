@@ -17,6 +17,12 @@ export interface PromptFormInitialValues extends PromptFormValues {
    * content always flips it back to pending_review, so this is knowable
    * up front without a round trip). */
   status: PromptStatus;
+  /** Is the *editor* (not necessarily the author) an admin? guard_prompt_review_state()'s
+   * resubmit-on-edit reset only applies in its non-admin branch — an admin
+   * editing an approved/rejected prompt's content leaves status untouched.
+   * Needed so the "will resubmit for review" warning isn't shown to an
+   * admin editor, for whom it isn't true. */
+  editorIsAdmin: boolean;
 }
 
 export function PromptForm({
@@ -52,12 +58,14 @@ export function PromptForm({
 
   const preview = useMemo(() => assembleTemplate(fields), [fields]);
 
-  // Editing an approved/rejected prompt's content always resubmits it for
-  // review (guard_prompt_review_state(), 0009_prompt_review_workflow.sql) —
-  // known from the status this prompt had when the page loaded, no need to
-  // wait for the save to complete.
+  // Editing an approved/rejected prompt's content resubmits it for review
+  // (guard_prompt_review_state(), 0009_prompt_review_workflow.sql) — but
+  // only in that trigger's non-admin branch; an admin editor's save never
+  // resets status. Both are known from data the page already loaded, no
+  // need to wait for the save to complete.
   const priorStatus = isEdit ? initialValues?.status : undefined;
-  const willResubmit = priorStatus !== undefined && priorStatus !== "pending_review";
+  const willResubmit =
+    priorStatus !== undefined && priorStatus !== "pending_review" && !initialValues?.editorIsAdmin;
   const toastText = !isEdit ? "Submitted for review" : willResubmit ? "Saved — resubmitted for review" : "Saved";
 
   async function handleSubmit(e: React.FormEvent) {
