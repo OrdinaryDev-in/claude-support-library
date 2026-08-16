@@ -133,9 +133,24 @@ test("owner can create a prompt", async ({ page }) => {
     .fill("Nothing in particular.");
   await page.getByRole("button", { name: "Publish prompt" }).click();
 
-  await expect(page).toHaveURL(/\/library\/prompts\/[^/]+$/, { timeout: 10_000 });
+  // Wait for a signal that can ONLY be true on the real detail page
+  // first, before touching the URL at all: /\/library\/prompts\/[^/]+$/
+  // looks like it only matches the new prompt's slug, but [^/]+ also
+  // matches the literal word "new" — so it was trivially already
+  // satisfied by the *form's own URL* (/library/prompts/new) the instant
+  // this assertion started polling, before the real post-submit redirect
+  // ever happened. That silently captured promptSlug = "new" below (not
+  // a real prompt), which then made the next test's "denied editing it"
+  // check fail for a completely different reason than intended — it hit
+  // a genuine 404 on /library/prompts/new/edit, since no prompt has that
+  // slug. The heading is unambiguous: it only renders on the created
+  // prompt's own detail page.
+  await expect(page.getByRole("heading", { name: promptTitle })).toBeVisible({ timeout: 10_000 });
+  // Negative lookahead as defense in depth, now that ordering alone
+  // already fixes the real bug — belt and suspenders against the exact
+  // same trap recurring here or anywhere this pattern gets copied.
+  await expect(page).toHaveURL(/\/library\/prompts\/(?!new$)[^/]+$/);
   promptSlug = new URL(page.url()).pathname.split("/").pop()!;
-  await expect(page.getByRole("heading", { name: promptTitle })).toBeVisible();
   // Owner sees edit controls.
   await expect(page.getByRole("link", { name: "Edit" })).toBeVisible();
 });
