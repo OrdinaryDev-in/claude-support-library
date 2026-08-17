@@ -1,0 +1,18 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 560 160">
+  <g transform="translate(10,15) scale(0.677)">
+    <rect x="0" y="0" width="192" height="192" rx="40" fill="oklch(12% 0.006 240)"></rect>
+    
+  <circle cx="96" cy="46" r="10" fill="oklch(72% 0.13 200)"></circle>
+  <circle cx="146" cy="96" r="10" fill="oklch(72% 0.13 200)"></circle>
+  <circle cx="96" cy="146" r="10" fill="oklch(72% 0.13 200)"></circle>
+  <circle cx="46" cy="96" r="10" fill="oklch(72% 0.13 200)"></circle>
+  <line x1="96" y1="96" x2="96" y2="46" stroke="oklch(72% 0.13 200)" stroke-width="6" stroke-linecap="round" opacity="0.9"></line>
+  <line x1="96" y1="96" x2="146" y2="96" stroke="oklch(72% 0.13 200)" stroke-width="6" stroke-linecap="round" opacity="0.9"></line>
+  <line x1="96" y1="96" x2="96" y2="146" stroke="oklch(72% 0.13 200)" stroke-width="6" stroke-linecap="round" opacity="0.9"></line>
+  <line x1="96" y1="96" x2="46" y2="96" stroke="oklch(72% 0.13 200)" stroke-width="6" stroke-linecap="round" opacity="0.9"></line>
+  <circle cx="96" cy="96" r="14" fill="oklch(12% 0.006 240)"></circle>
+  <circle cx="96" cy="96" r="12" fill="oklch(72% 0.13 80)"></circle>
+
+  </g>
+  <text x="165" y="100" font-family="Sora, sans-serif" font-weight="800" font-size="64" letter-spacing="-1.5" fill="oklch(97% 0.004 240)">DevAtlas</text>
+</svg>

@@ -1,5 +1,6 @@
 import Link from "next/link";
 import type { Metadata } from "next";
+import { Logo } from "@/components/layout/Logo";
 
 export const metadata: Metadata = {
   title: "Terms of Service — DevAtlas",
@@ -9,8 +10,8 @@ export default function TermsPage() {
   return (
     <div className="min-h-screen bg-[var(--ink)] text-[var(--text)] px-4 py-12 sm:py-16">
       <div className="max-w-[640px] mx-auto">
-        <Link href="/" className="font-[family-name:var(--font-display)] text-xl font-semibold no-underline text-[var(--text)]">
-          DevAtlas
+        <Link href="/" className="inline-block no-underline">
+          <Logo markSize={24} textClassName="text-xl" />
         </Link>
 
         <div className="mt-8 mb-10 p-4 border border-[var(--brass)]/40 rounded-md bg-[var(--brass)]/5">

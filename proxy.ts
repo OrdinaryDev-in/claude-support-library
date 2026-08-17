@@ -28,9 +28,15 @@ export async function proxy(request: NextRequest) {
 export const config = {
   matcher: [
     /*
-     * Run on every request except static assets and image optimization
-     * files, so auth gating never blocks CSS/JS/images from loading.
+     * Run on every request except static assets, image optimization
+     * files, and the generated icon/opengraph-image routes, so auth
+     * gating never blocks CSS/JS/images — or the social-preview image —
+     * from loading. opengraph-image has no fixed extension in its URL
+     * (unlike icon.svg/apple-icon.png, already caught by the extension
+     * alternation below), so it needs its own explicit exclusion, or an
+     * unauthenticated crawler fetching it gets bounced to /login instead
+     * of the image.
      */
-    "/((?!_next/static|_next/image|favicon.ico|.*\\.(?:svg|png|jpg|jpeg|gif|webp)$).*)",
+    "/((?!_next/static|_next/image|favicon.ico|opengraph-image|.*\\.(?:svg|png|jpg|jpeg|gif|webp)$).*)",
   ],
 };

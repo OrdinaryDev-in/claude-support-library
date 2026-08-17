@@ -5,6 +5,7 @@ import { usePathname, useRouter } from "next/navigation";
 import { useEffect, useRef, useState } from "react";
 import { createClient } from "@/lib/supabase/client";
 import { LIBRARY_SECTIONS } from "@/lib/constants/library-sections";
+import { Logo } from "@/components/layout/Logo";
 
 export interface NavBarUser {
   initials: string;
@@ -73,11 +74,9 @@ export function NavBar({ user }: { user: NavBarUser | null }) {
   return (
     <div className="flex items-center justify-between h-16 px-4 sm:px-8 bg-[var(--surface)] border-b border-[var(--border)] shrink-0">
       <div className="flex items-center gap-6 sm:gap-9 min-w-0">
-        <Link href="/library" className="flex items-baseline gap-1.5 shrink-0">
-          <span className="font-[family-name:var(--font-display)] text-[19px] font-semibold text-[var(--text)]">
-            DevAtlas
-          </span>
-          <span className="font-[family-name:var(--font-mono)] text-[10px] text-[var(--brass)] tracking-wider">
+        <Link href="/library" className="flex items-center gap-1.5 shrink-0">
+          <Logo markSize={24} textClassName="text-[19px]" />
+          <span className="font-[family-name:var(--font-mono)] text-[10px] text-[var(--brass)] tracking-wider self-end mb-px">
             v1
           </span>
         </Link>
