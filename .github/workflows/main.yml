@@ -1,4 +1,16 @@
-- name: 'notify vercel'
-  uses: 'vercel/repository-dispatch/actions/status@v1'
-  with:
-    name: Vercel - claude-support-library: lint
+name: Notify Vercel
+
+on:
+  push:
+    branches: [main]
+  pull_request:
+    branches: [main]
+
+jobs:
+  notify-vercel:
+    runs-on: ubuntu-latest
+    steps:
+      - name: 'notify vercel'
+        uses: 'vercel/repository-dispatch/actions/status@v1'
+        with:
+          name: "Vercel - claude-support-library: lint"
