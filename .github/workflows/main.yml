@@ -1,10 +1,26 @@
 name: Notify Vercel
 
+# Fired by Vercel's GitHub integration via a repository_dispatch webhook
+# whenever a deployment changes state — NOT by push/pull_request. These
+# are the exact client_payload event types Vercel sends (see
+# vercel/repository-dispatch's DispatchDeploymentEventType).
 on:
-  push:
-    branches: [main]
-  pull_request:
-    branches: [main]
+  repository_dispatch:
+    types:
+      - vercel.deployment.success
+      - vercel.deployment.error
+      - vercel.deployment.failed
+      - vercel.deployment.canceled
+      - vercel.deployment.ignored
+      - vercel.deployment.skipped
+      - vercel.deployment.pending
+      - vercel.deployment.promoted
+
+# The status action calls GitHub's "create a commit status" REST API,
+# which needs statuses: write on the token — without this the job fails
+# with "Resource not accessible by integration".
+permissions:
+  statuses: write
 
 jobs:
   notify-vercel:
