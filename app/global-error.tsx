@@ -1,6 +1,7 @@
 "use client";
 
 import { useEffect } from "react";
+import { logClientError } from "@/app/actions/errors";
 
 // Last-resort fallback: only fires when app/layout.tsx *itself* throws
 // (a plain app/error.tsx can't catch that — it's rendered by the layout
@@ -9,8 +10,10 @@ import { useEffect } from "react";
 // Inline styles with the design tokens' actual hex values, not Tailwind
 // classes or var(--...) references: this is the one boundary that has to
 // assume nothing else in the app (globals.css, font loading, Tailwind's
-// own build output) is trustworthy. Same Sentry.captureException() note
-// as app/error.tsx — this is the other place it'd go.
+// own build output) is trustworthy. Same error-persistence note as
+// app/error.tsx — this is the other place logClientError()/eventually
+// Sentry.captureException() goes. logClientError() itself never throws
+// (see lib/data/error-logs.ts), so it can't take this fallback down with it.
 export default function GlobalError({
   error,
   reset,
@@ -20,6 +23,12 @@ export default function GlobalError({
 }) {
   useEffect(() => {
     console.error(error);
+    void logClientError({
+      context: "app/global-error.tsx",
+      message: error.message,
+      digest: error.digest,
+      path: typeof window !== "undefined" ? window.location.pathname : null,
+    });
   }, [error]);
 
   return (

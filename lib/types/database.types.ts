@@ -128,6 +128,37 @@ export interface Database {
           },
         ];
       };
+      // Added by 0021_error_logs.sql.
+      error_logs: {
+        Row: {
+          id: string;
+          created_at: string;
+          context: string;
+          message: string;
+          digest: string | null;
+          path: string | null;
+          user_id: string | null;
+        };
+        Insert: {
+          id?: string;
+          created_at?: string;
+          context: string;
+          message: string;
+          digest?: string | null;
+          path?: string | null;
+          user_id?: string | null;
+        };
+        Update: Partial<Database["public"]["Tables"]["error_logs"]["Insert"]>;
+        Relationships: [
+          {
+            foreignKeyName: "error_logs_user_id_fkey";
+            columns: ["user_id"];
+            isOneToOne: false;
+            referencedRelation: "profiles";
+            referencedColumns: ["id"];
+          },
+        ];
+      };
     };
     Views: Record<string, never>;
     Functions: {

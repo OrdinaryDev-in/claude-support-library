@@ -1,18 +1,17 @@
 "use client";
 
 import { useEffect } from "react";
+import { logClientError } from "@/app/actions/errors";
 
 // Catches a render/runtime error anywhere under app/ that isn't caught by
 // a more specific error.tsx in its own segment. Must be a Client
 // Component (Next.js requirement — it needs reset(), a closure over
 // React state). This is also PRODUCTION_CHECKLIST.md's "no App Router
-// error boundaries" gap closed for the render-error half of it; the
-// still-open half is wiring an actual reporting service (Sentry or
-// equivalent) into the effect below — right now it only reaches the
-// server/browser's own logs, which is the same "log server-side, generic
-// message to the user" shape lib/errors.ts's safeActionError() already
-// uses for server action failures. If Sentry gets added, this is where
-// Sentry.captureException(error) goes.
+// error boundaries" gap closed for the render-error half of it — the
+// effect below now persists to public.error_logs (0021_error_logs.sql)
+// via logClientError(), the zero-dependency floor until/unless a real
+// service (Sentry or equivalent) is added. If Sentry gets added, this is
+// also where Sentry.captureException(error) goes, alongside this call.
 export default function Error({
   error,
   reset,
@@ -22,6 +21,12 @@ export default function Error({
 }) {
   useEffect(() => {
     console.error(error);
+    void logClientError({
+      context: "app/error.tsx",
+      message: error.message,
+      digest: error.digest,
+      path: typeof window !== "undefined" ? window.location.pathname : null,
+    });
   }, [error]);
 
   return (
