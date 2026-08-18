@@ -155,7 +155,12 @@ test("owner can create a prompt", async ({ page }) => {
   await page
     .getByPlaceholder("One sentence — what this prompt gets you")
     .fill("Created by the E2E suite.");
-  await page.getByRole("button", { name: "Backend" }).click();
+  // The category picker is a role="radiogroup"/role="radio" set
+  // (components/prompts/PromptForm.tsx), not plain buttons — distinct
+  // from the "Backend" *filter* button on /library/prompts (LibraryFilters,
+  // still a real <button>, see "category filtering narrows the browse
+  // grid" below).
+  await page.getByRole("radio", { name: "Backend" }).click();
   await page.getByPlaceholder("api, postgres, auth").fill("e2e-test");
   await page.getByPlaceholder("AI role and task-type framing").fill("You are a test.");
   await page.getByPlaceholder("[BRACKETED PLACEHOLDERS]").fill("[FIELD]");
@@ -310,7 +315,7 @@ test("owner submits a second prompt and admin rejects it with a reason", async (
   await page
     .getByPlaceholder("One sentence — what this prompt gets you")
     .fill("Also created by the E2E suite — expected to be rejected.");
-  await page.getByRole("button", { name: "Backend" }).click();
+  await page.getByRole("radio", { name: "Backend" }).click();
   await page.getByPlaceholder("api, postgres, auth").fill("e2e-test");
   await page.getByPlaceholder("AI role and task-type framing").fill("You are a test.");
   await page.getByPlaceholder("[BRACKETED PLACEHOLDERS]").fill("[FIELD]");
