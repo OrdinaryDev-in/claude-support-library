@@ -33,6 +33,15 @@ prior session's direct Supabase MCP use, never matching this repo's
 schema/data touched. `supabase db push --linked --dry-run` now reports
 "Remote database is up to date."
 
+**Custom domain added (2026-08-18):** `atlas.ordinarydev.in` is the
+project's real, primary public domain. `lib/site.ts` (metadataBase,
+sitemap.xml, robots.txt) now defaults to it directly — verified via a
+real production build (`NODE_ENV=production`) that `/robots.txt` and
+`/sitemap.xml` both resolve to `https://atlas.ordinarydev.in/...`.
+`.env.local.example` documents the `NEXT_PUBLIC_SITE_URL` override in
+case the domain ever changes. The one piece still needing the dashboard
+is Supabase Auth's own Site URL/redirect config — see below.
+
 ## 🟠 Should-fix before/shortly after launch
 
 All remaining items here are manual steps in an external dashboard
@@ -44,8 +53,16 @@ All remaining items here are manual steps in an external dashboard
       next scheduled run fails without this secret set.
 - [ ] Confirm **"Confirm email"** is re-enabled on the production Supabase
       project (README notes it's only disabled for local dev convenience).
-- [ ] Update Supabase Auth **Site URL / redirect allow-list** to the real
-      production domain (easy-to-forget manual deploy step, README §6).
+- [ ] Set Supabase Auth **Site URL** to `https://atlas.ordinarydev.in` and
+      add `https://atlas.ordinarydev.in/callback` to **Additional Redirect
+      URLs** (Dashboard → Authentication → URL Configuration).
+      `atlas.ordinarydev.in` was added as the project's custom domain
+      2026-08-18 — `lib/site.ts`'s app-side default already points there
+      (see below); this is the one remaining place it needs to be entered
+      by hand, since there's no scoped API/CLI path to it that doesn't
+      risk a wholesale config overwrite (`supabase config push` replaces
+      the *entire* remote Auth config with local `config.toml`, which
+      still intentionally holds `http://127.0.0.1:3000` for local dev).
 - [ ] Revisit **leaked-password-protection** (disabled — Free-tier
       limitation, currently an accepted risk in
       `scripts/supabase-security-allowlist.json`) once/if on a paid tier.

@@ -2,16 +2,17 @@
  * The app's canonical public origin — needed absolute (not relative) for
  * `metadataBase` (app/layout.tsx), app/sitemap.ts, and app/robots.ts.
  *
- * Prefers an explicit override (NEXT_PUBLIC_SITE_URL), then Vercel's own
- * auto-injected production-domain env var (no manual deploy step needed
- * on Vercel — see PRODUCTION_CHECKLIST.md's "double-check Vercel env
- * vars" item, which this deliberately avoids adding to), then localhost
- * for local dev.
+ * atlas.ordinarydev.in is the project's real, primary production domain
+ * (added as a custom domain 2026-08-18) — hardcoded as the fallback so
+ * metadata/sitemap/robots resolve correctly on any deploy even without
+ * NEXT_PUBLIC_SITE_URL set. `NEXT_PUBLIC_SITE_URL` still overrides it if
+ * ever set (e.g. the domain changes later, or a staging deploy wants a
+ * different value) — no code change needed for that, just the env var.
+ * Localhost only applies to an actual local dev server.
  */
+const PRODUCTION_SITE_URL = "https://atlas.ordinarydev.in";
+
 export const SITE_URL = (
   process.env.NEXT_PUBLIC_SITE_URL ??
-  (process.env.VERCEL_PROJECT_PRODUCTION_URL
-    ? `https://${process.env.VERCEL_PROJECT_PRODUCTION_URL}`
-    : null) ??
-  "http://localhost:3000"
+  (process.env.NODE_ENV === "development" ? "http://localhost:3000" : PRODUCTION_SITE_URL)
 ).replace(/\/$/, "");
