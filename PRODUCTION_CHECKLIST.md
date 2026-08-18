@@ -69,10 +69,13 @@ All remaining items here are manual steps in an external dashboard
 - [ ] Double-check the **Vercel project's env vars** match
       `.env.local.example` exactly before the first prod deploy — there's
       no deployment config committed to the repo to enforce this.
-- [ ] **Confirm branch protection on `main`.** Not checkable from the
-      CLI — verify in repo settings whether required review + passing
-      checks before merge is configured, given direct pushes to `main`
-      have happened this session.
+- [ ] **Decide whether to keep bypassing branch protection on `main`.**
+      Confirmed configured (`git push` itself reported it: "Changes must
+      be made through a pull request", "6 of 6 required status checks
+      are expected") — every direct push this session succeeded only
+      because the pushing account has bypass rights, not because
+      protection is absent. Worth a deliberate call on whether that's
+      the intended workflow going forward, not just default momentum.
 
 ## 🟡 Worth a decision, not blocking
 
