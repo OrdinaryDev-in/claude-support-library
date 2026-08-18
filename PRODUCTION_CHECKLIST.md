@@ -25,7 +25,13 @@ both checked directly). Applied all seven, including a follow-up
 surfaced once `0016`/`0018` went live. Re-ran `supabase db advisors
 --type security` after: clean except the two items already listed below
 (leaked-password-protection) and `is_admin`'s `authenticated` grant,
-which is intentional (see `0004`'s own comment) and isn't a gap.
+which is intentional (see `0004`'s own comment) and isn't a gap. Also
+reconciled the legacy migration-history naming mismatch (13 remote
+entries recorded under CLI-auto-generated timestamp versions from a
+prior session's direct Supabase MCP use, never matching this repo's
+`0003`–`0015` filenames) via `migration repair` — bookkeeping only, no
+schema/data touched. `supabase db push --linked --dry-run` now reports
+"Remote database is up to date."
 
 ## 🟠 Should-fix before/shortly after launch
 
@@ -50,14 +56,6 @@ All remaining items here are manual steps in an external dashboard
       CLI — verify in repo settings whether required review + passing
       checks before merge is configured, given direct pushes to `main`
       have happened this session.
-- [ ] **Reconcile the legacy migration-history naming mismatch** (13
-      remote entries recorded under CLI-auto-generated timestamp versions
-      — e.g. `20260815030105` — that don't match any local filename, from
-      migrations applied directly via a prior session's Supabase MCP
-      connection before being hand-documented into this repo's
-      `0003`–`0015`). Cosmetic only — `supabase db advisors` is clean and
-      nothing is missing — but it breaks `supabase db push`/`migration
-      list`'s output until reconciled. Optional cleanup, not blocking.
 
 ## 🟡 Worth a decision, not blocking
 
