@@ -126,8 +126,11 @@ export function PromptForm({
       <div className="flex flex-col lg:flex-row gap-8 lg:gap-12 items-start">
         <form onSubmit={handleSubmit} className="flex flex-col gap-5 flex-1 w-full lg:max-w-[560px]">
           <div>
-            <label className={labelClass}>Title</label>
+            <label htmlFor="prompt-title" className={labelClass}>
+              Title
+            </label>
             <input
+              id="prompt-title"
               className="dv-input"
               value={fields.title}
               onChange={(e) => setField("title", e.target.value)}
@@ -135,8 +138,11 @@ export function PromptForm({
             />
           </div>
           <div>
-            <label className={labelClass}>Description</label>
+            <label htmlFor="prompt-description" className={labelClass}>
+              Description
+            </label>
             <input
+              id="prompt-description"
               className="dv-input"
               value={fields.description}
               onChange={(e) => setField("description", e.target.value)}
@@ -144,14 +150,18 @@ export function PromptForm({
             />
           </div>
           <div>
-            <label className={labelClass}>Category</label>
-            <div className="flex flex-wrap gap-2">
+            <span id="prompt-category-label" className={labelClass}>
+              Category
+            </span>
+            <div role="radiogroup" aria-labelledby="prompt-category-label" className="flex flex-wrap gap-2">
               {PROMPT_CATEGORIES.map((c) => {
                 const active = fields.category === c.key;
                 return (
                   <button
                     type="button"
                     key={c.key}
+                    role="radio"
+                    aria-checked={active}
                     onClick={() => setField("category", c.key)}
                     className="flex items-center gap-1.5 px-3 py-1.5 rounded-md border text-xs"
                     style={{
@@ -168,10 +178,11 @@ export function PromptForm({
             </div>
           </div>
           <div>
-            <label className={labelClass}>
+            <label htmlFor="prompt-tags" className={labelClass}>
               Tags <span className="normal-case font-[family-name:var(--font-body)] text-[var(--muted)]">(comma-separated)</span>
             </label>
             <input
+              id="prompt-tags"
               className="dv-input"
               value={fields.tagsInput}
               onChange={(e) => setField("tagsInput", e.target.value)}
@@ -182,8 +193,11 @@ export function PromptForm({
           <div className="h-px bg-[var(--border)] my-1" />
 
           <div>
-            <label className={labelClass}>Task Framing</label>
+            <label htmlFor="prompt-base-instructions" className={labelClass}>
+              Task Framing
+            </label>
             <textarea
+              id="prompt-base-instructions"
               className="dv-input resize-y"
               rows={3}
               value={fields.base_instructions}
@@ -192,8 +206,11 @@ export function PromptForm({
             />
           </div>
           <div>
-            <label className={labelClass}>Fill In Your Details</label>
+            <label htmlFor="prompt-fill-in-details" className={labelClass}>
+              Fill In Your Details
+            </label>
             <textarea
+              id="prompt-fill-in-details"
               className="dv-input resize-y"
               style={{ fontFamily: "var(--font-mono)" }}
               rows={3}
@@ -203,8 +220,11 @@ export function PromptForm({
             />
           </div>
           <div>
-            <label className={labelClass}>Similar Reference Projects</label>
+            <label htmlFor="prompt-reference-projects" className={labelClass}>
+              Similar Reference Projects
+            </label>
             <textarea
+              id="prompt-reference-projects"
               className="dv-input resize-y"
               style={{ fontFamily: "var(--font-mono)" }}
               rows={2}
@@ -214,8 +234,11 @@ export function PromptForm({
             />
           </div>
           <div>
-            <label className={labelClass}>Reference Links / Docs</label>
+            <label htmlFor="prompt-reference-links" className={labelClass}>
+              Reference Links / Docs
+            </label>
             <textarea
+              id="prompt-reference-links"
               className="dv-input resize-y"
               style={{ fontFamily: "var(--font-mono)" }}
               rows={2}
@@ -225,8 +248,11 @@ export function PromptForm({
             />
           </div>
           <div>
-            <label className={labelClass}>Expected Output</label>
+            <label htmlFor="prompt-expected-output" className={labelClass}>
+              Expected Output
+            </label>
             <textarea
+              id="prompt-expected-output"
               className="dv-input resize-y"
               rows={3}
               value={fields.expected_output_notes}
@@ -235,7 +261,11 @@ export function PromptForm({
             />
           </div>
 
-          {error && <div className="text-xs text-[var(--danger)]">{error}</div>}
+          {error && (
+            <div role="alert" className="text-xs text-[var(--danger)]">
+              {error}
+            </div>
+          )}
 
           <div className="flex gap-2.5 mt-2">
             <button
@@ -273,7 +303,11 @@ export function PromptForm({
       </div>
 
       {savedToast && (
-        <div className="fixed bottom-7 left-1/2 -translate-x-1/2 bg-[var(--surface-2)] border border-[var(--border)] rounded-lg px-[18px] py-3 z-[60] shadow-[0_8px_24px_rgba(0,0,0,0.4)]">
+        <div
+          role="status"
+          aria-live="polite"
+          className="fixed bottom-7 left-1/2 -translate-x-1/2 bg-[var(--surface-2)] border border-[var(--border)] rounded-lg px-[18px] py-3 z-[60] shadow-[0_8px_24px_rgba(0,0,0,0.4)]"
+        >
           <span className="text-[13px] font-semibold text-[var(--teal)]">{toastText}</span>
         </div>
       )}

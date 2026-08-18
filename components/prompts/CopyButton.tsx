@@ -14,6 +14,7 @@ export function CopyButton({ text }: { text: string }) {
   return (
     <button
       onClick={handleCopy}
+      aria-label={copied ? "Copied to clipboard" : "Copy prompt to clipboard"}
       className="px-3.5 py-2 rounded-md border text-[13px] font-semibold transition-colors"
       style={{
         borderColor: copied ? "var(--teal)" : "var(--brass)",

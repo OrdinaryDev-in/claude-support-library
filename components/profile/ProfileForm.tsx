@@ -95,12 +95,21 @@ export function ProfileForm({ profile, submissions }: { profile: ProfileData; su
       <div className={sectionHeading}>Account details</div>
       <div className="flex flex-col gap-3.5 mb-8">
         <div>
-          <label className={labelClass}>Full name</label>
-          <input className="dv-input" value={fullName} onChange={(e) => setFullName(e.target.value)} />
+          <label htmlFor="profile-full-name" className={labelClass}>
+            Full name
+          </label>
+          <input
+            id="profile-full-name"
+            className="dv-input"
+            value={fullName}
+            onChange={(e) => setFullName(e.target.value)}
+          />
         </div>
         <div>
-          <label className={labelClass}>Email</label>
-          <input className="dv-input" value={profile.email} disabled />
+          <label htmlFor="profile-email" className={labelClass}>
+            Email
+          </label>
+          <input id="profile-email" className="dv-input" value={profile.email} disabled />
         </div>
         <div className="flex gap-6">
           <div className="flex-1">
@@ -112,7 +121,11 @@ export function ProfileForm({ profile, submissions }: { profile: ProfileData; su
             <div className="font-[family-name:var(--font-mono)] text-[13px]">{profile.lastLogin}</div>
           </div>
         </div>
-        {profileError && <div className="text-xs text-[var(--danger)]">{profileError}</div>}
+        {profileError && (
+          <div role="alert" className="text-xs text-[var(--danger)]">
+            {profileError}
+          </div>
+        )}
         <div>
           <button onClick={handleSaveProfile} disabled={savingProfile} className={activeBtn}>
             {savingProfile ? "Saving…" : "Save changes"}
@@ -132,8 +145,11 @@ export function ProfileForm({ profile, submissions }: { profile: ProfileData; su
       <div className={sectionHeading}>Reset password</div>
       <div className="flex flex-col gap-3.5 max-w-[400px]">
         <div>
-          <label className={labelClass}>Current password</label>
+          <label htmlFor="profile-current-pw" className={labelClass}>
+            Current password
+          </label>
           <input
+            id="profile-current-pw"
             type="password"
             className="dv-input"
             placeholder="••••••••"
@@ -142,8 +158,11 @@ export function ProfileForm({ profile, submissions }: { profile: ProfileData; su
           />
         </div>
         <div>
-          <label className={labelClass}>New password</label>
+          <label htmlFor="profile-new-pw" className={labelClass}>
+            New password
+          </label>
           <input
+            id="profile-new-pw"
             type="password"
             className="dv-input"
             placeholder="At least 8 characters"
@@ -152,8 +171,11 @@ export function ProfileForm({ profile, submissions }: { profile: ProfileData; su
           />
         </div>
         <div>
-          <label className={labelClass}>Confirm new password</label>
+          <label htmlFor="profile-confirm-pw" className={labelClass}>
+            Confirm new password
+          </label>
           <input
+            id="profile-confirm-pw"
             type="password"
             className="dv-input"
             placeholder="••••••••"
@@ -161,7 +183,11 @@ export function ProfileForm({ profile, submissions }: { profile: ProfileData; su
             onChange={(e) => setConfirmPw(e.target.value)}
           />
         </div>
-        {pwError && <div className="text-xs text-[var(--danger)]">{pwError}</div>}
+        {pwError && (
+          <div role="alert" className="text-xs text-[var(--danger)]">
+            {pwError}
+          </div>
+        )}
         <div>
           <button onClick={handleResetPw} disabled={savingPw} className={activeBtn}>
             {savingPw ? "Updating…" : "Update password"}
@@ -170,7 +196,11 @@ export function ProfileForm({ profile, submissions }: { profile: ProfileData; su
       </div>
 
       {toast && (
-        <div className="fixed bottom-7 left-1/2 -translate-x-1/2 bg-[var(--surface-2)] border border-[var(--border)] rounded-lg px-[18px] py-3 z-[60] shadow-[0_8px_24px_rgba(0,0,0,0.4)]">
+        <div
+          role="status"
+          aria-live="polite"
+          className="fixed bottom-7 left-1/2 -translate-x-1/2 bg-[var(--surface-2)] border border-[var(--border)] rounded-lg px-[18px] py-3 z-[60] shadow-[0_8px_24px_rgba(0,0,0,0.4)]"
+        >
           <span className="text-[13px] font-semibold text-[var(--teal)]">{toast}</span>
         </div>
       )}

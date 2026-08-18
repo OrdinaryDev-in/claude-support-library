@@ -142,8 +142,11 @@ export function AuthForm({ mode }: { mode: Mode }) {
       <form onSubmit={handleSubmit} className="flex flex-col gap-3.5">
         {!isLogin && (
           <div>
-            <label className="block text-xs text-[var(--muted)] mb-1.5">Full name</label>
+            <label htmlFor="auth-full-name" className="block text-xs text-[var(--muted)] mb-1.5">
+              Full name
+            </label>
             <input
+              id="auth-full-name"
               className="dv-input"
               placeholder="Jane Doe"
               value={fullName}
@@ -153,8 +156,11 @@ export function AuthForm({ mode }: { mode: Mode }) {
           </div>
         )}
         <div>
-          <label className="block text-xs text-[var(--muted)] mb-1.5">Email</label>
+          <label htmlFor="auth-email" className="block text-xs text-[var(--muted)] mb-1.5">
+            Email
+          </label>
           <input
+            id="auth-email"
             type="email"
             className="dv-input"
             placeholder="you@company.com"
@@ -164,8 +170,11 @@ export function AuthForm({ mode }: { mode: Mode }) {
           />
         </div>
         <div>
-          <label className="block text-xs text-[var(--muted)] mb-1.5">Password</label>
+          <label htmlFor="auth-password" className="block text-xs text-[var(--muted)] mb-1.5">
+            Password
+          </label>
           <input
+            id="auth-password"
             type="password"
             className="dv-input"
             placeholder="••••••••"
@@ -176,7 +185,11 @@ export function AuthForm({ mode }: { mode: Mode }) {
           />
         </div>
 
-        {error && <div className="text-xs text-[var(--danger)]">{error}</div>}
+        {error && (
+          <div role="alert" className="text-xs text-[var(--danger)]">
+            {error}
+          </div>
+        )}
 
         <button
           type="submit"

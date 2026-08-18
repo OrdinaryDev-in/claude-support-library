@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, useTransition } from "react";
+import { useEffect, useState, useTransition } from "react";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
 import { categoryMeta } from "@/lib/constants/categories/prompts";
@@ -54,6 +54,16 @@ export function ReviewDetail({ prompt }: { prompt: ReviewQueueRow }) {
       router.refresh();
     });
   }
+
+  // Same Escape-to-close reasoning as ReviewQueueTable's reject dialog.
+  useEffect(() => {
+    if (!rejecting) return;
+    function onKeyDown(e: KeyboardEvent) {
+      if (e.key === "Escape") setRejecting(false);
+    }
+    window.addEventListener("keydown", onKeyDown);
+    return () => window.removeEventListener("keydown", onKeyDown);
+  }, [rejecting]);
 
   function submitReject() {
     startTransition(async () => {
@@ -122,7 +132,11 @@ export function ReviewDetail({ prompt }: { prompt: ReviewQueueRow }) {
         )}
       </div>
 
-      {error && <div className="text-xs text-[var(--danger)] mt-4">{error}</div>}
+      {error && (
+        <div role="alert" className="text-xs text-[var(--danger)] mt-4">
+          {error}
+        </div>
+      )}
 
       <div className="h-px bg-[var(--border)] my-6 sm:my-8" />
 
@@ -151,14 +165,26 @@ export function ReviewDetail({ prompt }: { prompt: ReviewQueueRow }) {
 
       {rejecting && (
         <div className="fixed inset-0 bg-black/55 flex items-center justify-center z-50 p-4">
-          <div className="bg-[var(--surface-2)] border border-[var(--border)] rounded-[10px] p-7 w-full max-w-[420px]">
-            <h2 className="font-[family-name:var(--font-display)] text-lg font-medium mb-2.5">
+          <div
+            role="dialog"
+            aria-modal="true"
+            aria-labelledby="review-reject-heading"
+            className="bg-[var(--surface-2)] border border-[var(--border)] rounded-[10px] p-7 w-full max-w-[420px]"
+          >
+            <h2
+              id="review-reject-heading"
+              className="font-[family-name:var(--font-display)] text-lg font-medium mb-2.5"
+            >
               Reject this prompt?
             </h2>
             <p className="text-[13px] text-[var(--muted)] mb-3 leading-relaxed">
               The author will see this reason on their submission.
             </p>
+            <label htmlFor="review-reject-reason" className="sr-only">
+              Rejection reason
+            </label>
             <textarea
+              id="review-reject-reason"
               className="dv-input mb-2"
               rows={3}
               placeholder="e.g. Overlaps with an existing prompt, or the template needs more detail."

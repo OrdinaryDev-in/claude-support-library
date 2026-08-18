@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, useTransition } from "react";
+import { useEffect, useState, useTransition } from "react";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
 import { approvePrompt, rejectPrompt } from "@/app/actions/review";
@@ -36,6 +36,16 @@ export function ReviewQueueTable({ rows, status }: { rows: ReviewQueueRow[]; sta
     setError(null);
   }
 
+  // Same Escape-to-close reasoning as PromptDetail's delete-confirm dialog.
+  useEffect(() => {
+    if (!rejectingId) return;
+    function onKeyDown(e: KeyboardEvent) {
+      if (e.key === "Escape") setRejectingId(null);
+    }
+    window.addEventListener("keydown", onKeyDown);
+    return () => window.removeEventListener("keydown", onKeyDown);
+  }, [rejectingId]);
+
   function submitReject() {
     if (!rejectingId) return;
     const id = rejectingId;
@@ -53,11 +63,11 @@ export function ReviewQueueTable({ rows, status }: { rows: ReviewQueueRow[]; sta
   }
 
   return (
-    <div className="flex flex-col gap-2.5">
+    <ul className="list-none m-0 p-0 flex flex-col gap-2.5">
       {rows.map((row) => {
         const cat = categoryMeta(row.category);
         return (
-          <div
+          <li
             key={row.id}
             className="flex flex-col sm:flex-row sm:items-center gap-3 bg-[var(--surface)] border border-[var(--border)] rounded-lg p-4"
           >
@@ -106,27 +116,41 @@ export function ReviewQueueTable({ rows, status }: { rows: ReviewQueueRow[]; sta
                 </button>
               </div>
             )}
-          </div>
+          </li>
         );
       })}
 
       {rejectingId && (
         <div className="fixed inset-0 bg-black/55 flex items-center justify-center z-50 p-4">
-          <div className="bg-[var(--surface-2)] border border-[var(--border)] rounded-[10px] p-7 w-full max-w-[420px]">
-            <h2 className="font-[family-name:var(--font-display)] text-lg font-medium mb-2.5">
+          <div
+            role="dialog"
+            aria-modal="true"
+            aria-labelledby="reject-heading"
+            className="bg-[var(--surface-2)] border border-[var(--border)] rounded-[10px] p-7 w-full max-w-[420px]"
+          >
+            <h2 id="reject-heading" className="font-[family-name:var(--font-display)] text-lg font-medium mb-2.5">
               Reject this prompt?
             </h2>
             <p className="text-[13px] text-[var(--muted)] mb-3 leading-relaxed">
               The author will see this reason on their submission.
             </p>
+            <label htmlFor="reject-reason" className="sr-only">
+              Rejection reason
+            </label>
             <textarea
+              id="reject-reason"
+              autoFocus
               className="dv-input mb-2"
               rows={3}
               placeholder="e.g. Overlaps with an existing prompt, or the template needs more detail."
               value={reason}
               onChange={(e) => setReason(e.target.value)}
             />
-            {error && <div className="text-xs text-[var(--danger)] mb-2">{error}</div>}
+            {error && (
+              <div role="alert" className="text-xs text-[var(--danger)] mb-2">
+                {error}
+              </div>
+            )}
             <div className="flex justify-end gap-2.5">
               <button
                 onClick={() => setRejectingId(null)}
@@ -145,6 +169,6 @@ export function ReviewQueueTable({ rows, status }: { rows: ReviewQueueRow[]; sta
           </div>
         </div>
       )}
-    </div>
+    </ul>
   );
 }

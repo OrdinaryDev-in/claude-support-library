@@ -1,6 +1,6 @@
 "use client";
 
-import { useRef, useState } from "react";
+import { useEffect, useRef, useState } from "react";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
 import { categoryMeta } from "@/lib/constants/categories/prompts";
@@ -74,6 +74,19 @@ export function PromptDetail({
     setShowToast(false);
   }
 
+  // Dialog gets no library/focus-trap of its own (no 3rd-party dependency
+  // here) — Escape-to-close is the one keyboard affordance every native
+  // dialog-like widget needs at minimum, so it's hand-rolled instead of
+  // skipped.
+  useEffect(() => {
+    if (!showDeleteConfirm) return;
+    function onKeyDown(e: KeyboardEvent) {
+      if (e.key === "Escape") setShowDeleteConfirm(false);
+    }
+    window.addEventListener("keydown", onKeyDown);
+    return () => window.removeEventListener("keydown", onKeyDown);
+  }, [showDeleteConfirm]);
+
   async function handleDuplicate() {
     setDuplicating(true);
     setActionError(null);
@@ -134,7 +147,9 @@ export function PromptDetail({
             </div>
           )}
           {actionError && (
-            <p className="text-[13px] text-[var(--danger)] max-w-[600px] mt-3">{actionError}</p>
+            <p role="alert" className="text-[13px] text-[var(--danger)] max-w-[600px] mt-3">
+              {actionError}
+            </p>
           )}
         </div>
 
@@ -195,8 +210,16 @@ export function PromptDetail({
 
       {showDeleteConfirm && (
         <div className="fixed inset-0 bg-black/55 flex items-center justify-center z-50 p-4">
-          <div className="bg-[var(--surface-2)] border border-[var(--border)] rounded-[10px] p-7 w-full max-w-[380px]">
-            <h2 className="font-[family-name:var(--font-display)] text-lg font-medium mb-2.5">
+          <div
+            role="dialog"
+            aria-modal="true"
+            aria-labelledby="delete-confirm-heading"
+            className="bg-[var(--surface-2)] border border-[var(--border)] rounded-[10px] p-7 w-full max-w-[380px]"
+          >
+            <h2
+              id="delete-confirm-heading"
+              className="font-[family-name:var(--font-display)] text-lg font-medium mb-2.5"
+            >
               Delete this prompt?
             </h2>
             <p className="text-[13px] text-[var(--muted)] mb-5 leading-relaxed">
@@ -211,6 +234,7 @@ export function PromptDetail({
                 Cancel
               </button>
               <button
+                autoFocus
                 onClick={confirmDelete}
                 className="px-3.5 py-2 rounded-md border-none bg-[var(--danger)] text-[var(--ink)] text-[13px] font-semibold"
               >
@@ -222,7 +246,11 @@ export function PromptDetail({
       )}
 
       {showToast && (
-        <div className="fixed bottom-7 left-1/2 -translate-x-1/2 bg-[var(--surface-2)] border border-[var(--border)] rounded-lg px-4 py-3 flex items-center gap-4 z-[60] shadow-[0_8px_24px_rgba(0,0,0,0.4)]">
+        <div
+          role="status"
+          aria-live="polite"
+          className="fixed bottom-7 left-1/2 -translate-x-1/2 bg-[var(--surface-2)] border border-[var(--border)] rounded-lg px-4 py-3 flex items-center gap-4 z-[60] shadow-[0_8px_24px_rgba(0,0,0,0.4)]"
+        >
           <span className="text-[13px] text-[var(--text)]">Deleted</span>
           <button onClick={undoDelete} className="text-[13px] font-semibold text-[var(--brass)]">
             Undo

@@ -43,8 +43,19 @@ export default async function AppLayout({ children }: LayoutProps<"/">) {
 
   return (
     <div className="min-h-screen flex flex-col bg-[var(--ink)] text-[var(--text)] relative">
+      {/* Visually hidden until focused — lets a keyboard user jump past the
+          NavBar's links/search on every single page instead of tabbing
+          through them every time. */}
+      <a
+        href="#main-content"
+        className="sr-only focus:not-sr-only focus:fixed focus:top-3 focus:left-3 focus:z-[100] focus:px-3 focus:py-2 focus:rounded-md focus:bg-[var(--brass)] focus:text-[var(--ink)] focus:text-[13px] focus:font-semibold"
+      >
+        Skip to content
+      </a>
       <NavBar user={navUser} />
-      <div className="flex-1 flex flex-col">{children}</div>
+      <main id="main-content" className="flex-1 flex flex-col">
+        {children}
+      </main>
     </div>
   );
 }

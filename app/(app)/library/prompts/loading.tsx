@@ -13,9 +13,11 @@ export default function BrowsePromptsLoading() {
       </div>
       <div className="flex flex-col md:flex-row gap-6 md:gap-10">
         <div className="hidden md:block w-[220px] shrink-0" />
-        <main className="flex-1 min-w-0">
+        {/* Not <main> — see app/(app)/library/prompts/page.tsx's comment;
+            same nested-landmark reasoning applies to its loading state. */}
+        <div className="flex-1 min-w-0">
           <PromptGridSkeleton />
-        </main>
+        </div>
       </div>
     </div>
   );
