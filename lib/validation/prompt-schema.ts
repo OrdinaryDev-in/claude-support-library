@@ -8,28 +8,43 @@ export const promptCategoryValues = [
   "backend",
 ] as const;
 
+// 20,000 chars matches the CHECK constraints added on public.prompts by
+// supabase/migrations/0020_prompt_text_length_constraints.sql — keep both
+// in sync so a form submission that would fail the DB constraint is
+// rejected here first, with a message the user can actually act on,
+// instead of surfacing as a generic safeActionError() failure.
+const GUIDANCE_MAX = 20000;
+
 export const promptSchema = z.object({
   title: z.string().trim().min(1, "Title is required.").max(140),
   description: z.string().trim().min(1, "Description is required.").max(300),
   category: z.enum(promptCategoryValues),
   tagsInput: z.string().trim().optional().default(""),
-  base_instructions: z.string().trim().min(1, "Task framing is required."),
+  base_instructions: z
+    .string()
+    .trim()
+    .min(1, "Task framing is required.")
+    .max(GUIDANCE_MAX, `Keep this under ${GUIDANCE_MAX.toLocaleString()} characters.`),
   fill_in_details_guidance: z
     .string()
     .trim()
-    .min(1, "Fill-in-your-details guidance is required."),
+    .min(1, "Fill-in-your-details guidance is required.")
+    .max(GUIDANCE_MAX, `Keep this under ${GUIDANCE_MAX.toLocaleString()} characters.`),
   reference_projects_guidance: z
     .string()
     .trim()
-    .min(1, "Reference-projects guidance is required."),
+    .min(1, "Reference-projects guidance is required.")
+    .max(GUIDANCE_MAX, `Keep this under ${GUIDANCE_MAX.toLocaleString()} characters.`),
   reference_links_guidance: z
     .string()
     .trim()
-    .min(1, "Reference-links guidance is required."),
+    .min(1, "Reference-links guidance is required.")
+    .max(GUIDANCE_MAX, `Keep this under ${GUIDANCE_MAX.toLocaleString()} characters.`),
   expected_output_notes: z
     .string()
     .trim()
-    .min(1, "Expected-output notes are required."),
+    .min(1, "Expected-output notes are required.")
+    .max(GUIDANCE_MAX, `Keep this under ${GUIDANCE_MAX.toLocaleString()} characters.`),
 });
 
 export type PromptFormValues = z.infer<typeof promptSchema>;

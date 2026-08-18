@@ -4,6 +4,7 @@ import { redirect } from "next/navigation";
 import { revalidatePath } from "next/cache";
 import { createClient } from "@/lib/supabase/server";
 import { safeActionError } from "@/lib/errors";
+import { checkRateLimit } from "@/lib/security/rate-limit";
 import {
   searchPrompts,
   PROMPTS_PAGE_SIZE,
@@ -28,6 +29,17 @@ async function requireUser() {
   } = await supabase.auth.getUser();
   if (!user) redirect("/login");
   return { supabase, user };
+}
+
+// Shared bucket across create/update/delete/duplicate, keyed by user (not
+// IP) since these are authenticated actions — the thing worth throttling
+// is a single account spamming writes, not a shared office IP. Generous
+// enough not to bother a legitimate user editing several prompts in a
+// row, tight enough to blunt a scripted spam/abuse loop.
+const PROMPT_WRITE_RATE_LIMIT = { max: 20, windowMs: 60_000 };
+
+function checkPromptWriteRateLimit(userId: string): { allowed: boolean } {
+  return checkRateLimit(`prompt-write:${userId}`, PROMPT_WRITE_RATE_LIMIT);
 }
 
 async function isAuthorOrAdmin(
@@ -103,6 +115,10 @@ export async function createPrompt(
 ): Promise<PromptActionResult> {
   const { supabase, user } = await requireUser();
 
+  if (!checkPromptWriteRateLimit(user.id).allowed) {
+    return { ok: false, error: "Too many changes — please wait a minute and try again." };
+  }
+
   const parsed = promptSchema.safeParse(values);
   if (!parsed.success) {
     return { ok: false, error: parsed.error.issues[0]?.message ?? "Invalid input." };
@@ -143,6 +159,10 @@ export async function updatePrompt(
   values: PromptFormValues
 ): Promise<PromptActionResult> {
   const { supabase, user } = await requireUser();
+
+  if (!checkPromptWriteRateLimit(user.id).allowed) {
+    return { ok: false, error: "Too many changes — please wait a minute and try again." };
+  }
 
   const { data: existing, error: fetchError } = await supabase
     .from("prompts")
@@ -199,6 +219,10 @@ export async function deletePrompt(
 ): Promise<{ ok: true } | { ok: false; error: string }> {
   const { supabase, user } = await requireUser();
 
+  if (!checkPromptWriteRateLimit(user.id).allowed) {
+    return { ok: false, error: "Too many changes — please wait a minute and try again." };
+  }
+
   const { data: existing, error: fetchError } = await supabase
     .from("prompts")
     .select("id, author_id")
@@ -238,6 +262,10 @@ export async function duplicatePrompt(
   promptId: string
 ): Promise<PromptActionResult> {
   const { supabase, user } = await requireUser();
+
+  if (!checkPromptWriteRateLimit(user.id).allowed) {
+    return { ok: false, error: "Too many changes — please wait a minute and try again." };
+  }
 
   const { data: source, error: fetchError } = await supabase
     .from("prompts")

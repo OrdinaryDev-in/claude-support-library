@@ -1,6 +1,7 @@
 import { describe, it, expect, vi, beforeEach } from "vitest";
 import { createSupabaseMock, type SupabaseMock } from "@/test/supabase-mock";
 import type { PromptFormValues } from "@/lib/validation/prompt-schema";
+import { __resetRateLimitStoreForTests } from "@/lib/security/rate-limit";
 
 // See app/actions/profile.test.ts for why redirect() needs to actually throw.
 vi.mock("next/navigation", () => ({
@@ -43,6 +44,11 @@ function setUser(supabase: SupabaseMock, id: string | null) {
 describe("app/actions/prompts.ts — authorization boundary", () => {
   beforeEach(() => {
     vi.clearAllMocks();
+    // Each test below calls a mutating action with one of a handful of
+    // reused fixture user ids — without this, hits toward
+    // checkPromptWriteRateLimit's per-user bucket (app/actions/prompts.ts)
+    // would accumulate across unrelated tests in this file.
+    __resetRateLimitStoreForTests();
     // safeActionError() (lib/errors.ts) logs server-side on error paths —
     // not exercised by the tests below today, but silenced defensively.
     vi.spyOn(console, "error").mockImplementation(() => {});

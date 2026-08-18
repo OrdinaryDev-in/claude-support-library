@@ -5,6 +5,7 @@ import { revalidatePath } from "next/cache";
 import { z } from "zod";
 import { createClient } from "@/lib/supabase/server";
 import { safeActionError } from "@/lib/errors";
+import { checkRateLimit } from "@/lib/security/rate-limit";
 
 export type ReviewActionResult = { ok: true } | { ok: false; error: string };
 
@@ -16,6 +17,12 @@ async function requireUser() {
   if (!user) redirect("/login");
   return { supabase, user };
 }
+
+// Shared bucket across approve/reject, keyed by admin user id. More
+// generous than prompt writes (app/actions/prompts.ts) — an admin
+// working through a real review queue can legitimately approve/reject
+// many rows in quick succession.
+const REVIEW_ACTION_RATE_LIMIT = { max: 30, windowMs: 60_000 };
 
 /** App-level check for a clean error message — RLS (prompts_update_owner_or_admin,
  * supabase/migrations/0002_rls.sql) is the actual backstop a non-admin can't
@@ -35,6 +42,9 @@ async function requireAdmin(): Promise<
     .single();
   if (profile?.role !== "admin") {
     return { ok: false, error: "You don't have permission to review prompts." };
+  }
+  if (!checkRateLimit(`review-action:${user.id}`, REVIEW_ACTION_RATE_LIMIT).allowed) {
+    return { ok: false, error: "Too many actions — please wait a minute and try again." };
   }
   return { ok: true, supabase, user };
 }

@@ -1,5 +1,6 @@
 import { describe, it, expect, vi, beforeEach } from "vitest";
 import { createSupabaseMock, type SupabaseMock } from "@/test/supabase-mock";
+import { __resetRateLimitStoreForTests } from "@/lib/security/rate-limit";
 
 // See app/actions/profile.test.ts for why redirect() needs to actually throw.
 vi.mock("next/navigation", () => ({
@@ -27,6 +28,10 @@ function setUser(supabase: SupabaseMock, id: string | null) {
 describe("app/actions/review.ts — authorization boundary", () => {
   beforeEach(() => {
     vi.clearAllMocks();
+    // Same reasoning as app/actions/prompts.test.ts — reused fixture admin
+    // ids across tests would otherwise share requireAdmin()'s rate-limit
+    // bucket (app/actions/review.ts).
+    __resetRateLimitStoreForTests();
     vi.spyOn(console, "error").mockImplementation(() => {});
   });
 

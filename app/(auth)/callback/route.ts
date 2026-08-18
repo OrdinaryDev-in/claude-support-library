@@ -2,6 +2,7 @@ import { NextResponse, type NextRequest } from "next/server";
 import { createClient } from "@/lib/supabase/server";
 import { touchLastLogin } from "@/app/actions/profile";
 import { checkRateLimit, getClientIp } from "@/lib/security/rate-limit";
+import { sanitizeNextPath } from "@/lib/security/safe-redirect";
 
 // Fires for both OAuth redirects and email-confirmation links — exchanges
 // the auth `code` for a session, then sends the user on to `next`.
@@ -16,7 +17,11 @@ import { checkRateLimit, getClientIp } from "@/lib/security/rate-limit";
 export async function GET(request: NextRequest) {
   const { searchParams, origin } = request.nextUrl;
   const code = searchParams.get("code");
-  const next = searchParams.get("next") || "/library";
+  // `next` is fully attacker-controlled (a crafted OAuth/confirmation
+  // link) — sanitizeNextPath() rejects anything but a same-origin
+  // relative path before it's ever used in a redirect. See
+  // lib/security/safe-redirect.ts for what that closes off.
+  const next = sanitizeNextPath(searchParams.get("next"));
 
   const { allowed } = checkRateLimit(`callback:${getClientIp(request.headers)}`, {
     max: 10,

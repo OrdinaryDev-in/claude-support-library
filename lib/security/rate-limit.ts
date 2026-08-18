@@ -22,6 +22,16 @@ function sweep(now: number) {
   }
 }
 
+/** Test-only: clears the in-memory store between test cases. Without this,
+ * tests that reuse the same fixture user id/IP across multiple `it()`
+ * blocks in one file (common in this repo's auth-boundary suites — see
+ * app/actions/prompts.test.ts, app/actions/review.test.ts) accumulate hits
+ * toward the same bucket across unrelated tests, since this module's `hits`
+ * Map is a real singleton, not something vi.clearAllMocks() touches. */
+export function __resetRateLimitStoreForTests() {
+  hits.clear();
+}
+
 export function checkRateLimit(
   key: string,
   { max, windowMs }: { max: number; windowMs: number }
