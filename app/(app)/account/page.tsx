@@ -1,7 +1,13 @@
 import { redirect } from "next/navigation";
+import type { Metadata } from "next";
 import { createClient } from "@/lib/supabase/server";
 import { ProfileForm, type ProfileData } from "@/components/profile/ProfileForm";
 import { mySubmissions } from "@/lib/data/prompts";
+
+export const metadata: Metadata = {
+  title: "Your Profile",
+  robots: { index: false, follow: false },
+};
 
 function initialsOf(name: string, email: string) {
   const source = name.trim();

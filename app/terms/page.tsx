@@ -2,8 +2,12 @@ import Link from "next/link";
 import type { Metadata } from "next";
 import { Logo } from "@/components/layout/Logo";
 
+// Plain "Terms of Service" — app/layout.tsx's title.template ("%s —
+// DevAtlas") appends the suffix; a literal "... — DevAtlas" string here
+// would go through that template too and double up.
 export const metadata: Metadata = {
-  title: "Terms of Service — DevAtlas",
+  title: "Terms of Service",
+  description: "The terms governing use of DevAtlas.",
 };
 
 export default function TermsPage() {

@@ -2,8 +2,11 @@ import Link from "next/link";
 import type { Metadata } from "next";
 import { Logo } from "@/components/layout/Logo";
 
+// Plain "Privacy Policy" — see app/terms/page.tsx's comment on why this
+// isn't the full "... — DevAtlas" string now that a title.template exists.
 export const metadata: Metadata = {
-  title: "Privacy Policy — DevAtlas",
+  title: "Privacy Policy",
+  description: "How DevAtlas collects, uses, and protects your data.",
 };
 
 export default function PrivacyPage() {

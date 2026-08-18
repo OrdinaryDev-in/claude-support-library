@@ -1,4 +1,5 @@
 import Link from "next/link";
+import type { Metadata } from "next";
 import { createClient } from "@/lib/supabase/server";
 import { searchPrompts, categoryCounts, allTags, totalPublishedCount } from "@/lib/data/prompts";
 import { LibraryFilters } from "@/components/library/LibraryFilters";
@@ -6,6 +7,13 @@ import { PromptsGrid } from "@/components/library/PromptsGrid";
 import { PromptsCountProvider } from "@/components/library/PromptsCountContext";
 import { LoadedCount } from "@/components/library/LoadedCount";
 import type { PromptCategory } from "@/lib/types/database.types";
+
+// See app/(app)/library/page.tsx's comment on why this is noindex despite
+// otherwise looking like the app's most SEO-relevant page.
+export const metadata: Metadata = {
+  title: "Prompts",
+  robots: { index: false, follow: false },
+};
 
 export default async function BrowsePromptsPage({
   searchParams,
@@ -57,7 +65,10 @@ export default async function BrowsePromptsPage({
         <div className="flex flex-col md:flex-row gap-6 md:gap-10">
           <LibraryFilters counts={counts} tags={tags} />
 
-          <main className="flex-1 min-w-0">
+          {/* Not a <main> — app/(app)/layout.tsx already provides the
+              page's one <main> landmark; a nested second one is invalid
+              HTML and ambiguous for assistive tech. */}
+          <div className="flex-1 min-w-0">
             {prompts.length === 0 ? (
               <div className="text-center py-20 px-5 border border-dashed border-[var(--border)] rounded-lg">
                 <div className="font-[family-name:var(--font-mono)] text-[13px] text-[var(--muted)] mb-2">
@@ -72,7 +83,7 @@ export default async function BrowsePromptsPage({
             ) : (
               <PromptsGrid initialPrompts={prompts} filters={filters} />
             )}
-          </main>
+          </div>
         </div>
       </div>
     </PromptsCountProvider>

@@ -1,10 +1,16 @@
 import Link from "next/link";
 import { notFound } from "next/navigation";
+import type { Metadata } from "next";
 import { createClient } from "@/lib/supabase/server";
 import { listReviewQueue, reviewQueueCounts } from "@/lib/data/prompts";
 import { ReviewQueueTable } from "@/components/admin/ReviewQueueTable";
 import { PROMPT_STATUS_META } from "@/lib/constants/review";
 import type { PromptStatus } from "@/lib/types/database.types";
+
+export const metadata: Metadata = {
+  title: "Review Queue",
+  robots: { index: false, follow: false },
+};
 
 const TABS: PromptStatus[] = ["pending_review", "approved", "rejected"];
 

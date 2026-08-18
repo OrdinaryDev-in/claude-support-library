@@ -1,6 +1,12 @@
 import { Suspense } from "react";
+import type { Metadata } from "next";
 import { AuthForm } from "@/components/auth/AuthForm";
 import { Logo } from "@/components/layout/Logo";
+
+export const metadata: Metadata = {
+  title: "Create your account",
+  description: "Create a DevAtlas account to submit and save prompts.",
+};
 
 export default function SignupPage() {
   return (

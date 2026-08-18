@@ -1,6 +1,12 @@
 import { Suspense } from "react";
+import type { Metadata } from "next";
 import { AuthForm } from "@/components/auth/AuthForm";
 import { Logo } from "@/components/layout/Logo";
+
+export const metadata: Metadata = {
+  title: "Sign in",
+  description: "Sign in to DevAtlas — The Library.",
+};
 
 export default function LoginPage() {
   return (

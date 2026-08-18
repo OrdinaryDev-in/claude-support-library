@@ -29,14 +29,18 @@ export const config = {
   matcher: [
     /*
      * Run on every request except static assets, image optimization
-     * files, and the generated icon/opengraph-image routes, so auth
-     * gating never blocks CSS/JS/images — or the social-preview image —
-     * from loading. opengraph-image has no fixed extension in its URL
-     * (unlike icon.svg/apple-icon.png, already caught by the extension
-     * alternation below), so it needs its own explicit exclusion, or an
-     * unauthenticated crawler fetching it gets bounced to /login instead
-     * of the image.
+     * files, and the generated icon/opengraph-image/robots/sitemap
+     * routes, so auth gating never blocks CSS/JS/images — or the
+     * social-preview image, or search-engine crawling — from working.
+     * opengraph-image/robots.txt/sitemap.xml have no fixed extension in
+     * their URLs (unlike icon.svg/apple-icon.png, already caught by the
+     * extension alternation below), so each needs its own explicit
+     * exclusion. Confirmed by hand: without the robots/sitemap
+     * exclusions, an unauthenticated GET to /robots.txt got a 307 to
+     * /login instead of the actual file — Googlebot has no session, so
+     * app/robots.ts and app/sitemap.ts (and the disallow rules /robots.txt
+     * itself declares) would never actually be reachable.
      */
-    "/((?!_next/static|_next/image|favicon.ico|opengraph-image|.*\\.(?:svg|png|jpg|jpeg|gif|webp)$).*)",
+    "/((?!_next/static|_next/image|favicon.ico|opengraph-image|robots\\.txt|sitemap\\.xml|.*\\.(?:svg|png|jpg|jpeg|gif|webp)$).*)",
   ],
 };
