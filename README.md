@@ -34,7 +34,7 @@ support for older versions.
    ```bash
    supabase db push
    ```
-   (Or run `supabase/migrations/0001_init.sql` then `0002_rls.sql` directly in the
+   (Or run `supabase/migrations/20260815025000_init.sql` then `20260815025500_rls.sql` directly in the
    SQL editor if you're not using the CLI.)
 4. In **Authentication → Providers**, enable **Google** and **GitHub** OAuth
    (or skip this and use email/password only — both are wired up).
@@ -158,7 +158,7 @@ admin approves it at `/admin/review` — reject instead and the author sees
 the reason on their own submission (and their "My Submissions" list on
 `/account`). Editing an already-approved or -rejected prompt's content
 automatically resubmits it for review. See
-`supabase/migrations/0009_prompt_review_workflow.sql` for the schema/RLS
+`supabase/migrations/20260816090111_prompt_review_workflow.sql` for the schema/RLS
 and `app/actions/review.ts` for the approve/reject actions.
 
 ## Verifying it works
@@ -192,7 +192,7 @@ Two GitHub Actions workflows run on every push/PR to `main`
 
 This app's authorization model leans on Postgres Row Level Security, not
 just app-layer checks — every table's policies live in
-`supabase/migrations/0002_rls.sql`. One thing worth calling out from a
+`supabase/migrations/20260815025500_rls.sql`. One thing worth calling out from a
 security review of that file: `profiles_update_own`'s `USING (auth.uid() =
 id)` clause, on its own, only restricts *which row* a user can update, not
 *which columns* — without the accompanying

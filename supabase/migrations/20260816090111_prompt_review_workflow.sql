@@ -3,7 +3,7 @@
 -- immediately on insert) with a moderation queue: every new submission
 -- starts pending_review and only becomes visible to other users once an
 -- admin approves it. Supersedes the is_published-based scheme from
--- 0001_init.sql.
+-- 20260815025000_init.sql.
 
 create type prompt_status as enum ('pending_review', 'approved', 'rejected');
 
@@ -42,7 +42,7 @@ alter table public.prompts
 create index prompts_status_idx on public.prompts(status);
 
 -- ─── review-state guard trigger ───────────────────────────────────────
--- Same pattern as prevent_role_self_escalation (0002_rls.sql): RLS's
+-- Same pattern as prevent_role_self_escalation (20260815025500_rls.sql): RLS's
 -- USING/WITH CHECK can't tell which columns changed, so a BEFORE UPDATE
 -- trigger is what actually pins status/reviewed_* against self-approval.
 -- It also implements auto-resubmission: editing the content of an

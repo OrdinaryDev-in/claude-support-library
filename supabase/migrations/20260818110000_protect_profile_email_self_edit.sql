@@ -1,8 +1,8 @@
 -- DevAtlas — protect profiles.email from self-edit
 --
--- Same shape of gap prevent_role_self_escalation (0002_rls.sql) closed for
+-- Same shape of gap prevent_role_self_escalation (20260815025500_rls.sql) closed for
 -- `role`, just never applied to `email`: profiles_update_own's WITH CHECK
--- (0007_rls_review_hardening.sql) only pins `auth.uid() = id` — it can't
+-- (20260815042229_rls_review_hardening.sql) only pins `auth.uid() = id` — it can't
 -- tell which *columns* changed, so nothing stops a signed-in user from
 -- calling `update profiles set email = '...' where id = auth.uid()`
 -- directly via PostgREST, bypassing the app UI (ProfileForm.tsx renders
@@ -19,7 +19,7 @@
 -- identity to the admin reviewer.
 --
 -- Same trigger pattern as prevent_role_self_escalation, with the same
--- admin + service_role bypass 0014_service_role_bypasses_self_escalation_guards.sql
+-- admin + service_role bypass 20260816124803_service_role_bypasses_self_escalation_guards.sql
 -- already established is needed (handle_new_user, the only other writer of
 -- this column, is an INSERT trigger and is unaffected — this only guards
 -- UPDATE).

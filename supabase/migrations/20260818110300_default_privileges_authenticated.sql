@@ -1,8 +1,8 @@
 -- DevAtlas — future-proof table grants for `authenticated`
 --
--- 0012_grant_authenticated_table_privileges.sql granted `authenticated`
+-- 20260816105205_grant_authenticated_table_privileges.sql granted `authenticated`
 -- privileges per-table, explicitly, scoped to exactly what each table's
--- existing RLS policies needed at the time. 0013_grant_service_role_table_privileges.sql
+-- existing RLS policies needed at the time. 20260816112643_grant_service_role_table_privileges.sql
 -- fixed the identical class of bug for `service_role` but generalized it
 -- with `alter default privileges ... to service_role`, specifically so it
 -- wouldn't keep recurring "one newly-discovered table at a time" as the

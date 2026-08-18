@@ -13,7 +13,7 @@
 -- Insert-only for anon/authenticated: errors can happen before a user is
 -- signed in (e.g. the login page itself throwing), so this is the one
 -- table in this schema anon legitimately needs write access to (see
--- 0012_grant_authenticated_table_privileges.sql's comment on why anon is
+-- 20260816105205_grant_authenticated_table_privileges.sql's comment on why anon is
 -- otherwise deliberately untouched). No update/delete policy for anyone
 -- but service_role (via its default-privileges grant, 0013) — logs are
 -- append-only from the app's perspective. Only admins can read, since
@@ -33,7 +33,7 @@ create table public.error_logs (
   digest text,
   path text,
   -- Deliberately not FK-validated against auth.uid() by a trigger the way
-  -- profiles.role is (0002_rls.sql) — the WITH CHECK below is enough here
+  -- profiles.role is (20260815025500_rls.sql) — the WITH CHECK below is enough here
   -- since this is a log, not an authorization-bearing column.
   user_id uuid references public.profiles(id) on delete set null
 );

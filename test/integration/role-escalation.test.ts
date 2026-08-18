@@ -4,7 +4,7 @@ import type { Database } from "@/lib/types/database.types";
 
 /**
  * Integration test against a REAL Postgres instance — confirms the
- * prevent_role_self_escalation trigger (supabase/migrations/0002_rls.sql)
+ * prevent_role_self_escalation trigger (supabase/migrations/20260815025500_rls.sql)
  * actually blocks a signed-in user from promoting themselves to admin via
  * a direct `update profiles set role = 'admin'`, not just that the RLS
  * policy lets the UPDATE through (RLS alone can't restrict *which
@@ -63,7 +63,7 @@ describe.skipIf(!isLocalSupabase)("prevent_role_self_escalation trigger", () => 
     // := old.role`) rather than raising — RLS's WITH CHECK still passes
     // (auth.uid() = id is untouched), so the UPDATE itself succeeds with no
     // error. What actually proves the guard worked is that the row's role
-    // never changed — see prevent_role_self_escalation() in 0002_rls.sql.
+    // never changed — see prevent_role_self_escalation() in 20260815025500_rls.sql.
     expect(error).toBeNull();
 
     const { data } = await supabase.from("profiles").select("role").eq("id", userId).single();

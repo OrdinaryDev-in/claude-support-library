@@ -9,7 +9,7 @@ function formatDate(iso: string) {
 
 /** The one place an author can see their own pending/rejected prompts —
  * the public Browse grid only ever shows approved prompts (search_prompts
- * RPC, 0009_prompt_review_workflow.sql), so this is where "did my
+ * RPC, 20260816090111_prompt_review_workflow.sql), so this is where "did my
  * submission go anywhere?" gets answered. */
 export function MySubmissions({ submissions }: { submissions: PromptRow[] }) {
   if (submissions.length === 0) {

@@ -1,12 +1,12 @@
 -- CRITICAL: the pre-push security gate (scripts/check-supabase-security.sh)
 -- caught public.profiles with row_security = false at the table level
 -- (pg_class.relrowsecurity) on the remote project, even though its RLS
--- policies (profiles_select_all, profiles_update_own — 0002_rls.sql)
+-- policies (profiles_select_all, profiles_update_own — 20260815025500_rls.sql)
 -- still existed. A table's policies are inert while row security itself
 -- is off: `alter table ... disable row level security` (as opposed to
 -- disabling one specific trigger) turns off policy enforcement entirely,
 -- so every `authenticated`-role grant from
--- 0012_grant_authenticated_table_privileges.sql (select, update) applied
+-- 20260816105205_grant_authenticated_table_privileges.sql (select, update) applied
 -- completely unchecked — any signed-in user could read or overwrite any
 -- other user's profile row (their own `role` column stayed protected —
 -- that's the prevent_role_self_escalation trigger, independent of RLS —

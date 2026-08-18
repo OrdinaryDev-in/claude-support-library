@@ -8,7 +8,7 @@ import { logClientError } from "@/app/actions/errors";
 // Component (Next.js requirement — it needs reset(), a closure over
 // React state). This is also PRODUCTION_CHECKLIST.md's "no App Router
 // error boundaries" gap closed for the render-error half of it — the
-// effect below now persists to public.error_logs (0021_error_logs.sql)
+// effect below now persists to public.error_logs (20260818110500_error_logs.sql)
 // via logClientError(), the zero-dependency floor until/unless a real
 // service (Sentry or equivalent) is added. If Sentry gets added, this is
 // also where Sentry.captureException(error) goes, alongside this call.

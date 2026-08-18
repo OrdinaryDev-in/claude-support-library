@@ -1,4 +1,4 @@
-// Hand-written to match supabase/migrations/0001_init.sql + 0002_rls.sql,
+// Hand-written to match supabase/migrations/20260815025000_init.sql + 20260815025500_rls.sql,
 // in the shape @supabase/postgrest-js's GenericSchema expects (each table
 // needs Row/Insert/Update/Relationships; the schema needs Tables/Views/
 // Functions). Once a live Supabase project is linked, regenerate with:
@@ -6,7 +6,7 @@
 // and re-apply this file's structure if the generator's shape differs.
 //
 // prompts.status/reviewed_by/reviewed_at/rejection_reason added, is_published
-// removed, by 0009_prompt_review_workflow.sql (prompt review workflow).
+// removed, by 20260816090111_prompt_review_workflow.sql (prompt review workflow).
 
 export type PromptCategory =
   | "new_app"
@@ -128,7 +128,7 @@ export interface Database {
           },
         ];
       };
-      // Added by 0021_error_logs.sql.
+      // Added by 20260818110500_error_logs.sql.
       error_logs: {
         Row: {
           id: string;

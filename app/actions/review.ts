@@ -25,7 +25,7 @@ async function requireUser() {
 const REVIEW_ACTION_RATE_LIMIT = { max: 30, windowMs: 60_000 };
 
 /** App-level check for a clean error message — RLS (prompts_update_owner_or_admin,
- * supabase/migrations/0002_rls.sql) is the actual backstop a non-admin can't
+ * supabase/migrations/20260815025500_rls.sql) is the actual backstop a non-admin can't
  * bypass even if this check were skipped. Mirrors isAuthorOrAdmin's
  * error-return style in app/actions/prompts.ts rather than redirecting, since
  * this only gates review actions on a page a non-admin shouldn't be on in the
@@ -61,7 +61,7 @@ export async function approvePrompt(promptId: string): Promise<ReviewActionResul
   const { supabase } = admin;
 
   // reviewed_by/reviewed_at are stamped automatically by
-  // guard_prompt_review_state() (0009_prompt_review_workflow.sql) — it
+  // guard_prompt_review_state() (20260816090111_prompt_review_workflow.sql) — it
   // reads the caller's own auth.uid(), which an app-level UPDATE payload
   // can't spoof on another admin's behalf.
   const { data, error } = await supabase

@@ -29,7 +29,7 @@
 --
 -- 4) profiles_update_own had no WITH CHECK. The primary-key constraint on
 --    id already blocks reassigning a row's id to an existing other user's
---    id, and the prevent_role_self_escalation trigger (0001_init.sql)
+--    id, and the prevent_role_self_escalation trigger (20260815025000_init.sql)
 --    already blocks a role change via this same UPDATE — so this isn't
 --    closing a live gap, but the RLS checklist calls for USING + WITH
 --    CHECK together on every UPDATE policy, and doing so here means any

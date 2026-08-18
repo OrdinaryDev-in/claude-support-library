@@ -7,7 +7,7 @@ import { createClient } from "@supabase/supabase-js";
  * being genuinely RLS-denied (not just UI-hidden) from even seeing it
  * while it's pending review, that denial lifting once promoted to admin,
  * the prompt review workflow itself (approve from the queue, reject with
- * a reason the author then sees — 0009_prompt_review_workflow.sql), a
+ * a reason the author then sees — 20260816090111_prompt_review_workflow.sql), a
  * third account still being denied editing once the prompt is approved
  * and visible, and category/tag filtering.
  *
@@ -206,7 +206,7 @@ test("a different signed-in account can't see the still-pending prompt at all �
   await expect(page).toHaveURL(/\/library/);
 
   // The prompt from "owner can create a prompt" is still pending_review —
-  // prompts_select_signed_in (0009_prompt_review_workflow.sql) only lets a
+  // prompts_select_signed_in (20260816090111_prompt_review_workflow.sql) only lets a
   // signed-in stranger see status = 'approved' rows, so a non-owner,
   // non-admin account doesn't just lack edit controls here, the row is
   // invisible to it entirely: both the detail and edit routes hit the
@@ -263,7 +263,7 @@ test("admin approves the pending prompt from the review queue", async ({ page })
   // as the reviewer rather than a third throwaway account.
   await login(page, otherEmail);
 
-  // New prompts start pending_review, not live (0009_prompt_review_workflow.sql)
+  // New prompts start pending_review, not live (20260816090111_prompt_review_workflow.sql)
   // — the owner's prompt from "owner can create a prompt" has been sitting
   // unapproved this whole time, invisible to the public Browse grid even
   // though this account is an admin.

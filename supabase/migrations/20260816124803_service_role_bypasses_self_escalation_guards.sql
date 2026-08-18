@@ -1,6 +1,6 @@
 -- DevAtlas — service_role exemption for the two self-escalation guard
--- triggers (prevent_role_self_escalation, 0002_rls.sql; guard_prompt_review_state,
--- 0009_prompt_review_workflow.sql).
+-- triggers (prevent_role_self_escalation, 20260815025500_rls.sql; guard_prompt_review_state,
+-- 20260816090111_prompt_review_workflow.sql).
 --
 -- Real bug, found via a full local E2E run of the prompt review workflow
 -- (npm run test:e2e): "promoting that account to admin lifts the denial"
@@ -33,7 +33,7 @@
 -- `{"jwt_role":"service_role"}` correctly even from inside a SECURITY
 -- DEFINER call.
 --
--- Same reasoning 0013_grant_service_role_table_privileges.sql already
+-- Same reasoning 20260816112643_grant_service_role_table_privileges.sql already
 -- established for table grants applies here: service_role is Supabase's
 -- trusted backend role, explicitly meant to bypass exactly this kind of
 -- customer-facing restriction, protected by requiring the secret key

@@ -5,7 +5,7 @@ import { logError } from "@/lib/data/error-logs";
  * (constraint names, column names, driver internals) to the client — it
  * can leak schema details and isn't something a user can act on anyway.
  * Logs the real error server-side (picked up by the hosting platform's
- * function logs, and — since 0021_error_logs.sql — persisted to
+ * function logs, and — since 20260818110500_error_logs.sql — persisted to
  * public.error_logs too, see lib/data/error-logs.ts) and returns a
  * generic, context-specific message safe to show in the UI.
  *

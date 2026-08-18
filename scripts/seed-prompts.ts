@@ -49,7 +49,7 @@ async function main() {
           reference_links_guidance: prompt.reference_links_guidance,
           expected_output_notes: prompt.expected_output_notes,
           // Starter library content ships pre-reviewed — see
-          // guard_prompt_review_state() (0009_prompt_review_workflow.sql):
+          // guard_prompt_review_state() (20260816090111_prompt_review_workflow.sql):
           // on a re-run this only sticks if the row's content is
           // unchanged from what's already stored, since editing an
           // approved row's content flips it back to pending_review same
@@ -92,7 +92,7 @@ async function ensureSeedAuthor(
   if (error || !created.user) {
     throw new Error(`Could not create seed author: ${error?.message}`);
   }
-  // handle_new_user() (see supabase/migrations/0001_init.sql) auto-creates
+  // handle_new_user() (see supabase/migrations/20260815025000_init.sql) auto-creates
   // the matching profiles row on user insert.
   return created.user.id;
 }

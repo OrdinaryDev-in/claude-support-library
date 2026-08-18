@@ -4,7 +4,7 @@
 -- 0014) only diffs `prompts` content columns (title/description/
 -- base_instructions/...). prompt_tags rows are a separate table, gated only
 -- by prompt ownership (prompt_tags_insert/update/delete_owner_or_admin,
--- 0007_rls_review_hardening.sql) — not by prompts.status. An author calling
+-- 20260815042229_rls_review_hardening.sql) — not by prompts.status. An author calling
 -- updatePrompt with only the tags changed (app/actions/prompts.ts's
 -- syncTags deletes and re-inserts prompt_tags rows without touching any
 -- `prompts` column) never fires the BEFORE UPDATE trigger on `prompts`, so

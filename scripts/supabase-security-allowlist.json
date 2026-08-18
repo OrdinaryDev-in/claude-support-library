@@ -2,7 +2,7 @@
   {
     "lint": "authenticated_security_definer_function_executable",
     "function": "is_admin",
-    "reason": "is_admin(uuid) must stay EXECUTE-able by `authenticated` so RLS policies can call it on behalf of signed-in users. `anon` EXECUTE was revoked in 0005_revoke_is_admin_anon_execute.sql. Accepted residual risk: any signed-in user can call rpc/is_admin(uid) directly and learn whether an arbitrary uid is an admin — no other data is exposed.",
+    "reason": "is_admin(uuid) must stay EXECUTE-able by `authenticated` so RLS policies can call it on behalf of signed-in users. `anon` EXECUTE was revoked in 20260815031028_revoke_is_admin_anon_execute.sql. Accepted residual risk: any signed-in user can call rpc/is_admin(uid) directly and learn whether an arbitrary uid is an admin — no other data is exposed.",
     "added": "2026-08-15"
   },
   {

@@ -1,7 +1,7 @@
 import { createClient } from "@/lib/supabase/server";
 
 /**
- * Best-effort persistence into public.error_logs (0021_error_logs.sql) —
+ * Best-effort persistence into public.error_logs (20260818110500_error_logs.sql) —
  * the zero-dependency floor for PRODUCTION_CHECKLIST.md's "real error
  * tracking" item until/unless a service like Sentry is added. Called from
  * two places: lib/errors.ts's safeActionError() (every Server Action

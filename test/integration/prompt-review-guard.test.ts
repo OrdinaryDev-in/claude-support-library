@@ -4,9 +4,9 @@ import type { Database } from "@/lib/types/database.types";
 
 /**
  * Integration tests against a REAL Postgres instance for
- * guard_prompt_review_state() (supabase/migrations/0009_prompt_review_workflow.sql,
+ * guard_prompt_review_state() (supabase/migrations/20260816090111_prompt_review_workflow.sql,
  * refreshed by 0014/0017/0018) and prevent_email_self_edit()
- * (0016_protect_profile_email_self_edit.sql) — the review-workflow's
+ * (20260818110000_protect_profile_email_self_edit.sql) — the review-workflow's
  * counterparts to prevent_role_self_escalation
  * (test/integration/role-escalation.test.ts), which had test coverage but
  * these never did, despite guard_prompt_review_state already needing a
@@ -88,7 +88,7 @@ describe.skipIf(!isLocalSupabase)("guard_prompt_review_state trigger", () => {
   }
 
   it("rejects reviewed_by/reviewed_at/rejection_reason forged on a fresh INSERT", async () => {
-    // prompts_insert_own's WITH CHECK (0017_guard_prompt_insert_review_fields.sql)
+    // prompts_insert_own's WITH CHECK (20260818110100_guard_prompt_insert_review_fields.sql)
     // requires these null for a non-admin insert — without it, an author
     // could forge a fake review audit trail on their own pending prompt.
     const { error } = await insertPrompt({

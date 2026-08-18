@@ -3,7 +3,7 @@
 -- Real bug, found via E2E: "owner can create a prompt" failed with
 -- `permission denied for table prompts` (SQLSTATE 42501) on a fresh
 -- local `supabase start` + `db reset` stack, even though the
--- prompts_insert_own RLS policy (0002_rls.sql) clearly allows it. RLS
+-- prompts_insert_own RLS policy (20260815025500_rls.sql) clearly allows it. RLS
 -- policies only restrict *which rows* a role can touch — the role still
 -- needs the underlying SQL-level table privilege (GRANT SELECT/INSERT/
 -- etc.) before RLS is even evaluated. No migration here has ever granted
@@ -22,7 +22,7 @@
 -- project.
 --
 -- Scoped to exactly what each table's existing RLS policies need for
--- `authenticated` (see 0002_rls.sql) — nothing broader:
+-- `authenticated` (see 20260815025500_rls.sql) — nothing broader:
 --   profiles:    select (profiles_select_all), update (profiles_update_own)
 --                — no insert (handle_new_user() is SECURITY DEFINER and
 --                inserts on signup; no policy allows a client-side

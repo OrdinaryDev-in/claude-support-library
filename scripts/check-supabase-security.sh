@@ -7,7 +7,7 @@
 # files in this branch.
 #
 # Exits non-zero — and blocks the push — on any security advisory at
-# warn level or above. See supabase/migrations/0003_fix_rls_anon_bypass.sql
+# warn level or above. See supabase/migrations/20260815030105_fix_rls_anon_bypass.sql
 # for the kind of issue this is meant to catch (auth.role() policy gaps,
 # SECURITY DEFINER functions callable by anon/authenticated, etc).
 set -euo pipefail

@@ -13,7 +13,7 @@ export interface PromptFormInitialValues extends PromptFormValues {
   slug: string;
   /** The prompt's status *before* this edit — used only to decide whether
    * saving will resubmit it for review (see guard_prompt_review_state(),
-   * 0009_prompt_review_workflow.sql: editing an approved/rejected prompt's
+   * 20260816090111_prompt_review_workflow.sql: editing an approved/rejected prompt's
    * content always flips it back to pending_review, so this is knowable
    * up front without a round trip). */
   status: PromptStatus;
@@ -59,7 +59,7 @@ export function PromptForm({
   const preview = useMemo(() => assembleTemplate(fields), [fields]);
 
   // Editing an approved/rejected prompt's content resubmits it for review
-  // (guard_prompt_review_state(), 0009_prompt_review_workflow.sql) — but
+  // (guard_prompt_review_state(), 20260816090111_prompt_review_workflow.sql) — but
   // only in that trigger's non-admin branch; an admin editor's save never
   // resets status. Both are known from data the page already loaded, no
   // need to wait for the save to complete.

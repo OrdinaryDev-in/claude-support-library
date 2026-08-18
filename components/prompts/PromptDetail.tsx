@@ -120,7 +120,7 @@ export function PromptDetail({
             </span>
             {/* Only the author/admin ever sees this — everyone else can only
                 reach this page for an approved prompt in the first place
-                (RLS: prompts_select_signed_in, 0009_prompt_review_workflow.sql). */}
+                (RLS: prompts_select_signed_in, 20260816090111_prompt_review_workflow.sql). */}
             {isOwner && prompt.status !== "approved" && <StatusPill status={prompt.status} />}
           </div>
           <h1 className="font-[family-name:var(--font-display)] font-medium text-[26px] sm:text-[32px] mb-2.5 max-w-[640px]">

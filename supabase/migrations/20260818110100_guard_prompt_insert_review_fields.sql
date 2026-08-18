@@ -1,7 +1,7 @@
 -- DevAtlas — block forged review-audit fields on prompt INSERT
 --
--- guard_prompt_review_state() (0009_prompt_review_workflow.sql, refreshed
--- in 0014_service_role_bypasses_self_escalation_guards.sql) only runs
+-- guard_prompt_review_state() (20260816090111_prompt_review_workflow.sql, refreshed
+-- in 20260816124803_service_role_bypasses_self_escalation_guards.sql) only runs
 -- `before update` — it pins status/reviewed_by/reviewed_at/rejection_reason
 -- against a non-admin's UPDATE, but has nothing to say about INSERT.
 -- prompts_insert_own's WITH CHECK only constrained author_id and status,

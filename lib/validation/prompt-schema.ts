@@ -9,7 +9,7 @@ export const promptCategoryValues = [
 ] as const;
 
 // 20,000 chars matches the CHECK constraints added on public.prompts by
-// supabase/migrations/0020_prompt_text_length_constraints.sql — keep both
+// supabase/migrations/20260818110400_prompt_text_length_constraints.sql — keep both
 // in sync so a form submission that would fail the DB constraint is
 // rejected here first, with a message the user can actually act on,
 // instead of surfacing as a generic safeActionError() failure.

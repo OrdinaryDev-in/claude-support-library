@@ -1,9 +1,9 @@
 -- DevAtlas — close two WARN-level findings from `supabase db advisors
--- --type security`, same shape 0004_harden_definer_functions.sql and
--- 0011_revoke_guard_prompt_review_state_public_execute.sql already closed
+-- --type security`, same shape 20260815030924_harden_definer_functions.sql and
+-- 20260816090327_revoke_guard_prompt_review_state_public_execute.sql already closed
 -- for their sibling trigger functions, just never applied to these two
--- newer ones (0016_protect_profile_email_self_edit.sql,
--- 0018_reset_review_on_tag_change.sql):
+-- newer ones (20260818110000_protect_profile_email_self_edit.sql,
+-- 20260818110200_reset_review_on_tag_change.sql):
 --
 -- `prevent_email_self_edit()` and `reset_prompt_review_on_tag_change()`
 -- are SECURITY DEFINER functions that only exist to back a trigger (on
