@@ -18,6 +18,12 @@ on:
     - cron: "17 3 * * *"
   workflow_dispatch: {}
 
+# Least-privilege default — this job only checks out the repo and dumps a
+# remote database via a token passed as a secret, it never needs to write
+# back to the repo itself.
+permissions:
+  contents: read
+
 jobs:
   backup:
     name: Database dump
@@ -51,15 +57,34 @@ jobs:
         env:
           SUPABASE_ACCESS_TOKEN: ${{ secrets.SUPABASE_ACCESS_TOKEN }}
 
+      # This repo is public — GitHub Actions artifacts on a public repo
+      # are downloadable by any GitHub account, no collaborator access
+      # needed. An unencrypted full schema+data dump uploaded as a plain
+      # artifact would mean the database (including user data) is
+      # effectively public the moment this job runs. Encrypt before
+      # upload with a passphrase-derived AES-256 key (openssl is
+      # preinstalled on ubuntu-latest — no new dependency); only someone
+      # with BACKUP_ENCRYPTION_KEY can decrypt
+      # (`openssl enc -d -aes-256-cbc -pbkdf2 -in backup-*.sql.enc -out backup.sql`).
+      - name: Encrypt dump
+        run: |
+          openssl enc -aes-256-cbc -pbkdf2 -salt \
+            -in "backup-$(date -u +%Y-%m-%d).sql" \
+            -out "backup-$(date -u +%Y-%m-%d).sql.enc" \
+            -pass env:BACKUP_ENCRYPTION_KEY
+          rm "backup-$(date -u +%Y-%m-%d).sql"
+        env:
+          BACKUP_ENCRYPTION_KEY: ${{ secrets.BACKUP_ENCRYPTION_KEY }}
+
       # Interim only — a GitHub Actions artifact isn't durable enough for
       # real disaster recovery (90-day retention, same-repo blast radius:
       # if this repo/account is compromised or deleted, the backups go
       # with it). TODO(production): once a bucket is provisioned
       # (S3/GCS/Backblaze), replace this step with an upload to it and add
       # the bucket's credentials as GitHub secrets.
-      - name: Upload dump as build artifact (interim)
+      - name: Upload encrypted dump as build artifact (interim)
         uses: actions/upload-artifact@v4
         with:
           name: supabase-backup-${{ github.run_id }}
-          path: backup-*.sql
+          path: backup-*.sql.enc
           retention-days: 90
