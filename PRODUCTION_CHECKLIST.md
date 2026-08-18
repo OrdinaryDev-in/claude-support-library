@@ -12,16 +12,30 @@ pass on every form/dialog/list, no committed secrets, CI lint/typecheck/
 build/CodeQL/`npm audit`, unit + E2E test coverage).
 
 Originally reviewed 2026-08-15, re-verified 2026-08-16 and again
-2026-08-18 (attack-surface/data-leak pass, then implementation pass —
-every code-level finding from that pass is closed; what's left below is
-exclusively dashboard/account settings and open decisions nothing in this
-repo can perform).
+2026-08-18 (attack-surface/data-leak pass, implementation pass, then a
+production-DB sync pass — every code-level finding from all three is
+closed; what's left below is exclusively dashboard/account settings and
+open decisions nothing in this repo can perform).
+
+**Production DB confirmed in sync (2026-08-18):** migrations `0016`
+through `0022` were found applied to local files but *not* to the live
+project (`supabase migration list --linked` / `supabase db advisors`
+both checked directly). Applied all seven, including a follow-up
+(`0022`) closing two `SECURITY DEFINER` EXECUTE-grant WARNs the advisor
+surfaced once `0016`/`0018` went live. Re-ran `supabase db advisors
+--type security` after: clean except the two items already listed below
+(leaked-password-protection) and `is_admin`'s `authenticated` grant,
+which is intentional (see `0004`'s own comment) and isn't a gap.
 
 ## 🟠 Should-fix before/shortly after launch
 
 All remaining items here are manual steps in an external dashboard
 (Supabase, Vercel, GitHub) — nothing left to implement in this repo.
 
+- [ ] **Add a `BACKUP_ENCRYPTION_KEY` GitHub Actions secret** (Settings →
+      Secrets and variables → Actions on the repo, any strong random
+      value). `backup.yml`'s dump step now encrypts before upload — the
+      next scheduled run fails without this secret set.
 - [ ] Confirm **"Confirm email"** is re-enabled on the production Supabase
       project (README notes it's only disabled for local dev convenience).
 - [ ] Update Supabase Auth **Site URL / redirect allow-list** to the real
@@ -36,6 +50,14 @@ All remaining items here are manual steps in an external dashboard
       CLI — verify in repo settings whether required review + passing
       checks before merge is configured, given direct pushes to `main`
       have happened this session.
+- [ ] **Reconcile the legacy migration-history naming mismatch** (13
+      remote entries recorded under CLI-auto-generated timestamp versions
+      — e.g. `20260815030105` — that don't match any local filename, from
+      migrations applied directly via a prior session's Supabase MCP
+      connection before being hand-documented into this repo's
+      `0003`–`0015`). Cosmetic only — `supabase db advisors` is clean and
+      nothing is missing — but it breaks `supabase db push`/`migration
+      list`'s output until reconciled. Optional cleanup, not blocking.
 
 ## 🟡 Worth a decision, not blocking
 
