@@ -1,4 +1,5 @@
 import { redirect } from "next/navigation";
+import { headers } from "next/headers";
 import { createClient } from "@/lib/supabase/server";
 import { NavBar, type NavBarUser } from "@/components/layout/NavBar";
 import { reviewQueueCounts } from "@/lib/data/prompts";
@@ -13,19 +14,21 @@ function initialsOf(name: string | null, email: string) {
 }
 
 export default async function AppLayout({ children }: LayoutProps<"/">) {
-  const supabase = await createClient();
-  const {
-    data: { user },
-  } = await supabase.auth.getUser();
+  // proxy.ts (see lib/supabase/middleware.ts) already ran getUser() for
+  // this request — a network round trip to Supabase Auth — and forwards
+  // the verified id via this header. Reading it here instead of calling
+  // getUser() again avoids paying that round trip twice per page load.
+  const userId = (await headers()).get("x-user-id");
 
   // proxy.ts already redirects unauthenticated requests before they reach
   // this layout — this is a defense-in-depth backstop, not the primary gate.
-  if (!user) redirect("/login");
+  if (!userId) redirect("/login");
 
+  const supabase = await createClient();
   const { data: profile } = await supabase
     .from("profiles")
     .select("full_name, email, role")
-    .eq("id", user.id)
+    .eq("id", userId)
     .single();
 
   const isAdmin = profile?.role === "admin";
@@ -35,8 +38,8 @@ export default async function AppLayout({ children }: LayoutProps<"/">) {
   const pendingReviewCount = isAdmin ? (await reviewQueueCounts(supabase)).pending_review : 0;
 
   const navUser: NavBarUser = {
-    initials: initialsOf(profile?.full_name ?? null, profile?.email ?? user.email ?? ""),
-    fullName: profile?.full_name || profile?.email || user.email || "",
+    initials: initialsOf(profile?.full_name ?? null, profile?.email ?? ""),
+    fullName: profile?.full_name || profile?.email || "",
     isAdmin,
     pendingReviewCount,
   };

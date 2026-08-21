@@ -1,4 +1,5 @@
 import { redirect } from "next/navigation";
+import { headers } from "next/headers";
 import type { Metadata } from "next";
 import { createClient } from "@/lib/supabase/server";
 import { ProfileForm, type ProfileData } from "@/components/profile/ProfileForm";
@@ -40,16 +41,18 @@ function formatLastLogin(iso: string | null) {
 }
 
 export default async function AccountPage() {
-  const supabase = await createClient();
-  const {
-    data: { user },
-  } = await supabase.auth.getUser();
-  if (!user) redirect("/login");
+  // proxy.ts (lib/supabase/middleware.ts) already ran getUser() for this
+  // request and forwards the verified id via this header — reading it
+  // here instead of calling getUser() again skips a repeat Supabase Auth
+  // round trip.
+  const userId = (await headers()).get("x-user-id");
+  if (!userId) redirect("/login");
 
+  const supabase = await createClient();
   const { data: profile } = await supabase
     .from("profiles")
     .select("full_name, email, role, created_at, last_login_at")
-    .eq("id", user.id)
+    .eq("id", userId)
     .single();
 
   if (!profile) redirect("/login");
@@ -63,7 +66,7 @@ export default async function AccountPage() {
     lastLogin: formatLastLogin(profile.last_login_at),
   };
 
-  const submissions = await mySubmissions(supabase, user.id);
+  const submissions = await mySubmissions(supabase, userId);
 
   return <ProfileForm profile={data} submissions={submissions} />;
 }

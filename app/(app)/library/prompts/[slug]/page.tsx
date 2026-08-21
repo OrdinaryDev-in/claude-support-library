@@ -1,4 +1,5 @@
 import { notFound } from "next/navigation";
+import { headers } from "next/headers";
 import type { Metadata } from "next";
 import { createClient } from "@/lib/supabase/server";
 import { PromptDetail } from "@/components/prompts/PromptDetail";
@@ -36,9 +37,12 @@ export default async function PromptDetailPage({
   const { slug } = await params;
   const supabase = await createClient();
 
-  const {
-    data: { user },
-  } = await supabase.auth.getUser();
+  // proxy.ts (lib/supabase/middleware.ts) already ran getUser() for this
+  // request and forwards the verified id via this header — reading it
+  // here instead of calling getUser() again skips a repeat Supabase Auth
+  // round trip. This route allows anonymous viewing, so absence just
+  // means "no owner controls," not an auth failure.
+  const userId = (await headers()).get("x-user-id");
 
   const { data: prompt, error } = await supabase
     .from("prompts")
@@ -57,14 +61,14 @@ export default async function PromptDetailPage({
     .filter((name): name is string => Boolean(name));
 
   let isOwner = false;
-  if (user) {
-    if (user.id === prompt.author_id) {
+  if (userId) {
+    if (userId === prompt.author_id) {
       isOwner = true;
     } else {
       const { data: profile } = await supabase
         .from("profiles")
         .select("role")
-        .eq("id", user.id)
+        .eq("id", userId)
         .single();
       isOwner = profile?.role === "admin";
     }

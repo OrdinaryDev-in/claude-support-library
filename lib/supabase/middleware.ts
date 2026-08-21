@@ -48,6 +48,31 @@ export async function updateSession(request: NextRequest, requestHeaders: Header
     data: { user },
   } = await supabase.auth.getUser();
 
+  // Downstream Server Components (AppLayout in particular) used to call
+  // getUser() again themselves — a second network round trip to Supabase
+  // Auth to revalidate the exact session this middleware just validated.
+  // Forward the already-verified id instead so they can skip that repeat
+  // call. Safe against spoofing: this unconditionally overwrites whatever
+  // x-user-id the client sent (Headers.set replaces, not appends), so the
+  // value downstream code sees is always the one *this* getUser() call
+  // just verified, never client-supplied. Same mechanism the x-nonce
+  // header above already relies on.
+  if (user) {
+    requestHeaders.set("x-user-id", user.id);
+  } else {
+    requestHeaders.delete("x-user-id");
+  }
+
+  // NextResponse.next() copies `request.headers` into
+  // `x-middleware-request-*` response headers at construction time, not
+  // lazily — so the x-user-id set just above wouldn't reach downstream
+  // code through the `response` built earlier (before `user` was known).
+  // Rebuild it now that requestHeaders is final, carrying forward any
+  // Set-Cookie the session refresh above may have written onto the old one.
+  const cookiesToForward = response.cookies.getAll();
+  response = NextResponse.next({ request: { headers: requestHeaders } });
+  cookiesToForward.forEach((cookie) => response.cookies.set(cookie));
+
   // Server Actions POST to whatever page they were called from — e.g.
   // AuthForm.tsx calls touchLastLogin() while still on /signup, right
   // after a successful signUp() has already set the session cookie. A

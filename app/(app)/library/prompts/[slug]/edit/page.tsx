@@ -1,4 +1,5 @@
 import { notFound, redirect } from "next/navigation";
+import { headers } from "next/headers";
 import { createClient } from "@/lib/supabase/server";
 import { PromptForm, type PromptFormInitialValues } from "@/components/prompts/PromptForm";
 
@@ -6,13 +7,15 @@ export default async function EditPromptPage({
   params,
 }: PageProps<"/library/prompts/[slug]/edit">) {
   const { slug } = await params;
+
+  // proxy.ts (lib/supabase/middleware.ts) already ran getUser() for this
+  // request and forwards the verified id via this header — reading it
+  // here instead of calling getUser() again skips a repeat Supabase Auth
+  // round trip.
+  const userId = (await headers()).get("x-user-id");
+  if (!userId) redirect("/login");
+
   const supabase = await createClient();
-
-  const {
-    data: { user },
-  } = await supabase.auth.getUser();
-  if (!user) redirect("/login");
-
   const { data: prompt, error } = await supabase
     .from("prompts")
     .select("*")
@@ -29,11 +32,11 @@ export default async function EditPromptPage({
   const { data: profile } = await supabase
     .from("profiles")
     .select("role")
-    .eq("id", user.id)
+    .eq("id", userId)
     .single();
   const isAdmin = profile?.role === "admin";
 
-  const allowed = user.id === prompt.author_id || isAdmin;
+  const allowed = userId === prompt.author_id || isAdmin;
   if (!allowed) redirect(`/library/prompts/${prompt.slug}`);
 
   const { data: joins } = await supabase

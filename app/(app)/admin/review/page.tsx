@@ -1,5 +1,6 @@
 import Link from "next/link";
 import { notFound } from "next/navigation";
+import { headers } from "next/headers";
 import type { Metadata } from "next";
 import { createClient } from "@/lib/supabase/server";
 import { listReviewQueue, reviewQueueCounts } from "@/lib/data/prompts";
@@ -19,18 +20,20 @@ export default async function ReviewQueuePage({
 }: {
   searchParams: Promise<{ status?: string }>;
 }) {
-  const supabase = await createClient();
-  const {
-    data: { user },
-  } = await supabase.auth.getUser();
+  // proxy.ts (lib/supabase/middleware.ts) already ran getUser() for this
+  // request and forwards the verified id via this header — reading it
+  // here instead of calling getUser() again skips a repeat Supabase Auth
+  // round trip on every review-queue page load.
+  const userId = (await headers()).get("x-user-id");
   // 404 rather than redirect for both the no-session and non-admin cases —
   // this route's existence isn't something a non-admin needs to know about.
-  if (!user) notFound();
+  if (!userId) notFound();
 
+  const supabase = await createClient();
   const { data: profile } = await supabase
     .from("profiles")
     .select("role")
-    .eq("id", user.id)
+    .eq("id", userId)
     .single();
   if (profile?.role !== "admin") notFound();
 

@@ -1,4 +1,5 @@
 import { notFound } from "next/navigation";
+import { headers } from "next/headers";
 import type { Metadata } from "next";
 import { createClient } from "@/lib/supabase/server";
 import { ReviewDetail } from "@/components/admin/ReviewDetail";
@@ -21,17 +22,17 @@ export default async function ReviewDetailPage({
   params,
 }: PageProps<"/admin/review/[slug]">) {
   const { slug } = await params;
+
+  // See app/(app)/admin/review/page.tsx's comment — this skips a repeat
+  // getUser() round trip already done in proxy.ts's middleware.
+  const userId = (await headers()).get("x-user-id");
+  if (!userId) notFound();
+
   const supabase = await createClient();
-
-  const {
-    data: { user },
-  } = await supabase.auth.getUser();
-  if (!user) notFound();
-
   const { data: profile } = await supabase
     .from("profiles")
     .select("role")
-    .eq("id", user.id)
+    .eq("id", userId)
     .single();
   if (profile?.role !== "admin") notFound();
 
