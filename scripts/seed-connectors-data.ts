@@ -173,4 +173,242 @@ export const SEED_CONNECTORS: SeedConnector[] = [
       "Blocking internal IP ranges (127.0.0.1, 169.254.169.254 cloud metadata, RFC1918 ranges) at the tool layer is the real SSRF defense — an agent that can be steered to navigate anywhere the browser process's network can reach is a serious risk without this. Pages with heavy client-side rendering need an explicit wait-for-selector, not a fixed sleep, or the agent reads a half-rendered page.",
     docs_links: "[LINK: Playwright docs] [LINK: OWASP SSRF prevention cheat sheet]",
   },
+
+  // ─── mcp_server_setup (+3) — from the Phase 2b seed research pass, see
+  // plan-phase-2-...md. Vendor-hosted remote servers, distinct setup shape
+  // from the local stdio servers above.
+  {
+    title: "Wire Up the Sentry MCP Server",
+    slug: "wire-up-the-sentry-mcp-server",
+    description: "Give an agent read access to Sentry issues and error data via Sentry's official hosted MCP server.",
+    category: "mcp_server_setup",
+    tags: ["mcp", "sentry", "observability"],
+    setup_steps:
+      "1. Confirm your agent client supports remote MCP servers over OAuth (not just local stdio). 2. Add Sentry's hosted MCP endpoint to your agent's MCP config. 3. On first use, complete the OAuth consent flow in the browser it opens — this scopes access to the specific Sentry org/projects you approve, not your whole Sentry account. 4. Verify by asking the agent to list recent unresolved issues in a known project.",
+    config_snippet:
+      '{\n  "mcpServers": {\n    "sentry": {\n      "url": "https://mcp.sentry.dev/mcp"\n    }\n  }\n}',
+    gotchas_notes:
+      "This server can trigger Seer, Sentry's AI root-cause analysis tool — that's a real API cost/quota action, not just a read, so an agent that reaches for it liberally can burn through Seer usage faster than expected. Consent is scoped per Sentry org at OAuth time; if you need access to a second org, you'll go through the consent flow again rather than it silently extending.",
+    docs_links: "[LINK: github.com/getsentry/sentry-mcp] [LINK: Sentry MCP server docs]",
+  },
+  {
+    title: "Wire Up the Linear MCP Server",
+    slug: "wire-up-the-linear-mcp-server",
+    description: "Let an agent read and update Linear issues via Linear's official hosted MCP server — remote-only now.",
+    category: "mcp_server_setup",
+    tags: ["mcp", "linear", "project-management"],
+    setup_steps:
+      "1. Confirm your agent client supports remote MCP over OAuth. 2. Add Linear's hosted MCP endpoint to your config — there is no supported local/stdio Linear server; the older community one is explicitly deprecated. 3. Complete the OAuth consent flow, which scopes access to the specific Linear workspace you approve. 4. Verify by asking the agent to list your open issues in one team.",
+    config_snippet:
+      '{\n  "mcpServers": {\n    "linear": {\n      "url": "https://mcp.linear.app/mcp"\n    }\n  }\n}',
+    gotchas_notes:
+      "If you find a local/stdio Linear MCP setup guide online, treat it as stale — Linear moved to hosted-remote-only and the old community server is a dead end. An agent with write access can create/update issues on your behalf; scope the OAuth consent to only the teams/workspaces you actually want it touching.",
+    docs_links: "[LINK: linear.app/docs/mcp]",
+  },
+  {
+    title: "Wire Up the Supabase MCP Server (Read-Only)",
+    slug: "wire-up-the-supabase-mcp-server-read-only",
+    description: "Let an agent inspect a Supabase project's schema and data via the official server, locked to read-only.",
+    category: "mcp_server_setup",
+    tags: ["mcp", "supabase", "postgres"],
+    setup_steps:
+      "1. Generate a Supabase personal access token scoped to the specific project the agent needs, not your whole account. 2. Add the official Supabase MCP server to your config with the `--read-only` flag set. 3. Restart the client. 4. Verify: ask the agent to list tables and describe a schema, then confirm an attempted write is actually rejected — don't just trust the flag's name.",
+    config_snippet:
+      '{\n  "mcpServers": {\n    "supabase": {\n      "command": "npx",\n      "args": ["-y", "@supabase/mcp-server-supabase", "--project-ref=<project-ref>", "--read-only"],\n      "env": { "SUPABASE_ACCESS_TOKEN": "${SUPABASE_ACCESS_TOKEN}" }\n    }\n  }\n}',
+    gotchas_notes:
+      "A known open issue: `tools/list` still advertises mutating tools (like `apply_migration`) even with `--read-only` set — the tool appears available even though calling it will actually fail. Don't rely on the tool list itself to prove read-only is enforced; verify by attempting a write and confirming it's rejected.",
+    docs_links: "[LINK: github.com/supabase/mcp] [LINK: @supabase/mcp-server-supabase on npm]",
+  },
+
+  // ─── api_integration (+4) ──────────────────────────────────────────
+  {
+    title: "Wire Up the Stripe MCP Server",
+    slug: "wire-up-the-stripe-mcp-server",
+    description: "Give an agent access to Stripe data/actions via the official hosted MCP server, scoped to a restricted key.",
+    category: "api_integration",
+    tags: ["mcp", "stripe", "payments"],
+    setup_steps:
+      "1. In the Stripe dashboard, create a restricted API key scoped to only the specific resources the agent needs (e.g. read-only on Customers and Charges) — never use an unrestricted secret key. 2. Add Stripe's hosted MCP server to your config. 3. Authenticate via the OAuth flow it presents, or the restricted key depending on your client's support. 4. Verify by asking the agent to look up a known test-mode customer before ever pointing it at live data.",
+    config_snippet:
+      '{\n  "mcpServers": {\n    "stripe": {\n      "url": "https://mcp.stripe.com"\n    }\n  }\n}',
+    gotchas_notes:
+      "This server is genuinely live-payments-capable — running it with an unrestricted live secret key against an agent is a real financial risk, not a theoretical one. Test everything against Stripe's test mode first, and only grant live-mode, write-capable scopes if the agent's actual job requires taking payment actions, not just reading data.",
+    docs_links: "[LINK: mcp.stripe.com] [LINK: Stripe restricted API keys docs]",
+  },
+  {
+    title: "Wire Up the Figma Dev Mode MCP Server",
+    slug: "wire-up-the-figma-dev-mode-mcp-server",
+    description: "Let a coding agent read a Figma file's structure and design tokens via Figma's local Dev Mode server.",
+    category: "api_integration",
+    tags: ["mcp", "figma", "design"],
+    setup_steps:
+      "1. Open the target file in the Figma desktop app (not the browser) with a Professional plan or above. 2. Toggle Dev Mode on for that specific file — the local server only serves files with Dev Mode explicitly enabled. 3. Add the local Dev Mode MCP endpoint to your agent config. 4. Verify by asking the agent to describe a specific frame's layout and design tokens while the file stays open in Figma.",
+    config_snippet:
+      '{\n  "mcpServers": {\n    "figma-dev-mode": {\n      "url": "http://127.0.0.1:3845/mcp"\n    }\n  }\n}',
+    gotchas_notes:
+      "This is not a general Figma API integration — it requires an active Figma desktop session with that specific file open and Dev Mode toggled on. If it silently returns nothing useful, the most common cause is Dev Mode not being enabled for that file, not a config problem.",
+    docs_links: "[LINK: developers.figma.com/docs/figma-mcp-server/local-server-installation]",
+  },
+  {
+    title: "Wire Up the Vercel MCP Server",
+    slug: "wire-up-the-vercel-mcp-server",
+    description: "Let an agent inspect and manage Vercel deployments/projects via the official hosted MCP server.",
+    category: "api_integration",
+    tags: ["mcp", "vercel", "deployments"],
+    setup_steps:
+      "1. Add Vercel's hosted MCP server to your agent config. 2. Complete the OAuth consent flow, scoping access to a specific team/project rather than your whole Vercel account. 3. Verify by asking the agent to list recent deployments for one project before granting it anything beyond read access.",
+    config_snippet:
+      '{\n  "mcpServers": {\n    "vercel": {\n      "url": "https://mcp.vercel.com"\n    }\n  }\n}',
+    gotchas_notes:
+      "This server can trigger real deployments and project changes, not just report status — scope the OAuth consent to a single team/project you actually want the agent acting on, and treat any deployment-triggering capability as a genuinely consequential action, not a read.",
+    docs_links: "[LINK: vercel.com/docs/mcp/vercel-mcp]",
+  },
+  {
+    title: "Wire Up the Cloudflare MCP Servers",
+    slug: "wire-up-the-cloudflare-mcp-servers",
+    description: "Give an agent access to specific Cloudflare products (Workers, KV, D1) via Cloudflare's official MCP servers.",
+    category: "api_integration",
+    tags: ["mcp", "cloudflare", "infra"],
+    setup_steps:
+      "1. Identify which specific Cloudflare products the agent actually needs (Workers, KV, D1, etc.) — Cloudflare ships separate sub-servers per product area, not one server for everything. 2. Create an API token scoped to only those products' permissions. 3. Add the relevant sub-server(s) to your agent config, each with its own token if scopes differ. 4. Verify each sub-server independently before combining them.",
+    config_snippet:
+      '{\n  "mcpServers": {\n    "cloudflare-workers": {\n      "command": "npx",\n      "args": ["-y", "@cloudflare/mcp-server-cloudflare", "run", "workers"],\n      "env": { "CLOUDFLARE_API_TOKEN": "${CLOUDFLARE_API_TOKEN}" }\n    }\n  }\n}',
+    gotchas_notes:
+      "One broad API token doesn't cover every Cloudflare product area — a token scoped for Workers won't necessarily work for KV or D1. Set up and test each sub-server's own token rather than assuming a single credential covers the whole catalog.",
+    docs_links: "[LINK: github.com/cloudflare/mcp-server-cloudflare] [LINK: github.com/cloudflare/workers-mcp]",
+  },
+
+  // ─── auth_and_tool_use (+3) ──────────────────────────────────────────
+  {
+    title: "Set Up OAuth Device Authorization Grant for a Headless Agent",
+    slug: "set-up-oauth-device-authorization-grant-for-a-headless-agent",
+    description: "Authorize a CLI or headless agent against a SaaS API without a localhost browser callback, via RFC 8628.",
+    category: "auth_and_tool_use",
+    tags: ["oauth", "cli"],
+    setup_steps:
+      "1. Confirm the provider supports the device authorization grant (RFC 8628) — check their OAuth docs for a 'device code' or 'device flow' endpoint. 2. From the headless/CLI agent, request a device code and user code from the provider's device-authorization endpoint. 3. Display the user code and verification URL to the person running the agent; they approve it on a separate device with a browser. 4. Poll the token endpoint until the user completes approval, then store the resulting token the same way you would any OAuth token.",
+    config_snippet:
+      "POST https://provider.example.com/oauth/device/code\n  client_id=YOUR_CLIENT_ID\n  scope=read:resource\n\n# Response includes device_code, user_code, verification_uri, interval\n# Then poll:\nPOST https://provider.example.com/oauth/token\n  grant_type=urn:ietf:params:oauth:grant-type:device_code\n  device_code=...\n  client_id=YOUR_CLIENT_ID",
+    gotchas_notes:
+      "Respect the provider's returned polling interval — polling faster than instructed commonly triggers rate-limiting or a slow_down error. The user code has a real expiry (often 10-15 minutes); if the agent's process dies mid-flow, the code can't be resumed and the flow has to restart from scratch.",
+    docs_links: "[LINK: RFC 8628 — OAuth 2.0 Device Authorization Grant]",
+  },
+  {
+    title: "Use a Client-Credentials Grant for a Fully Autonomous Agent",
+    slug: "use-a-client-credentials-grant-for-a-fully-autonomous-agent",
+    description: "Authenticate a scheduled, no-human-in-the-loop agent job as itself, distinct from user-delegated OAuth.",
+    category: "auth_and_tool_use",
+    tags: ["oauth", "auth"],
+    setup_steps:
+      "1. Register a dedicated client (not a shared one used elsewhere) for this specific autonomous job, so its access can be revoked independently. 2. Request only the scopes the scheduled job's actual actions require — this credential has no human approving each action, so over-scoping here has a wider blast radius than a user-delegated token. 3. Store the client secret in a secrets manager, never in the job's own repo or config file. 4. Set a rotation schedule for the secret, since there's no user re-consenting periodically to naturally force rotation the way OAuth refresh flows sometimes do.",
+    config_snippet:
+      "POST https://provider.example.com/oauth/token\n  grant_type=client_credentials\n  client_id=YOUR_CLIENT_ID\n  client_secret=YOUR_CLIENT_SECRET\n  scope=write:specific-resource",
+    gotchas_notes:
+      "Because no human approves each individual action with this grant, the scope you request at registration time is the actual, permanent ceiling on what the job can do — treat scope selection as the real security control, not a formality. A leaked client-credentials secret is immediately as powerful as the job itself, with no session or user context to further limit it.",
+    docs_links: "[LINK: OAuth 2.0 RFC 6749 — Client Credentials Grant]",
+  },
+  {
+    title: "Wire Up a Remote MCP Server With OAuth 2.1 + PKCE Consent",
+    slug: "wire-up-a-remote-mcp-server-with-oauth-21-pkce-consent",
+    description: "The general pattern behind GitHub/Linear/Sentry/Stripe/Figma/Vercel's hosted MCP servers — distinct from a local stdio server.",
+    category: "auth_and_tool_use",
+    tags: ["mcp", "oauth"],
+    setup_steps:
+      "1. Point your agent client's MCP config at the provider's hosted HTTPS endpoint rather than a local command. 2. On first connection, the client should open a browser to the provider's consent screen — if it doesn't, your client may not support remote MCP over OAuth yet, and no amount of config will fix that. 3. Approve only the specific scopes/resources shown on the consent screen, not blanket account access if the screen offers a narrower option. 4. The client stores the resulting token and refreshes it automatically; re-running the OAuth flow is only needed if the token is revoked or scopes change.",
+    config_snippet:
+      '{\n  "mcpServers": {\n    "example": {\n      "url": "https://mcp.example-provider.com/mcp"\n    }\n  }\n}',
+    gotchas_notes:
+      "This is a genuinely different setup shape from a local stdio server with an env-var API key — there's no token to copy-paste, and a setup guide written for local servers won't transfer. If your agent client is older or minimal, it may simply not support the OAuth consent flow yet, which looks like a silent connection failure rather than a clear error.",
+    docs_links: "[LINK: OAuth 2.1 draft spec] [LINK: RFC 7636 — PKCE]",
+  },
+
+  // ─── data_source_connector (+2) ─────────────────────────────────────
+  {
+    title: "Wire Up the AWS MCP Servers for Docs and Knowledge Lookup",
+    slug: "wire-up-the-aws-mcp-servers-for-docs-and-knowledge-lookup",
+    description: "Give an agent grounded AWS documentation/knowledge lookup via AWS Labs' official MCP servers.",
+    category: "data_source_connector",
+    tags: ["mcp", "aws"],
+    setup_steps:
+      "1. Pick the specific sub-server(s) you need from the AWS Labs MCP monorepo — it's organized into tiers (Essential vs. Core), not one server for all of AWS. 2. Configure AWS credentials scoped to read-only, least-privilege access for whatever the chosen sub-server actually touches. 3. Add the sub-server(s) to your agent config. 4. Verify with a documentation lookup query before relying on it for anything account-specific.",
+    config_snippet:
+      '{\n  "mcpServers": {\n    "aws-docs": {\n      "command": "uvx",\n      "args": ["awslabs.aws-documentation-mcp-server@latest"]\n    }\n  }\n}',
+    gotchas_notes:
+      "AWS has been actively steering production agent use toward a newer 'Agent Toolkit for AWS' rather than these MCP servers — treat this integration as good for exploration and documentation lookup today, not as the durable long-term path for account-acting agents. Don't grant broader-than-read AWS credentials to a documentation-lookup use case.",
+    docs_links: "[LINK: github.com/awslabs/mcp]",
+  },
+  {
+    title: "Wire Up the Kubernetes MCP Server",
+    slug: "wire-up-the-kubernetes-mcp-server",
+    description: "Let an agent inspect (or, if scoped, act on) a Kubernetes cluster via a native, kubeconfig-aware MCP server.",
+    category: "data_source_connector",
+    tags: ["mcp", "kubernetes", "infra"],
+    setup_steps:
+      "1. Create a kubeconfig context scoped to exactly the cluster and namespace(s) the agent should touch — never point it at a config with every cluster you have access to. 2. Explicitly pin the active context rather than relying on whatever the default happens to be. 3. Add the Kubernetes MCP server to your agent config, pointing at that specific kubeconfig. 4. Verify by asking the agent to list pods in the intended namespace and confirming it can't see resources outside it.",
+    config_snippet:
+      '{\n  "mcpServers": {\n    "kubernetes": {\n      "command": "kubernetes-mcp-server",\n      "args": ["--kubeconfig", "/path/to/scoped-kubeconfig"]\n    }\n  }\n}',
+    gotchas_notes:
+      "This server talks directly to whatever cluster context is active — if the default context in the supplied kubeconfig isn't pinned explicitly, an agent can silently operate against the wrong cluster (e.g. production instead of staging) with no warning. Multi-cluster kubeconfigs are convenient for a human and dangerous for an agent; use a single-context, single-namespace config instead.",
+    docs_links: "[LINK: github.com/containers/kubernetes-mcp-server]",
+  },
+
+  // ─── browser_automation (+2) ─────────────────────────────────────────
+  {
+    title: "Wire Up the Playwright MCP Server",
+    slug: "wire-up-the-playwright-mcp-server",
+    description: "Give an agent structured browser automation via accessibility snapshots, without needing a vision model.",
+    category: "browser_automation",
+    tags: ["mcp", "playwright", "browser"],
+    setup_steps:
+      "1. Add Microsoft's official Playwright MCP server to your agent config. 2. Separately run `npx playwright install chromium` (or the browser you need) — the MCP package doesn't bundle the browser binary itself. 3. Restart the client. 4. Verify by asking the agent to navigate to a known page and describe its structure via the accessibility snapshot, not a screenshot.",
+    config_snippet:
+      '{\n  "mcpServers": {\n    "playwright": {\n      "command": "npx",\n      "args": ["-y", "@playwright/mcp"]\n    }\n  }\n}',
+    gotchas_notes:
+      "The accessibility-snapshot approach means it works without a vision-capable model, but it also means pages with poor semantic markup (divs-as-buttons with no ARIA role) are genuinely harder for the agent to interact with correctly — that's a real limitation of the approach, not a bug. Browser state (cookies, login sessions) isn't sandboxed from the host machine by default.",
+    docs_links: "[LINK: npmjs.com/package/@playwright/mcp]",
+  },
+  {
+    title: "Give an Agent Its Own Browser-Extension Session",
+    slug: "give-an-agent-its-own-browser-extension-session",
+    description: "Let an agent drive a user's real, already-logged-in browser via an extension, instead of holding separate credentials.",
+    category: "browser_automation",
+    tags: ["browser", "extension"],
+    setup_steps:
+      "1. Install the agent's browser extension in the user's actual browser profile — this pattern only makes sense when the agent should act as the signed-in user, not as an independent service. 2. Confirm the extension's permission scope covers only the sites/actions actually needed, not blanket all-sites access if a narrower option exists. 3. Have the user explicitly grant the extension access when prompted, rather than pre-approving broadly. 4. Verify by having the agent read a page that requires the user's existing login, confirming it inherits the session correctly.",
+    config_snippet:
+      "// No API key or OAuth token to configure — the extension inherits\n// the browser's existing cookies/session for whatever site the\n// user is signed into. Nothing to store server-side.",
+    gotchas_notes:
+      "The security model here is fundamentally different from every other pattern in this section: the agent isn't holding its own credential at all, it's borrowing the user's live session — so 'least privilege' means restricting which sites/tabs the extension can act on, not scoping an API token. This also means the agent can only do what the signed-in user could do by hand, which is a real safety property worth stating explicitly to users.",
+    docs_links: "[LINK: your browser's extension permissions documentation]",
+  },
+
+  // ─── other (+2) ──────────────────────────────────────────────────────
+  {
+    title: "Understand the Agent2Agent (A2A) Protocol Basics",
+    slug: "understand-the-agent2agent-a2a-protocol-basics",
+    description: "The open protocol for agent-to-agent task delegation and discovery — complements MCP, doesn't replace it.",
+    category: "other",
+    tags: ["a2a", "agent-to-agent"],
+    setup_steps:
+      "1. Understand the split first: MCP connects one agent to tools/data sources; A2A connects one agent to another agent for task delegation and discovery — they solve different problems and are often used together, not as alternatives. 2. Publish (or look up) an Agent Card — a signed, discoverable description of what an agent can do and how to reach it. 3. To delegate a task to another agent, send it a task request referencing its Agent Card's declared capabilities, not an assumed API shape. 4. Handle the response asynchronously — A2A tasks are commonly long-running, not a synchronous request/reply.",
+    config_snippet:
+      '{\n  "name": "example-agent",\n  "capabilities": ["summarize-document", "draft-email"],\n  "endpoint": "https://agent.example.com/a2a",\n  "signature": "..."\n}',
+    gotchas_notes:
+      "Don't reach for A2A when what you actually need is MCP (an agent calling a tool) — they're commonly conflated, but A2A is specifically for one agent delegating to another autonomous agent. Agent Cards are signed for a reason: verify a card's signature before trusting its declared capabilities, the same way you'd verify any other credential before acting on it.",
+    docs_links: "[LINK: github.com/a2aproject/A2A]",
+  },
+  {
+    title: "Run MCP Servers in a Sandboxed Container via Docker's MCP Toolkit",
+    slug: "run-mcp-servers-in-a-sandboxed-container-via-dockers-mcp-toolkit",
+    description: "Run untrusted or third-party MCP servers as isolated containers instead of raw `npx -y` on the host.",
+    category: "other",
+    tags: ["docker", "security", "mcp"],
+    setup_steps:
+      "1. Install Docker Desktop with the MCP Toolkit enabled. 2. Browse the MCP Catalog for the server you need rather than running an arbitrary npm package directly on the host — the catalog includes curated partner servers (Stripe, Elastic, Grafana, Neo4j, and others) already packaged this way. 3. Launch the server through the Toolkit rather than `npx`, so it runs in its own container with its own filesystem/network boundary. 4. Point your agent config at the Toolkit's local gateway rather than a directly-spawned process.",
+    config_snippet:
+      '{\n  "mcpServers": {\n    "toolkit-gateway": {\n      "command": "docker",\n      "args": ["mcp", "gateway", "run"]\n    }\n  }\n}',
+    gotchas_notes:
+      "This pattern exists specifically to address the real supply-chain risk of `npx -y some-untrusted-package` as your MCP transport — a compromised package published to npm runs directly on your host with that pattern, but stays contained when run through the Toolkit. The catalog is read-only; if you need a private or customized entry, you fork it rather than editing in place.",
+    docs_links: "[LINK: docs.docker.com/ai/mcp-catalog-and-toolkit/]",
+  },
 ];

@@ -80,9 +80,9 @@ Seeds the starter content for each section (both idempotent — safe to
 re-run):
 
 ```bash
-npm run seed             # 48 hand-written prompts across five categories
-npm run seed:skills      # 12 hand-written skills across six categories
-npm run seed:connectors  # 12 hand-written connectors across six categories
+npm run seed             # 66 hand-written prompts across nine categories
+npm run seed:skills      # 29 hand-written skills across six categories
+npm run seed:connectors  # 26 hand-written connectors across six categories
 ```
 
 ### 5. Promote yourself to admin (optional)
@@ -162,9 +162,9 @@ lib/security/csp.ts                  — Content-Security-Policy builder used by
 next.config.ts                       — static security headers (HSTS, X-Frame-Options, etc.)
 supabase/migrations/                 — schema + RLS
 supabase/config.toml                 — local Supabase stack config (`supabase start`)
-scripts/seed-data.ts, seed-prompts.ts             — the 48 starter prompts + loader (npm run seed)
-scripts/seed-skills-data.ts, seed-skills.ts       — the 12 starter skills + loader (npm run seed:skills)
-scripts/seed-connectors-data.ts, seed-connectors.ts — the 12 starter connectors + loader (npm run seed:connectors)
+scripts/seed-data.ts, seed-prompts.ts             — the 66 starter prompts + loader (npm run seed)
+scripts/seed-skills-data.ts, seed-skills.ts       — the 29 starter skills + loader (npm run seed:skills)
+scripts/seed-connectors-data.ts, seed-connectors.ts — the 26 starter connectors + loader (npm run seed:connectors)
 app/actions/*.test.ts, test/         — Vitest unit + integration tests
 e2e/                                 — Playwright E2E tests
 .github/workflows/backup.yml         — scheduled Supabase dump (Free-tier backup workaround)

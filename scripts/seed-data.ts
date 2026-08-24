@@ -12,7 +12,16 @@ export interface SeedPrompt {
   title: string;
   slug: string;
   description: string;
-  category: "new_app" | "module_feature" | "debugging" | "frontend" | "backend";
+  category:
+    | "new_app"
+    | "module_feature"
+    | "debugging"
+    | "frontend"
+    | "backend"
+    | "security_review"
+    | "code_review"
+    | "db_migrations"
+    | "legacy_modernization";
   tags: string[];
   base_instructions: string;
   fill_in_details_guidance: string;
@@ -904,5 +913,354 @@ export const SEED_PROMPTS: SeedPrompt[] = [
       "[LINK: YOUR CHOSEN QUEUE/BROKER'S DOCS, INCLUDING ITS ORDERING AND DELIVERY GUARANTEES]. [LINK: A SCHEMA-VERSIONING APPROACH'S DOCS, IF EVENT CONTRACTS NEED TO EVOLVE OVER TIME, e.g. JSON Schema or Avro].",
     expected_output_notes:
       "A correct response includes: explicit event schemas/contracts for every listed event (with a versioning approach for future changes), the producer and at least one consumer wired to the real queue (not an in-memory stub), the actual ordering guarantee of the chosen queue stated and matched against the stated requirement, a dead-letter path and alerting for repeatedly-failing messages, and a note on idempotent consumption (since most queues offer at-least-once delivery, not exactly-once).",
+  },
+
+  // ─── security_review (3) — new, closes a real gap: no prompt touched
+  // security as its own workflow before this, only as a side effect of
+  // RBAC/MFA/rate-limiting feature prompts. Added in the Phase 2b seed
+  // research pass, see plan-phase-2-...md.
+  {
+    title: "Pre-Deploy Security Review of a Diff",
+    slug: "pre-deploy-security-review-of-a-diff",
+    description:
+      "Review a specific pull request for injection, auth bypass, secrets-in-code, and unsafe deserialization before it merges.",
+    category: "security_review",
+    tags: ["security", "code-review"],
+    base_instructions:
+      "You are a senior application security engineer reviewing a specific diff before it merges — not the whole codebase, and not a generic code-quality pass. Focus exclusively on security-relevant issues: injection (SQL, command, template), authorization bypass (missing or wrong checks on a new/changed endpoint), secrets or credentials committed in the diff, unsafe deserialization, and any new trust boundary the diff crosses. State your plan (which files you're checking for which issue classes) before producing findings. For each finding, give a severity, the exact file/line, and a concrete fix — not just 'this looks risky'. If nothing in the diff is a real issue, say so explicitly rather than inventing a minor finding to seem thorough.",
+    fill_in_details_guidance:
+      "Diff to review: [PASTE THE DIFF, OR A LINK TO THE PR]. What this change does: [ONE-SENTENCE SUMMARY]. Any new external input this diff introduces: [E.G. A NEW FORM FIELD, QUERY PARAM, WEBHOOK PAYLOAD — OR 'NONE']. Auth context: [DOES THIS DIFF TOUCH ANY AUTHENTICATED/AUTHORIZED ROUTE OR PERMISSION CHECK].",
+    reference_projects_guidance:
+      "[PASTE A LINK OR DESCRIPTION OF THIS PROJECT'S EXISTING SECURITY CONVENTIONS — e.g. how other endpoints validate input or check authorization — so the review can flag deviations from your own established pattern, not a generic checklist].",
+    reference_links_guidance:
+      "[LINK: OWASP TOP 10 OR YOUR TEAM'S INTERNAL SECURITY CHECKLIST]. [LINK: YOUR FRAMEWORK'S SECURITY DOCS, e.g. its ORM's parameterized-query docs or auth middleware docs].",
+    expected_output_notes:
+      "A correct response includes: a stated review plan before any findings, each finding tagged with a severity (critical/high/medium/low), an exact file/line reference, a concrete fix (not a vague recommendation), and — if nothing real was found — an explicit statement that the diff is clean rather than a manufactured low-severity finding.",
+  },
+  {
+    title: "Third-Party Dependency Vulnerability Triage",
+    slug: "third-party-dependency-vulnerability-triage",
+    description:
+      "Given an npm audit/Dependabot-style report, decide which CVEs are actually exploitable in this codebase's real usage.",
+    category: "security_review",
+    tags: ["security", "dependencies"],
+    base_instructions:
+      "You are a senior engineer triaging a dependency vulnerability report. Do not recommend 'upgrade everything' — for each reported CVE, determine whether the vulnerable code path is actually reachable given how this codebase uses the package (e.g. a vulnerability in a package's XML parser doesn't matter if this codebase never calls that function). Produce a prioritized remediation plan: which upgrades are urgent because the path is reachable, which are safe to defer, and which upgrades themselves carry breaking-change risk that needs its own plan.",
+    fill_in_details_guidance:
+      "Audit report: [PASTE THE npm audit / Dependabot / SCA TOOL OUTPUT]. How this dependency is actually used in the codebase: [DESCRIBE, OR PASTE THE RELEVANT IMPORT/CALL SITES]. Upgrade constraints: [ANY VERSIONS PINNED FOR COMPATIBILITY REASONS, OR 'NONE'].",
+    reference_projects_guidance:
+      "[PASTE A LINK TO A PRIOR DEPENDENCY UPGRADE IN THIS CODEBASE THAT WENT SMOOTHLY (OR BADLY) SO THE SAME APPROACH CAN BE REPEATED OR AVOIDED].",
+    reference_links_guidance:
+      "[LINK: THE SPECIFIC CVE/ADVISORY DETAILS FOR EACH FLAGGED PACKAGE]. [LINK: THE PACKAGE'S CHANGELOG BETWEEN THE CURRENT AND PATCHED VERSION].",
+    expected_output_notes:
+      "A correct response includes: for each CVE, an explicit reachability determination grounded in this codebase's actual usage (not the package's general capability), a priority ranking (urgent/deferrable) based on that determination, and a note on any upgrade that itself introduces a breaking change requiring separate testing.",
+  },
+  {
+    title: "Secrets and Credential Leak Remediation",
+    slug: "secrets-and-credential-leak-remediation",
+    description:
+      "A secret was committed to git history — rotate it, scrub the history correctly, and add prevention so it doesn't recur.",
+    category: "security_review",
+    tags: ["security", "git"],
+    base_instructions:
+      "You are a senior engineer responding to a leaked secret found in git history. Treat the leaked credential as compromised the moment it's found, regardless of whether it's been used maliciously — the first step is always rotation at the source (the provider dashboard), not just removing it from the repo. Then correctly scrub it from git history (not just deleting the file in a new commit, which leaves it in history forever), and add a prevention mechanism (pre-commit secret scanning, a .gitignore entry, or a documented convention) so the same class of leak doesn't recur.",
+    fill_in_details_guidance:
+      "What leaked: [TYPE OF SECRET — API KEY, DB PASSWORD, PRIVATE KEY, ETC.]. Where it is in history: [COMMIT SHA(S) OR 'UNKNOWN, NEEDS TO BE FOUND']. Is the repo public or private, and who else has cloned it: [DESCRIBE — THIS AFFECTS HOW URGENT AND HOW THOROUGH THE HISTORY SCRUB NEEDS TO BE]. Provider: [WHERE THE SECRET NEEDS TO BE ROTATED, e.g. AWS IAM, a SaaS API dashboard].",
+    reference_projects_guidance:
+      "[DESCRIBE ANY EXISTING SECRET-SCANNING OR PREVENTION TOOLING ALREADY IN PLACE ELSEWHERE ON THE TEAM, IF ANY, SO THE SAME APPROACH CAN BE REUSED].",
+    reference_links_guidance:
+      "[LINK: THE PROVIDER'S KEY-ROTATION DOCS]. [LINK: A GIT-HISTORY-SCRUBBING TOOL'S DOCS, e.g. git-filter-repo or BFG Repo-Cleaner]. [LINK: A PRE-COMMIT SECRET-SCANNING TOOL'S DOCS, e.g. gitleaks or trufflehog].",
+    expected_output_notes:
+      "A correct response includes: rotation at the provider as the explicit first step (before any git surgery), the correct history-scrubbing approach (not just a new commit that deletes the file), a note that every existing clone/fork still holds the old history and needs to be accounted for, and a concrete prevention mechanism added so the same leak class can't recur silently.",
+  },
+
+  // ─── code_review (4) — new, closes a real gap: zero code-review or
+  // test-coverage prompts existed before this.
+  {
+    title: "Structured PR Review for Correctness and Risk",
+    slug: "structured-pr-review-for-correctness-and-risk",
+    description:
+      "Review a pull request diff for correctness bugs, edge cases, and rollback risk, with severity-tagged, line-referenced findings.",
+    category: "code_review",
+    tags: ["code-review", "testing"],
+    base_instructions:
+      "You are a senior engineer reviewing a pull request. Focus on correctness (logic errors, off-by-one, unhandled edge cases), risk (what breaks in production if this is wrong, and how hard it is to roll back), and test coverage for the changed behavior — not style nitpicks a linter would already catch. Produce structured, severity-tagged findings with exact file/line references, since this output is meant to be scanned and acted on, not read as prose. If the diff is genuinely solid, say so plainly rather than manufacturing minor findings to look thorough.",
+    fill_in_details_guidance:
+      "Diff to review: [PASTE THE DIFF, OR A LINK TO THE PR]. What this change is supposed to do: [ONE-SENTENCE SUMMARY]. Anything the author is specifically unsure about: [OPTIONAL — e.g. 'not sure the retry logic handles the timeout case correctly'].",
+    reference_projects_guidance:
+      "[PASTE A LINK OR DESCRIPTION OF THIS PROJECT'S EXISTING CODE-REVIEW STANDARDS OR STYLE GUIDE, IF ONE EXISTS, SO FINDINGS CAN BE HELD TO THE TEAM'S ACTUAL BAR RATHER THAN A GENERIC ONE].",
+    reference_links_guidance:
+      "[LINK: THE PROJECT'S CONTRIBUTING GUIDE OR CODE-REVIEW CHECKLIST, IF ONE EXISTS].",
+    expected_output_notes:
+      "A correct response includes: severity-tagged findings (critical/high/medium/low) each with an exact file/line reference and a concrete fix, an explicit note on any changed behavior that lacks test coverage, a rollback-risk assessment for the riskiest part of the change, and — if the diff is solid — an explicit statement to that effect instead of invented nitpicks.",
+  },
+  {
+    title: "Second Pair of Eyes on AI-Generated Code",
+    slug: "second-pair-of-eyes-on-ai-generated-code",
+    description:
+      "Re-review code another AI assistant generated for its specific failure modes: hallucinated APIs, scope creep, and missing tests.",
+    category: "code_review",
+    tags: ["code-review", "ai-generated"],
+    base_instructions:
+      "You are a senior engineer specifically reviewing code that another AI coding assistant generated — not a first-pass human review. Check for the failure modes unique to AI-authored diffs: calls to APIs/methods/config options that don't actually exist in the libraries used (verify against the real package, don't assume the call is valid because it looks plausible), scope creep (files touched or abstractions added beyond what was asked for), and tests that were skipped or that assert on the implementation rather than the actual behavior. Flag anything that looks plausible but wasn't verified against the real dependency's actual API.",
+    fill_in_details_guidance:
+      "Diff to review: [PASTE THE DIFF]. What was originally asked for: [THE ORIGINAL PROMPT/TASK GIVEN TO THE FIRST AI ASSISTANT]. Libraries/APIs the diff touches: [LIST THEM, SO CALLS CAN BE VERIFIED AGAINST REAL DOCS].",
+    reference_projects_guidance:
+      "[PASTE A LINK OR DESCRIPTION OF ANY PRIOR AI-GENERATED CODE IN THIS REPO THAT HAD A HALLUCINATED-API OR SCOPE-CREEP ISSUE, IF ANY, SO THE SAME PATTERN CAN BE SPECIFICALLY CHECKED FOR AGAIN].",
+    reference_links_guidance:
+      "[LINK: THE OFFICIAL DOCS FOR EACH LIBRARY/API THE DIFF CALLS, TO VERIFY THE CALLS ARE REAL].",
+    expected_output_notes:
+      "A correct response includes: an explicit verification (not an assumption) that every API/method call in the diff exists in the real library docs, a list of any files/changes beyond what was originally asked for, an assessment of whether new tests actually exercise the real behavior or just the implementation detail, and a clear verdict on whether the diff is safe to merge as-is.",
+  },
+  {
+    title: "Write a Missing Test Suite for Untested Legacy Code",
+    slug: "write-a-missing-test-suite-for-untested-legacy-code",
+    description:
+      "Add characterization/regression tests to a module that has none, to establish a safety net before refactoring it.",
+    category: "code_review",
+    tags: ["testing", "legacy"],
+    base_instructions:
+      "You are a senior engineer adding a test suite to an existing module that currently has zero tests, specifically as a safety net before a planned refactor. Write characterization tests that capture the module's actual current behavior (including any quirky-but-intentional edge cases) rather than tests that assert what the behavior 'should' be — the goal is a safety net that will catch an accidental behavior change during the refactor, not a redesign of the module's contract. Call out any behavior you find genuinely surprising or likely to be a latent bug, but don't silently 'fix' it as part of adding tests.",
+    fill_in_details_guidance:
+      "Module to test: [PASTE THE FILE/MODULE, OR DESCRIBE ITS LOCATION]. Planned refactor this is preparing for: [ONE-SENTENCE DESCRIPTION, SO THE TESTS CAN FOCUS ON THE BEHAVIOR THAT REFACTOR MOST RISKS BREAKING]. Test framework already in use in this repo: [e.g. Vitest, Jest, pytest].",
+    reference_projects_guidance:
+      "[PASTE A LINK OR DESCRIPTION OF AN EXISTING WELL-TESTED MODULE IN THIS REPO WHOSE TEST STYLE/STRUCTURE SHOULD BE MIRRORED].",
+    reference_links_guidance:
+      "[LINK: THE TEST FRAMEWORK'S DOCS FOR THIS REPO].",
+    expected_output_notes:
+      "A correct response includes: tests covering the module's actual current behavior across its realistic inputs (not just the happy path), an explicit call-out of any behavior that looks like a latent bug rather than a silent fix, and a note on which of the new tests would actually catch a regression in the specific planned refactor.",
+  },
+  {
+    title: "Increase Test Coverage on a Flaky-Prone Async Module",
+    slug: "increase-test-coverage-on-a-flaky-prone-async-module",
+    description:
+      "Add deterministic tests — fake timers, controlled concurrency — for async/event-driven code where naive tests would themselves be flaky.",
+    category: "code_review",
+    tags: ["testing", "async"],
+    base_instructions:
+      "You are a senior engineer adding tests to an async or event-driven module where naive tests (real timers, real network calls, race-dependent assertions) would themselves be flaky. Use deterministic techniques — fake/mocked timers, controlled concurrency, explicit await points — so the tests are reliable on every run, not just usually-passing. Explicitly avoid `sleep`-based waits and 'usually works' timing assumptions; if a test needs the passage of time, use the test framework's fake-timer facility instead.",
+    fill_in_details_guidance:
+      "Module to test: [PASTE THE FILE/MODULE]. What makes it async/event-driven: [e.g. 'retries with exponential backoff', 'debounced event handler', 'race between two concurrent requests']. Test framework already in use: [e.g. Vitest, Jest].",
+    reference_projects_guidance:
+      "[PASTE A LINK OR DESCRIPTION OF ANY EXISTING FAKE-TIMER OR DETERMINISTIC-ASYNC TEST PATTERN ALREADY USED ELSEWHERE IN THIS REPO].",
+    reference_links_guidance:
+      "[LINK: YOUR TEST FRAMEWORK'S FAKE-TIMERS DOCS, e.g. Vitest's vi.useFakeTimers or Jest's fake timers].",
+    expected_output_notes:
+      "A correct response includes: tests that pass deterministically on every run without relying on real elapsed time or `sleep`, explicit coverage of the actual race/retry/debounce behavior (not just the synchronous happy path), and no reliance on 'usually works' timing assumptions anywhere in the new test code.",
+  },
+
+  // ─── db_migrations (2) — new, rounds out the one existing zero-downtime
+  // migration prompt with two distinct, high-stakes scenarios.
+  {
+    title: "Backfill a Large Production Table Safely",
+    slug: "backfill-a-large-production-table-safely",
+    description:
+      "Write a batched, resumable backfill for millions of existing rows that doesn't lock the table or blow memory.",
+    category: "db_migrations",
+    tags: ["postgres", "migrations"],
+    base_instructions:
+      "You are a senior backend engineer writing a backfill job for a production table with a large number of existing rows (populating a new column, recomputing a derived value, etc.). The backfill must process rows in batches small enough to avoid long table locks or a memory blowup, must be resumable if interrupted partway through (so it can safely restart from where it left off, not from zero), and must not degrade the table's normal read/write traffic while running. State the batching strategy and how resumability is tracked before writing the implementation.",
+    fill_in_details_guidance:
+      "Table and approximate row count: [TABLE NAME, ROUGH ROW COUNT]. What needs to be backfilled: [e.g. 'populate the new nullable column X from existing column Y']. Database: [e.g. Postgres, MySQL]. Acceptable batch size / rate: [ANY KNOWN CONSTRAINT ON HOW FAST THIS CAN RUN WITHOUT IMPACTING PRODUCTION TRAFFIC — OR 'RECOMMEND ONE'].",
+    reference_projects_guidance:
+      "[PASTE A LINK OR DESCRIPTION OF A PRIOR BACKFILL IN THIS CODEBASE, SUCCESSFUL OR NOT, SO THE SAME BATCHING/RESUMABILITY APPROACH CAN BE REPEATED OR AVOIDED].",
+    reference_links_guidance:
+      "[LINK: YOUR DATABASE'S DOCS ON BATCHED UPDATES / LOCKING BEHAVIOR, e.g. Postgres's lock modes].",
+    expected_output_notes:
+      "A correct response includes: a stated batch size and the reasoning behind it, an explicit resumability mechanism (a watermark/cursor column or equivalent, not 'just re-run the whole thing'), a note on how the job avoids long-held locks, and a way to monitor progress while it runs.",
+  },
+  {
+    title: "Design a Soft-Delete / Data Retention Strategy",
+    slug: "design-a-soft-delete-data-retention-strategy",
+    description:
+      "Add soft-delete or TTL-based retention to a schema that currently hard-deletes, including how it interacts with foreign keys and indexes.",
+    category: "db_migrations",
+    tags: ["postgres", "migrations"],
+    base_instructions:
+      "You are a senior backend engineer adding soft-delete or time-based retention to a schema that currently performs hard deletes. Address the parts that are easy to get wrong: how existing foreign keys and unique constraints behave once 'deleted' rows still physically exist (a unique constraint that should now exclude soft-deleted rows needs a partial index, not just an app-level check), how every existing query that reads this table needs to filter out soft-deleted rows (and how to make forgetting that filter hard, not just documented), and — if this is retention/TTL rather than pure soft-delete — how the actual eventual hard-delete or archival is scheduled.",
+    fill_in_details_guidance:
+      "Table(s) to add soft-delete/retention to: [LIST THEM]. Retention requirement: [PURE SOFT-DELETE (NEVER HARD-DELETED) OR TTL (HARD-DELETED/ARCHIVED AFTER A PERIOD) — AND THE PERIOD IF SO]. Existing unique constraints or foreign keys on the table(s): [DESCRIBE, SO THE MIGRATION CAN ACCOUNT FOR THEM]. ORM/query layer in use: [e.g. Prisma, raw SQL, an ORM with soft-delete support already].",
+    reference_projects_guidance:
+      "[PASTE A LINK OR DESCRIPTION OF ANY EXISTING SOFT-DELETE PATTERN ALREADY USED ELSEWHERE IN THIS CODEBASE, IF ANY, SO IT CAN BE MIRRORED RATHER THAN A SECOND INCONSISTENT PATTERN INTRODUCED].",
+    reference_links_guidance:
+      "[LINK: YOUR DATABASE'S PARTIAL-INDEX DOCS, IF A UNIQUE CONSTRAINT NEEDS TO EXCLUDE SOFT-DELETED ROWS]. [LINK: YOUR ORM/QUERY LAYER'S DOCS ON A DEFAULT SCOPE OR GLOBAL FILTER, IF IT SUPPORTS ONE].",
+    expected_output_notes:
+      "A correct response includes: the migration adding the deleted-at/expires-at column, any existing unique constraint correctly converted to a partial index that excludes soft-deleted rows, a mechanism that makes it hard to accidentally query soft-deleted rows (a default scope/view, not just a comment reminding developers to filter), and — if TTL was requested — the actual scheduled job/mechanism that performs the eventual hard-delete or archival.",
+  },
+
+  // ─── legacy_modernization (3) — new category, covers upgrade planning,
+  // codebase onboarding, and incremental legacy replacement — distinct
+  // recurring workflows the existing 5 categories didn't address.
+  {
+    title: "Framework or Major-Version Upgrade Plan",
+    slug: "framework-or-major-version-upgrade-plan",
+    description:
+      "Produce a staged upgrade plan — breaking changes, codemods, ordering — before touching any code for a major framework/version bump.",
+    category: "legacy_modernization",
+    tags: ["migrations", "dependencies"],
+    base_instructions:
+      "You are a senior engineer planning a major framework or language version upgrade. Do not start changing code yet — first produce a staged plan: the breaking changes between the current and target version that actually affect this codebase (not every breaking change in the changelog, only the ones that touch code that exists here), any available codemods/automated migration tools, a safe ordering (what has to change first so later steps aren't blocked), and how the upgrade will be verified at each stage rather than only at the very end.",
+    fill_in_details_guidance:
+      "Framework/language and versions: [CURRENT VERSION → TARGET VERSION]. Rough codebase size/shape: [e.g. 'a 40k-line Next.js 14 app with 200 route files']. Known usages of anything likely to be affected: [e.g. 'we use the old Pages Router', 'we use a deprecated middleware API' — OR 'UNKNOWN, PLEASE IDENTIFY THEM'].",
+    reference_projects_guidance:
+      "[PASTE A LINK OR DESCRIPTION OF A PRIOR MAJOR-VERSION UPGRADE DONE ON THIS OR A SIMILAR CODEBASE, SUCCESSFUL OR NOT, SO THE SAME STAGING APPROACH CAN BE REPEATED OR AVOIDED].",
+    reference_links_guidance:
+      "[LINK: THE OFFICIAL MIGRATION GUIDE BETWEEN THE TWO VERSIONS]. [LINK: ANY OFFICIAL CODEMOD TOOL FOR THIS UPGRADE, IF ONE EXISTS].",
+    expected_output_notes:
+      "A correct response includes: a breaking-changes list filtered to what actually affects this codebase (not the full upstream changelog), any applicable codemods identified by name, a staged ordering with a reason for each stage's position, and a verification step after each stage rather than only a single check at the very end.",
+  },
+  {
+    title: "Onboard Into an Unfamiliar Codebase",
+    slug: "onboard-into-an-unfamiliar-codebase",
+    description:
+      "Produce a scoped tour of one subsystem — entry points, data models, conventions — rather than trying to explain the whole repo at once.",
+    category: "legacy_modernization",
+    tags: ["legacy", "documentation"],
+    base_instructions:
+      "You are a senior engineer being asked to produce an onboarding tour of a specific subsystem within a larger, unfamiliar codebase — not the entire repository at once, since that produces something too broad to actually be useful. Identify the subsystem's real entry points (where a request/job/event first enters this part of the code), its core data models, the conventions it follows that might not be obvious (naming, error handling, where tests live), and the parts of it that look like accumulated tech debt worth flagging for later, without trying to fix or explain everything.",
+    fill_in_details_guidance:
+      "Subsystem to onboard into: [NAME OR DESCRIBE THE SPECIFIC PART OF THE CODEBASE — e.g. 'the billing module', 'the notification pipeline' — NOT 'the whole repo']. Why you need this tour: [e.g. 'about to add a feature here', 'about to fix a bug here', 'general ramp-up before joining the team that owns it'].",
+    reference_projects_guidance:
+      "[PASTE A LINK OR DESCRIPTION OF AN EXISTING GOOD ONBOARDING DOC ELSEWHERE IN THE ORG, IF ONE EXISTS, SO THE SAME STRUCTURE CAN BE MIRRORED].",
+    reference_links_guidance:
+      "[LINK: ANY EXISTING (EVEN PARTIAL OR STALE) ARCHITECTURE DOCS FOR THIS SUBSYSTEM, IF THEY EXIST].",
+    expected_output_notes:
+      "A correct response includes: the subsystem's real entry points named explicitly (files/functions, not vague descriptions), its core data models and how they relate, at least one non-obvious convention specific to this part of the code, and a short, explicitly-flagged list of tech debt observed — without attempting to explain or fix parts of the codebase outside the requested scope.",
+  },
+  {
+    title: "Incremental Strangler-Fig Migration of a Legacy Module",
+    slug: "incremental-strangler-fig-migration-of-a-legacy-module",
+    description:
+      "Replace a legacy module with a new implementation with feature parity, routed via a flag/shim, without a big-bang rewrite.",
+    category: "legacy_modernization",
+    tags: ["legacy", "migrations"],
+    base_instructions:
+      "You are a senior engineer replacing one legacy module with a new implementation using the strangler-fig pattern: the new implementation is built alongside the old one, routed to incrementally via a feature flag or thin shim, rather than replacing everything in one big-bang rewrite. Define what feature parity actually means for this module (the exact behaviors that must match, including edge cases), how traffic is incrementally shifted from old to new (and how it's rolled back instantly if the new implementation misbehaves), and how you'll know it's safe to finally delete the old implementation.",
+    fill_in_details_guidance:
+      "Module being replaced: [DESCRIBE IT AND WHY IT'S BEING REPLACED — e.g. 'unmaintainable, wrong abstraction, needs a different dependency']. What the new implementation should do differently (if anything) beyond matching the old behavior: [DESCRIBE, OR 'NOTHING — PURE PARITY FIRST, IMPROVEMENTS LATER']. Traffic-shifting mechanism available: [e.g. a feature-flag system already in use, or 'recommend one'].",
+    reference_projects_guidance:
+      "[PASTE A LINK OR DESCRIPTION OF A PRIOR STRANGLER-FIG OR INCREMENTAL MIGRATION DONE IN THIS CODEBASE, IF ANY, SO THE SAME SHIMMING APPROACH CAN BE REUSED].",
+    reference_links_guidance:
+      "[LINK: YOUR FEATURE-FLAG SYSTEM'S DOCS, IF ONE IS ALREADY IN USE].",
+    expected_output_notes:
+      "A correct response includes: an explicit, testable definition of feature parity for this module (not just 'it should work the same'), the shim/flag mechanism that routes between old and new with an instant rollback path, a plan for incrementally increasing the new implementation's traffic share rather than an all-at-once cutover, and a concrete condition for when it's safe to delete the old implementation.",
+  },
+
+  // ─── module_feature (+2) — rounds out the existing category with two
+  // scenarios the original 48 didn't cover: money handling and data
+  // export.
+  {
+    title: "Add Soft Multi-Currency / Money Handling",
+    slug: "add-soft-multi-currency-money-handling",
+    description:
+      "Introduce correct money representation — integer minor units, currency-aware rounding — into a codebase currently using floats.",
+    category: "module_feature",
+    tags: ["typescript", "postgres"],
+    base_instructions:
+      "You are a senior backend engineer introducing correct money handling into a codebase that currently represents monetary amounts as floating-point numbers (or a single hardcoded currency). Convert to integer minor-units representation (cents, not dollars-as-float) for storage and arithmetic, add currency-aware formatting and rounding at display boundaries, and be explicit about every place a float-to-integer conversion currently happens, since that's exactly where silent rounding bugs live. Do not attempt full multi-currency conversion-rate support unless it's explicitly asked for — scope this to correct representation and formatting first.",
+    fill_in_details_guidance:
+      "Where money is currently handled: [LIST THE MODELS/COLUMNS/CALCULATIONS THAT CURRENTLY USE FLOATS OR A SINGLE HARDCODED CURRENCY]. Currencies actually needed: [LIST THEM, OR 'JUST USD FOR NOW BUT STRUCTURE FOR MORE LATER']. Whether live currency conversion is in scope: [YES/NO — DEFAULT SHOULD BE NO UNLESS STATED].",
+    reference_projects_guidance:
+      "[PASTE A LINK OR DESCRIPTION OF AN EXISTING MONEY-HANDLING PATTERN YOU'VE SEEN WORK WELL, e.g. a library like Dinero.js or a specific integer-cents convention].",
+    reference_links_guidance:
+      "[LINK: A MONEY-HANDLING LIBRARY'S DOCS FOR YOUR LANGUAGE, IF YOU WANT TO USE ONE RATHER THAN HAND-ROLLING IT]. [LINK: ISO 4217 CURRENCY CODE REFERENCE, IF MULTIPLE CURRENCIES ARE IN SCOPE].",
+    expected_output_notes:
+      "A correct response includes: every identified float-based money field migrated to an integer minor-units representation, a single, consistently-used formatting function for displaying amounts (not ad hoc `.toFixed(2)` calls scattered through the code), an explicit list of every conversion point where the old float representation is replaced (since those are where bugs hide), and a note on what was deliberately left out of scope (e.g. live FX conversion) if it wasn't asked for.",
+  },
+  {
+    title: "Add an Export / Data-Download Feature",
+    slug: "add-an-export-data-download-feature",
+    description:
+      "Let users export their own data as CSV/JSON, correctly scoped to the requesting user and with pagination handled completely.",
+    category: "module_feature",
+    tags: ["api", "postgres"],
+    base_instructions:
+      "You are a senior full-stack engineer adding a data-export feature that lets a user download their own data as CSV or JSON. Get the two easy-to-miss parts right: scoping (the export must only ever include data belonging to the requesting user — not a query that happens to work in testing but has no explicit authorization check baked into it) and completeness (the export must not silently truncate at some default page size — either stream/paginate through the full dataset server-side, or make the size limit explicit and visible to the user, not silent).",
+    fill_in_details_guidance:
+      "Data being exported: [DESCRIBE WHAT'S INCLUDED, e.g. 'a user's own orders and order line items']. Export format(s): [CSV, JSON, OR BOTH]. Rough expected data size per user: [e.g. 'typically under 1,000 rows, but could be 100k+ for a power user' — SO THE COMPLETENESS APPROACH CAN BE SIZED CORRECTLY]. Trigger: [SYNCHRONOUS DOWNLOAD BUTTON, OR ASYNC 'EMAIL ME WHEN READY' FOR LARGE EXPORTS].",
+    reference_projects_guidance:
+      "[PASTE A LINK OR DESCRIPTION OF AN EXISTING EXPORT FEATURE ELSEWHERE IN THIS CODEBASE OR ONE YOU'VE SEEN DONE WELL, TO MIRROR ITS SCOPING/STREAMING APPROACH].",
+    reference_links_guidance:
+      "[LINK: YOUR DATABASE/ORM'S DOCS ON CURSOR-BASED PAGINATION OR STREAMING QUERY RESULTS, IF LARGE EXPORTS ARE EXPECTED].",
+    expected_output_notes:
+      "A correct response includes: an export query with an explicit, testable authorization scope (not one that merely happens to filter by user in the common case), a streaming or fully-paginated implementation for large datasets (or an explicit, user-visible size cap if that's the deliberate choice), and correct CSV/JSON formatting for edge-case values (commas/quotes in CSV fields, null vs. missing in JSON).",
+  },
+
+  // ─── frontend (+2) — rounds out the existing category beyond the
+  // existing a11y/perf/design-system prompts.
+  {
+    title: "Fix a Hydration Mismatch in a Server-Rendered App",
+    slug: "fix-a-hydration-mismatch-in-a-server-rendered-app",
+    description:
+      "Diagnose and fix a specific SSR/CSR hydration error — distinct from a generic cross-browser rendering bug.",
+    category: "frontend",
+    tags: ["nextjs", "react"],
+    base_instructions:
+      "You are a senior frontend engineer diagnosing and fixing a specific hydration mismatch error in a server-rendered React/Next.js application. Identify the actual root cause among the usual suspects — non-deterministic values rendered on the server (Date.now(), Math.random(), locale-dependent formatting), server/client environment differences (window/document access during SSR), or a genuine markup mismatch (invalid nesting the browser silently corrects differently than React expects) — rather than reaching for `suppressHydrationWarning` as a first resort, which hides the symptom without fixing the underlying cause.",
+    fill_in_details_guidance:
+      "The exact hydration error/warning text: [PASTE IT]. The component(s) involved: [PASTE THE RELEVANT COMPONENT CODE, OR DESCRIBE WHERE IT RENDERS]. Framework/version: [e.g. Next.js 16 App Router].",
+    reference_projects_guidance:
+      "[PASTE A LINK OR DESCRIPTION OF ANY SIMILAR HYDRATION ISSUE ALREADY FIXED ELSEWHERE IN THIS CODEBASE, IF ANY].",
+    reference_links_guidance:
+      "[LINK: YOUR FRAMEWORK'S DOCS ON HYDRATION MISMATCHES, e.g. React's or Next.js's hydration error docs].",
+    expected_output_notes:
+      "A correct response includes: the actual root cause identified from the real error/component code (not a guess), a fix that addresses that root cause (moving non-deterministic values to client-only rendering, guarding browser-only APIs, or fixing invalid markup) rather than suppressing the warning, and a brief note on why `suppressHydrationWarning` would only be appropriate here if none of the real fixes apply.",
+  },
+  {
+    title: "Add Offline Support / Local-First Sync to an Existing View",
+    slug: "add-offline-support-local-first-sync-to-an-existing-view",
+    description:
+      "Make one view usable offline with local persistence and conflict-aware sync back to the server once reconnected.",
+    category: "frontend",
+    tags: ["react", "typescript"],
+    base_instructions:
+      "You are a senior frontend engineer adding offline support to one specific view, not the whole app. Persist the view's data locally (IndexedDB or an equivalent) so it's readable and usable while offline, queue writes made while offline, and define an explicit conflict-resolution strategy for when a locally-queued write syncs back to a server whose data has since changed (last-write-wins, a merge strategy, or surfacing the conflict to the user — state which one and why). Show the user their current connectivity/sync state; a local-first feature that looks identical whether it's synced or not is a trap.",
+    fill_in_details_guidance:
+      "View to make offline-capable: [DESCRIBE IT]. Data involved: [WHAT'S BEING READ/WRITTEN IN THIS VIEW]. Conflict tolerance: [IS LAST-WRITE-WINS ACCEPTABLE FOR THIS DATA, OR DOES A CONFLICT NEED TO BE SURFACED TO THE USER — e.g. last-write-wins is fine for a draft note, but not for a shared inventory count]. Existing local-storage/offline tooling already in the app: [e.g. none yet, or an existing service worker].",
+    reference_projects_guidance:
+      "[PASTE A LINK OR DESCRIPTION OF AN OFFLINE-CAPABLE APP WHOSE SYNC/CONFLICT UX YOU WANT MIRRORED].",
+    reference_links_guidance:
+      "[LINK: YOUR CHOSEN LOCAL-PERSISTENCE APPROACH'S DOCS, e.g. IndexedDB or a wrapper library like Dexie]. [LINK: YOUR FRAMEWORK'S SERVICE-WORKER/OFFLINE-DETECTION DOCS, IF RELEVANT].",
+    expected_output_notes:
+      "A correct response includes: local persistence that makes the view genuinely usable offline (not just cached-but-frozen), a write queue that replays once reconnected, an explicit, stated conflict-resolution strategy matched to the data's actual conflict tolerance, and a visible connectivity/sync-state indicator in the UI.",
+  },
+
+  // ─── backend (+2) — rounds out the existing category beyond the
+  // existing REST/queue/rate-limiting/caching/event prompts.
+  {
+    title: "Add Structured Logging and Correlation IDs Across Services",
+    slug: "add-structured-logging-and-correlation-ids-across-services",
+    description:
+      "Retrofit consistent structured logs and request/trace correlation IDs into a codebase currently using ad hoc console.log calls.",
+    category: "backend",
+    tags: ["api", "observability"],
+    base_instructions:
+      "You are a senior backend engineer retrofitting structured logging and correlation IDs into a codebase that currently logs with ad hoc, unstructured calls (`console.log`/`print`). Establish a single structured-log format (a JSON logger, with consistent field names for level/timestamp/message/context) rather than a per-file convention, and generate/propagate a correlation ID at the point a request enters the system, threading it through every downstream log line and any calls to other services, so a single request's full path can be reconstructed from logs alone after the fact.",
+    fill_in_details_guidance:
+      "Services/entry points involved: [LIST THEM — e.g. 'the API server and the background job worker']. Current logging approach: [DESCRIBE, e.g. 'scattered console.log calls, no consistent format']. Log aggregation/viewing tool in use, if any: [e.g. Datadog, CloudWatch, or 'none yet, just terminal output'].",
+    reference_projects_guidance:
+      "[PASTE A LINK OR DESCRIPTION OF AN EXISTING STRUCTURED-LOGGING SETUP YOU'VE SEEN WORK WELL, TO MIRROR ITS FIELD NAMING AND CORRELATION-ID PROPAGATION APPROACH].",
+    reference_links_guidance:
+      "[LINK: A STRUCTURED-LOGGING LIBRARY'S DOCS FOR YOUR LANGUAGE, e.g. pino or winston for Node]. [LINK: YOUR LOG AGGREGATION TOOL'S DOCS ON CORRELATION/TRACE IDs, IF ONE IS ALREADY IN USE].",
+    expected_output_notes:
+      "A correct response includes: a single consistent structured-log format used everywhere (not a mix of the old ad hoc calls and the new format), a correlation ID generated once per incoming request and explicitly propagated through every downstream log call and outbound service call, and a demonstration that a single request's full path can actually be reconstructed by filtering logs on that one ID.",
+  },
+  {
+    title: "Design a Graceful Deprecation Path for a Public API Endpoint",
+    slug: "design-a-graceful-deprecation-path-for-a-public-api-endpoint",
+    description:
+      "Sunset an existing API version/endpoint with a deprecation window, client migration notices, and monitoring of remaining traffic.",
+    category: "backend",
+    tags: ["api", "versioning"],
+    base_instructions:
+      "You are a senior backend engineer designing the deprecation and eventual removal of an existing public API endpoint or version — not designing a new API from scratch. Define a deprecation window with a concrete end date, a way for callers to discover the deprecation (a response header, a docs notice, or both) before it becomes a hard break, and a way to monitor real remaining traffic to the deprecated endpoint throughout the window so the actual removal date is a data-backed decision, not a guess. Handle the case where traffic doesn't drop to zero by the planned removal date.",
+    fill_in_details_guidance:
+      "Endpoint/version being deprecated: [DESCRIBE IT]. Replacement (if any): [WHAT CALLERS SHOULD MIGRATE TO]. Known consumers, if any: [INTERNAL SERVICES, KNOWN THIRD-PARTY INTEGRATIONS — OR 'UNKNOWN, PUBLIC API WITH NO CALLER REGISTRY']. Target deprecation window: [e.g. '90 days' — OR 'RECOMMEND ONE'].",
+    reference_projects_guidance:
+      "[PASTE A LINK OR DESCRIPTION OF A PRIOR API DEPRECATION DONE ON THIS OR A SIMILAR API, SUCCESSFUL OR NOT, SO THE SAME APPROACH CAN BE REPEATED OR AVOIDED].",
+    reference_links_guidance:
+      "[LINK: A REAL-WORLD EXAMPLE OF AN API DEPRECATION NOTICE/HEADER CONVENTION YOU LIKE, e.g. GitHub's or Stripe's API versioning docs].",
+    expected_output_notes:
+      "A correct response includes: a concrete deprecation window with a specific end date, a discoverable deprecation signal (header and/or docs) that fires before the hard break, a monitoring approach that tracks real remaining traffic to the deprecated endpoint throughout the window, and an explicit plan for what happens if traffic hasn't dropped to zero by the planned removal date (extend the window, reach out to known callers, or force the cutover).",
   },
 ];
