@@ -83,7 +83,7 @@ export function NavBar({ user }: { user: NavBarUser | null }) {
         <Link href="/library" className="flex items-center gap-1.5 shrink-0">
           <Logo markSize={24} textClassName="text-[19px]" />
           <span className="font-[family-name:var(--font-mono)] text-[10px] text-[var(--brass)] tracking-wider self-end mb-px">
-            v1
+            v2
           </span>
         </Link>
         <nav className="hidden sm:flex gap-5">
