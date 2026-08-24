@@ -66,10 +66,15 @@ revisit only if the project moves to a paid tier.
 
 - [ ] Decide whether `npm audit --audit-level=high` in CI should become a
       hard gate instead of advisory-only (`continue-on-error: true`).
-- [ ] Confirm the disabled **Skills** / **Cloud Connectors** "coming soon"
-      cards (`lib/constants/library-sections.ts`, `enabled: false`) render
-      correctly and don't link anywhere broken — these are intentional
-      Phase 2/3 stubs, not a gap.
+- [x] **Skills** shipped (`lib/constants/library-sections.ts`'s `skills`
+      entry is `enabled: true`) — verified live in the browser against
+      production data: category filtering, create/review/approve/reject,
+      and the browse grid all render correctly. Seeded with 12 starter
+      skills (`npm run seed:skills`).
+- [ ] **Connectors** (Volume III) is still a "coming soon" stub
+      (`lib/constants/library-sections.ts`, `enabled: false`) — confirm the
+      disabled card renders correctly and doesn't link anywhere broken
+      until that section is built.
 - [ ] **Set `SUPABASE_ACCESS_TOKEN` locally.** The pre-push security gate
       (`scripts/check-supabase-security.sh`) has been bypassed with
       `--no-verify` repeatedly this session because the token isn't set

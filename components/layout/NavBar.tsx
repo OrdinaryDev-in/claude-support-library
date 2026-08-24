@@ -11,7 +11,8 @@ export interface NavBarUser {
   initials: string;
   fullName: string;
   isAdmin: boolean;
-  pendingReviewCount: number;
+  pendingPromptReviewCount: number;
+  pendingSkillReviewCount: number;
 }
 
 export function NavBar({ user }: { user: NavBarUser | null }) {
@@ -23,7 +24,9 @@ export function NavBar({ user }: { user: NavBarUser | null }) {
 
   const onHub = pathname === "/library";
   const onPrompts = pathname.startsWith("/library/prompts");
-  const onReview = pathname.startsWith("/admin/review");
+  const onSkills = pathname.startsWith("/library/skills");
+  const onSkillReview = pathname.startsWith("/admin/review/skills");
+  const onPromptReview = pathname.startsWith("/admin/review") && !onSkillReview;
 
   useEffect(() => {
     function onKeyDown(e: KeyboardEvent) {
@@ -87,12 +90,28 @@ export function NavBar({ user }: { user: NavBarUser | null }) {
           <Link href="/library/prompts" className={linkClass(onPrompts)}>
             Prompts
           </Link>
+          <Link href="/library/skills" className={linkClass(onSkills)}>
+            Skills
+          </Link>
           {user?.isAdmin && (
-            <Link href="/admin/review" className={`${linkClass(onReview)} inline-flex items-center gap-1.5`}>
+            <Link href="/admin/review" className={`${linkClass(onPromptReview)} inline-flex items-center gap-1.5`}>
               Review
-              {user.pendingReviewCount > 0 && (
+              {user.pendingPromptReviewCount > 0 && (
                 <span className="font-[family-name:var(--font-mono)] text-[10px] leading-none px-1.5 py-1 rounded-full bg-[var(--brass)] text-[var(--ink)]">
-                  {user.pendingReviewCount}
+                  {user.pendingPromptReviewCount}
+                </span>
+              )}
+            </Link>
+          )}
+          {user?.isAdmin && (
+            <Link
+              href="/admin/review/skills"
+              className={`${linkClass(onSkillReview)} inline-flex items-center gap-1.5`}
+            >
+              Skills Review
+              {user.pendingSkillReviewCount > 0 && (
+                <span className="font-[family-name:var(--font-mono)] text-[10px] leading-none px-1.5 py-1 rounded-full bg-[var(--brass)] text-[var(--ink)]">
+                  {user.pendingSkillReviewCount}
                 </span>
               )}
             </Link>
@@ -190,9 +209,23 @@ export function NavBar({ user }: { user: NavBarUser | null }) {
               className="text-[var(--text)] text-sm inline-flex items-center gap-1.5"
             >
               Review
-              {user.pendingReviewCount > 0 && (
+              {user.pendingPromptReviewCount > 0 && (
                 <span className="font-[family-name:var(--font-mono)] text-[10px] leading-none px-1.5 py-1 rounded-full bg-[var(--brass)] text-[var(--ink)]">
-                  {user.pendingReviewCount}
+                  {user.pendingPromptReviewCount}
+                </span>
+              )}
+            </Link>
+          )}
+          {user?.isAdmin && (
+            <Link
+              href="/admin/review/skills"
+              onClick={() => setMenuOpen(false)}
+              className="text-[var(--text)] text-sm inline-flex items-center gap-1.5"
+            >
+              Skills Review
+              {user.pendingSkillReviewCount > 0 && (
+                <span className="font-[family-name:var(--font-mono)] text-[10px] leading-none px-1.5 py-1 rounded-full bg-[var(--brass)] text-[var(--ink)]">
+                  {user.pendingSkillReviewCount}
                 </span>
               )}
             </Link>

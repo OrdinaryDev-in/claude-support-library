@@ -1,6 +1,7 @@
 import Link from "next/link";
 import { categoryDisplay } from "@/lib/data/categories";
-import { StatusPill } from "@/components/prompts/StatusPill";
+import { StatusPill } from "@/components/library/StatusPill";
+import { PROMPT_STATUS_META } from "@/lib/constants/review";
 import type { PromptWithCategory } from "@/lib/data/prompts";
 
 function formatDate(iso: string) {
@@ -39,7 +40,7 @@ export function MySubmissions({ submissions }: { submissions: PromptWithCategory
                   >
                     {cat.label}
                   </span>
-                  <StatusPill status={prompt.status} />
+                  <StatusPill meta={PROMPT_STATUS_META[prompt.status]} />
                 </div>
                 <div className="text-[15px] font-semibold text-[var(--text)] truncate">{prompt.title}</div>
                 <div className="text-[13px] text-[var(--muted)] mt-0.5">

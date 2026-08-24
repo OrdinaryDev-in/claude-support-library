@@ -13,10 +13,17 @@ export const metadata: Metadata = {
 
 export default async function LibraryHubPage() {
   const supabase = await createClient();
-  const { count } = await supabase
-    .from("prompts")
-    .select("id", { count: "exact", head: true })
-    .eq("status", "approved");
+  const [{ count: promptsCount }, { count: skillsCount }] = await Promise.all([
+    supabase.from("prompts").select("id", { count: "exact", head: true }).eq("status", "approved"),
+    supabase.from("skills").select("id", { count: "exact", head: true }).eq("status", "approved"),
+  ]);
 
-  return <LibraryHub promptsCharted={count ?? 0} />;
+  return (
+    <LibraryHub
+      chartedCounts={{
+        prompts: promptsCount ?? 0,
+        skills: skillsCount ?? 0,
+      }}
+    />
+  );
 }

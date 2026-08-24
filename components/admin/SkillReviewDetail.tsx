@@ -4,20 +4,16 @@ import { useEffect, useState, useTransition } from "react";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
 import { categoryDisplay } from "@/lib/data/categories";
-import { approvePrompt, rejectPrompt } from "@/app/actions/review";
+import { approveSkill, rejectSkill } from "@/app/actions/skill-review";
 import { StatusPill } from "@/components/library/StatusPill";
-import { PROMPT_STATUS_META } from "@/lib/constants/review";
+import { SKILL_STATUS_META } from "@/lib/constants/review";
 import { LoadingButton } from "@/components/ui/LoadingButton";
-import type { ReviewQueueRow } from "@/lib/data/prompts";
+import type { ReviewQueueRow } from "@/lib/data/skills";
 
 interface SectionMeta {
   key: keyof Pick<
     ReviewQueueRow,
-    | "base_instructions"
-    | "fill_in_details_guidance"
-    | "reference_projects_guidance"
-    | "reference_links_guidance"
-    | "expected_output_notes"
+    "trigger_description" | "instructions_body" | "required_tools_guidance" | "example_usage" | "expected_output_notes"
   >;
   label: string;
   accent?: boolean;
@@ -25,19 +21,18 @@ interface SectionMeta {
 }
 
 const SECTIONS: SectionMeta[] = [
-  { key: "base_instructions", label: "Task Framing", accent: true },
-  { key: "fill_in_details_guidance", label: "Fill In Your Details", mono: true },
-  { key: "reference_projects_guidance", label: "Similar Reference Projects", mono: true },
-  { key: "reference_links_guidance", label: "Reference Links / Docs", mono: true },
+  { key: "trigger_description", label: "When To Use This Skill", accent: true },
+  { key: "instructions_body", label: "Instructions" },
+  { key: "required_tools_guidance", label: "Required Tools / Capabilities", mono: true },
+  { key: "example_usage", label: "Example Usage", mono: true },
   { key: "expected_output_notes", label: "Expected Output" },
 ];
 
-/** The review-queue counterpart to components/prompts/PromptDetail.tsx —
- * same section layout so an admin reviews exactly what a copy-paste would
- * look like, with an approve/reject action bar instead of edit/delete. */
-export function ReviewDetail({ prompt }: { prompt: ReviewQueueRow }) {
+/** The Skills counterpart to components/admin/ReviewDetail.tsx — same
+ * section layout, approve/reject action bar. */
+export function SkillReviewDetail({ skill }: { skill: ReviewQueueRow }) {
   const router = useRouter();
-  const cat = categoryDisplay(prompt.categories);
+  const cat = categoryDisplay(skill.categories);
 
   const [pending, startTransition] = useTransition();
   const [rejecting, setRejecting] = useState(false);
@@ -47,17 +42,16 @@ export function ReviewDetail({ prompt }: { prompt: ReviewQueueRow }) {
   function handleApprove() {
     setError(null);
     startTransition(async () => {
-      const result = await approvePrompt(prompt.id);
+      const result = await approveSkill(skill.id);
       if (!result.ok) {
         setError(result.error);
         return;
       }
-      router.push("/admin/review");
+      router.push("/admin/review/skills");
       router.refresh();
     });
   }
 
-  // Same Escape-to-close reasoning as ReviewQueueTable's reject dialog.
   useEffect(() => {
     if (!rejecting) return;
     function onKeyDown(e: KeyboardEvent) {
@@ -69,12 +63,12 @@ export function ReviewDetail({ prompt }: { prompt: ReviewQueueRow }) {
 
   function submitReject() {
     startTransition(async () => {
-      const result = await rejectPrompt(prompt.id, reason);
+      const result = await rejectSkill(skill.id, reason);
       if (!result.ok) {
         setError(result.error);
         return;
       }
-      router.push("/admin/review?status=rejected");
+      router.push("/admin/review/skills?status=rejected");
       router.refresh();
     });
   }
@@ -82,10 +76,10 @@ export function ReviewDetail({ prompt }: { prompt: ReviewQueueRow }) {
   return (
     <div className="flex-1 w-full mx-auto max-w-[900px] px-4 sm:px-8 py-8 sm:py-12 pb-24">
       <div className="text-xs text-[var(--muted)] mb-4">
-        <Link href="/admin/review" className="text-[var(--muted)] no-underline hover:text-[var(--text)]">
+        <Link href="/admin/review/skills" className="text-[var(--muted)] no-underline hover:text-[var(--text)]">
           Review queue
         </Link>{" "}
-        / {prompt.title}
+        / {skill.title}
       </div>
 
       <div className="flex flex-col sm:flex-row sm:justify-between sm:items-start gap-4 sm:gap-6">
@@ -98,23 +92,21 @@ export function ReviewDetail({ prompt }: { prompt: ReviewQueueRow }) {
             >
               {cat.label}
             </span>
-            <StatusPill meta={PROMPT_STATUS_META[prompt.status]} />
+            <StatusPill meta={SKILL_STATUS_META[skill.status]} />
           </div>
           <h1 className="font-[family-name:var(--font-display)] font-medium text-[26px] sm:text-[32px] mb-2.5 max-w-[640px]">
-            {prompt.title}
+            {skill.title}
           </h1>
-          <p className="text-sm text-[var(--muted)] max-w-[600px] mb-2 leading-relaxed">{prompt.description}</p>
+          <p className="text-sm text-[var(--muted)] max-w-[600px] mb-2 leading-relaxed">{skill.description}</p>
           <p className="text-[13px] text-[var(--muted)]">
-            Submitted by {prompt.author?.full_name || prompt.author?.email || "Unknown author"}
+            Submitted by {skill.author?.full_name || skill.author?.email || "Unknown author"}
           </p>
-          {prompt.status === "rejected" && prompt.rejection_reason && (
-            <p className="text-[13px] text-[var(--danger)] mt-2 max-w-[600px]">
-              &ldquo;{prompt.rejection_reason}&rdquo;
-            </p>
+          {skill.status === "rejected" && skill.rejection_reason && (
+            <p className="text-[13px] text-[var(--danger)] mt-2 max-w-[600px]">&ldquo;{skill.rejection_reason}&rdquo;</p>
           )}
         </div>
 
-        {prompt.status === "pending_review" && (
+        {skill.status === "pending_review" && (
           <div className="flex flex-wrap gap-2 shrink-0 sm:sticky sm:top-20">
             <LoadingButton
               onClick={handleApprove}
@@ -160,7 +152,7 @@ export function ReviewDetail({ prompt }: { prompt: ReviewQueueRow }) {
               className="text-sm leading-relaxed text-[var(--text)] m-0 whitespace-pre-wrap"
               style={section.mono ? { fontFamily: "var(--font-mono)" } : undefined}
             >
-              {prompt[section.key]}
+              {skill[section.key]}
             </p>
           </div>
         ))}
@@ -174,11 +166,8 @@ export function ReviewDetail({ prompt }: { prompt: ReviewQueueRow }) {
             aria-labelledby="review-reject-heading"
             className="bg-[var(--surface-2)] border border-[var(--border)] rounded-[10px] p-7 w-full max-w-[420px]"
           >
-            <h2
-              id="review-reject-heading"
-              className="font-[family-name:var(--font-display)] text-lg font-medium mb-2.5"
-            >
-              Reject this prompt?
+            <h2 id="review-reject-heading" className="font-[family-name:var(--font-display)] text-lg font-medium mb-2.5">
+              Reject this skill?
             </h2>
             <p className="text-[13px] text-[var(--muted)] mb-3 leading-relaxed">
               The author will see this reason on their submission.
@@ -190,7 +179,7 @@ export function ReviewDetail({ prompt }: { prompt: ReviewQueueRow }) {
               id="review-reject-reason"
               className="dv-input mb-2"
               rows={3}
-              placeholder="e.g. Overlaps with an existing prompt, or the template needs more detail."
+              placeholder="e.g. Overlaps with an existing skill, or the instructions need more detail."
               value={reason}
               onChange={(e) => setReason(e.target.value)}
               autoFocus

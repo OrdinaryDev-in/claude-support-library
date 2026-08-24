@@ -6,19 +6,15 @@ import { useRouter } from "next/navigation";
 import { categoryDisplay } from "@/lib/data/categories";
 import { CopyButton } from "@/components/prompts/CopyButton";
 import { StatusPill } from "@/components/library/StatusPill";
-import { PROMPT_STATUS_META } from "@/lib/constants/review";
+import { SKILL_STATUS_META } from "@/lib/constants/review";
 import { LoadingButton } from "@/components/ui/LoadingButton";
-import { deletePrompt, duplicatePrompt } from "@/app/actions/prompts";
-import type { PromptWithTags } from "@/lib/data/prompts";
+import { deleteSkill, duplicateSkill } from "@/app/actions/skills";
+import type { SkillWithTags } from "@/lib/data/skills";
 
 interface SectionMeta {
   key: keyof Pick<
-    PromptWithTags,
-    | "base_instructions"
-    | "fill_in_details_guidance"
-    | "reference_projects_guidance"
-    | "reference_links_guidance"
-    | "expected_output_notes"
+    SkillWithTags,
+    "trigger_description" | "instructions_body" | "required_tools_guidance" | "example_usage" | "expected_output_notes"
   >;
   label: string;
   accent?: boolean;
@@ -26,24 +22,26 @@ interface SectionMeta {
 }
 
 const SECTIONS: SectionMeta[] = [
-  { key: "base_instructions", label: "Task Framing", accent: true },
-  { key: "fill_in_details_guidance", label: "Fill In Your Details", mono: true },
-  { key: "reference_projects_guidance", label: "Similar Reference Projects", mono: true },
-  { key: "reference_links_guidance", label: "Reference Links / Docs", mono: true },
+  { key: "trigger_description", label: "When To Use This Skill", accent: true },
+  { key: "instructions_body", label: "Instructions" },
+  { key: "required_tools_guidance", label: "Required Tools / Capabilities", mono: true },
+  { key: "example_usage", label: "Example Usage", mono: true },
   { key: "expected_output_notes", label: "Expected Output" },
 ];
 
-export function PromptDetail({
-  prompt,
+/** The Skills counterpart to components/prompts/PromptDetail.tsx — same
+ * layout/behavior, different field names. */
+export function SkillDetail({
+  skill,
   templateText,
   isOwner,
 }: {
-  prompt: PromptWithTags;
+  skill: SkillWithTags;
   templateText: string;
   isOwner: boolean;
 }) {
   const router = useRouter();
-  const cat = categoryDisplay(prompt.categories);
+  const cat = categoryDisplay(skill.categories);
 
   const [showDeleteConfirm, setShowDeleteConfirm] = useState(false);
   const [showToast, setShowToast] = useState(false);
@@ -56,17 +54,13 @@ export function PromptDetail({
     setActionError(null);
     setShowToast(true);
     deleteTimer.current = setTimeout(async () => {
-      const result = await deletePrompt(prompt.id);
+      const result = await deleteSkill(skill.id);
       if (!result.ok) {
-        // Delete failed server-side after the undo window already closed —
-        // the prompt is still here, so don't navigate away as if it
-        // succeeded. Surface the error instead of leaving the user to
-        // discover it's still in the library on their own.
         setShowToast(false);
         setActionError(result.error);
         return;
       }
-      router.push("/library/prompts");
+      router.push("/library/skills");
       router.refresh();
     }, 5000);
   }
@@ -76,10 +70,6 @@ export function PromptDetail({
     setShowToast(false);
   }
 
-  // Dialog gets no library/focus-trap of its own (no 3rd-party dependency
-  // here) — Escape-to-close is the one keyboard affordance every native
-  // dialog-like widget needs at minimum, so it's hand-rolled instead of
-  // skipped.
   useEffect(() => {
     if (!showDeleteConfirm) return;
     function onKeyDown(e: KeyboardEvent) {
@@ -92,9 +82,9 @@ export function PromptDetail({
   async function handleDuplicate() {
     setDuplicating(true);
     setActionError(null);
-    const result = await duplicatePrompt(prompt.id);
+    const result = await duplicateSkill(skill.id);
     if (result.ok) {
-      router.push(`/library/prompts/${result.slug}/edit`);
+      router.push(`/library/skills/${result.slug}/edit`);
     } else {
       setDuplicating(false);
       setActionError(result.error);
@@ -104,10 +94,10 @@ export function PromptDetail({
   return (
     <div className="flex-1 w-full mx-auto max-w-[900px] px-4 sm:px-8 py-8 sm:py-12 pb-24">
       <div className="text-xs text-[var(--muted)] mb-4">
-        <Link href="/library/prompts" className="text-[var(--muted)] no-underline hover:text-[var(--text)]">
-          Prompts
+        <Link href="/library/skills" className="text-[var(--muted)] no-underline hover:text-[var(--text)]">
+          Skills
         </Link>{" "}
-        / {prompt.title}
+        / {skill.title}
       </div>
 
       <div className="flex flex-col sm:flex-row sm:justify-between sm:items-start gap-4 sm:gap-6">
@@ -120,25 +110,20 @@ export function PromptDetail({
             >
               {cat.label}
             </span>
-            {/* Only the author/admin ever sees this — everyone else can only
-                reach this page for an approved prompt in the first place
-                (RLS: prompts_select_signed_in, 20260816090111_prompt_review_workflow.sql). */}
-            {isOwner && prompt.status !== "approved" && <StatusPill meta={PROMPT_STATUS_META[prompt.status]} />}
+            {isOwner && skill.status !== "approved" && <StatusPill meta={SKILL_STATUS_META[skill.status]} />}
           </div>
           <h1 className="font-[family-name:var(--font-display)] font-medium text-[26px] sm:text-[32px] mb-2.5 max-w-[640px]">
-            {prompt.title}
+            {skill.title}
           </h1>
-          <p className="text-sm text-[var(--muted)] max-w-[600px] mb-3 leading-relaxed">
-            {prompt.description}
-          </p>
-          {isOwner && prompt.status === "rejected" && prompt.rejection_reason && (
+          <p className="text-sm text-[var(--muted)] max-w-[600px] mb-3 leading-relaxed">{skill.description}</p>
+          {isOwner && skill.status === "rejected" && skill.rejection_reason && (
             <p className="text-[13px] text-[var(--danger)] max-w-[600px] mb-3 leading-relaxed">
-              &ldquo;{prompt.rejection_reason}&rdquo;
+              &ldquo;{skill.rejection_reason}&rdquo;
             </p>
           )}
-          {prompt.tags.length > 0 && (
+          {skill.tags.length > 0 && (
             <div className="flex flex-wrap gap-1.5">
-              {prompt.tags.map((tag) => (
+              {skill.tags.map((tag) => (
                 <span
                   key={tag}
                   className="font-[family-name:var(--font-mono)] text-[11px] px-2 py-0.5 border border-[var(--border)] rounded text-[var(--muted)]"
@@ -156,19 +141,19 @@ export function PromptDetail({
         </div>
 
         <div className="flex flex-wrap gap-2 shrink-0 sm:sticky sm:top-20">
-          <CopyButton text={templateText} />
+          <CopyButton text={templateText} label="skill" />
           <LoadingButton
             onClick={handleDuplicate}
             pending={duplicating}
             pendingLabel="Duplicating…"
             className="px-3.5 py-2 rounded-md border border-[var(--border)] text-[var(--text)] text-[13px]"
           >
-            Duplicate as new prompt
+            Duplicate as new skill
           </LoadingButton>
           {isOwner && (
             <>
               <Link
-                href={`/library/prompts/${prompt.slug}/edit`}
+                href={`/library/skills/${skill.slug}/edit`}
                 className="no-underline px-3.5 py-2 rounded-md border border-[var(--border)] text-[var(--text)] text-[13px]"
               >
                 Edit
@@ -191,9 +176,7 @@ export function PromptDetail({
           <div
             key={section.key}
             className="pl-4"
-            style={{
-              borderLeft: `2px solid ${section.accent ? "var(--brass)" : "var(--border)"}`,
-            }}
+            style={{ borderLeft: `2px solid ${section.accent ? "var(--brass)" : "var(--border)"}` }}
           >
             <div
               className="font-[family-name:var(--font-mono)] text-[11px] tracking-wide uppercase mb-2"
@@ -205,7 +188,7 @@ export function PromptDetail({
               className="text-sm leading-relaxed text-[var(--text)] m-0 whitespace-pre-wrap"
               style={section.mono ? { fontFamily: "var(--font-mono)" } : undefined}
             >
-              {prompt[section.key]}
+              {skill[section.key]}
             </p>
           </div>
         ))}
@@ -219,15 +202,11 @@ export function PromptDetail({
             aria-labelledby="delete-confirm-heading"
             className="bg-[var(--surface-2)] border border-[var(--border)] rounded-[10px] p-7 w-full max-w-[380px]"
           >
-            <h2
-              id="delete-confirm-heading"
-              className="font-[family-name:var(--font-display)] text-lg font-medium mb-2.5"
-            >
-              Delete this prompt?
+            <h2 id="delete-confirm-heading" className="font-[family-name:var(--font-display)] text-lg font-medium mb-2.5">
+              Delete this skill?
             </h2>
             <p className="text-[13px] text-[var(--muted)] mb-5 leading-relaxed">
-              &ldquo;{prompt.title}&rdquo; will be removed from the library. You&apos;ll have 5
-              seconds to undo.
+              &ldquo;{skill.title}&rdquo; will be removed from the library. You&apos;ll have 5 seconds to undo.
             </p>
             <div className="flex justify-end gap-2.5">
               <button

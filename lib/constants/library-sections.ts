@@ -27,9 +27,9 @@ export const LIBRARY_SECTIONS: LibrarySection[] = [
     key: "skills",
     volume: "II",
     label: "Skills",
-    description: "Reusable agent skills — coming soon.",
+    description: "Reusable, tool-agnostic agent workflow templates.",
     href: "/library/skills",
-    enabled: false,
+    enabled: true,
   },
   {
     key: "connectors",
