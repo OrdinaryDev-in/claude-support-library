@@ -5,7 +5,8 @@ import Link from "next/link";
 import { useRouter } from "next/navigation";
 import { categoryDisplay } from "@/lib/data/categories";
 import { approvePrompt, rejectPrompt } from "@/app/actions/review";
-import { StatusPill } from "@/components/prompts/StatusPill";
+import { StatusPill } from "@/components/library/StatusPill";
+import { PROMPT_STATUS_META } from "@/lib/constants/review";
 import { LoadingButton } from "@/components/ui/LoadingButton";
 import type { ReviewQueueRow } from "@/lib/data/prompts";
 
@@ -97,7 +98,7 @@ export function ReviewDetail({ prompt }: { prompt: ReviewQueueRow }) {
             >
               {cat.label}
             </span>
-            <StatusPill status={prompt.status} />
+            <StatusPill meta={PROMPT_STATUS_META[prompt.status]} />
           </div>
           <h1 className="font-[family-name:var(--font-display)] font-medium text-[26px] sm:text-[32px] mb-2.5 max-w-[640px]">
             {prompt.title}

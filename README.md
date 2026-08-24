@@ -1,19 +1,30 @@
-# DevAtlas — Phase 1: Prompt Library
+# DevAtlas — a curated, tool-agnostic developer library
 
 [![CI](https://github.com/Mubashir-Mohamed/claude-prompt-library/actions/workflows/ci.yml/badge.svg)](https://github.com/Mubashir-Mohamed/claude-prompt-library/actions/workflows/ci.yml)
 [![CodeQL](https://github.com/Mubashir-Mohamed/claude-prompt-library/actions/workflows/codeql.yml/badge.svg)](https://github.com/Mubashir-Mohamed/claude-prompt-library/actions/workflows/codeql.yml)
 
-A library of elaborate, structured AI-coding prompt templates for developers
-— for building new apps, adding a module/feature, debugging, and frontend-
-or backend-only work. Every prompt is written to be copy-pasted and filled
-in: it carries an explicit "fill in your details" section, a place to point
-at similar reference projects, and reference/docs links, plus notes on what
-a correct AI response should include.
+Three hand-curated, structured library sections for developers — every entry
+is written to be copy-pasted and filled in, not just browsed:
 
-This is Phase 1 of a larger platform. The data model, routes (`/library/...`)
-and shared `Library*` components are built so a **Skills library** and a
-**Cloud Connectors library** can be added later as new, additive modules —
-see the "Future phases" note at the bottom of this file.
+- **Prompts** (`/library/prompts`) — elaborate prompt templates for building
+  new apps, adding a module/feature, debugging, and frontend- or
+  backend-only work. Each carries an explicit "fill in your details"
+  section, a place to point at similar reference projects, and
+  reference/docs links, plus notes on what a correct AI response should
+  include.
+- **Skills** (`/library/skills`) — reusable, tool-agnostic agent workflow
+  templates (when to reach for it, step-by-step instructions, required
+  tools/capabilities, a worked example, and what a correct run looks like).
+  Written to be usable as-is by any agent/assistant, not framed around one
+  vendor's skill-file format.
+- **Connectors** (`/library/connectors`) — guides for wiring an AI agent to
+  an external tool or data source (setup steps, a config snippet, gotchas
+  and notes, docs links) — MCP server setup, API-key/OAuth patterns for
+  tool use, data-source and browser-automation connectors. Tool-agnostic,
+  not framed around one vendor's own "connectors" feature.
+
+All three share the same review workflow, admin-managed category taxonomy,
+and authorization model.
 
 ## Stack
 
@@ -65,20 +76,25 @@ npm run dev
 
 ### 4. Load the starter library
 
-Seeds 48 hand-written prompts across all five categories (idempotent —
-safe to re-run):
+Seeds the starter content for each section (both idempotent — safe to
+re-run):
 
 ```bash
-npm run seed
+npm run seed             # 66 hand-written prompts across nine categories
+npm run seed:skills      # 29 hand-written skills across six categories
+npm run seed:connectors  # 26 hand-written connectors across six categories
 ```
 
 ### 5. Promote yourself to admin (optional)
 
-Admins can edit/delete any prompt (not just their own) and approve/reject
-prompt submissions at `/admin/review` — every new prompt starts
-`pending_review` and only appears in the public library once an admin
-approves it (see "Prompt review workflow" below). There's no self-serve
-promotion UI — after signing up once, run this in the Supabase SQL editor:
+Admins can edit/delete any prompt, skill, or connector (not just their
+own), manage the category taxonomy (the inline "+ New category" control on
+each resource's create/edit form), and approve/reject submissions at
+`/admin/review`, `/admin/review/skills`, and `/admin/review/connectors` —
+every new prompt/skill/connector starts `pending_review` and only appears
+in the public library once an admin approves it (see "Review workflow"
+below). There's no self-serve promotion UI — after signing up once, run
+this in the Supabase SQL editor:
 
 ```sql
 update public.profiles set role = 'admin' where email = 'you@example.com';
@@ -105,11 +121,12 @@ production callback URLs.
 
 ```bash
 npm run test        # unit tests (Vitest) — the authorization boundary:
-                     # app/actions/{prompts,profile}.ts
+                     # app/actions/{prompts,skills,connectors,profile,categories}.ts
 
 # E2E (Playwright) — needs a local Supabase stack:
 supabase start && supabase db reset
-npm run test:e2e
+npm run test:e2e    # e2e/core-flows.spec.ts (Prompts) + e2e/skills-flow.spec.ts
+                     # + e2e/connectors-flow.spec.ts
 ```
 
 No manual env var wrangling needed for `test:e2e` — the script (`package.json`)
@@ -134,48 +151,76 @@ against your normal dev `.env.local`.
 app/(auth)/{login,signup,callback}   — sign in/up, OAuth (currently hidden) + email-confirm callback
 app/{privacy,terms}                  — legal pages (draft placeholder content — replace before relying on it)
 app/(app)/layout.tsx                 — authenticated shell (NavBar + gating backstop)
-app/(app)/library                    — hub, browse/filter, detail, create/edit
+app/(app)/library                    — hub, browse/filter, detail, create/edit (prompts + skills + connectors)
+app/(app)/admin/review               — review queues (prompts + skills + connectors)
 app/(app)/account                    — profile + password reset
-app/actions/{prompts,profile}.ts     — server actions (the real CRUD authorization boundary, alongside RLS)
+app/actions/{prompts,skills,connectors,profile,categories}.ts — server actions (the real CRUD authorization boundary, alongside RLS)
+app/actions/{review,skill-review,connector-review}.ts — approve/reject actions per resource type
+components/library/                  — shared Library* components (LibraryList, LibraryFilters, LibraryCard, StatusPill, count-context factory) all three resource types build on
 proxy.ts                             — session refresh, auth redirect, per-request CSP nonce (Next 16's renamed middleware.ts)
 lib/security/csp.ts                  — Content-Security-Policy builder used by proxy.ts
 next.config.ts                       — static security headers (HSTS, X-Frame-Options, etc.)
 supabase/migrations/                 — schema + RLS
 supabase/config.toml                 — local Supabase stack config (`supabase start`)
-scripts/seed-data.ts                 — the 48 starter prompts (source of truth)
-scripts/seed-prompts.ts              — loads them via Supabase (npm run seed)
+scripts/seed-data.ts, seed-prompts.ts             — the 66 starter prompts + loader (npm run seed)
+scripts/seed-skills-data.ts, seed-skills.ts       — the 29 starter skills + loader (npm run seed:skills)
+scripts/seed-connectors-data.ts, seed-connectors.ts — the 26 starter connectors + loader (npm run seed:connectors)
 app/actions/*.test.ts, test/         — Vitest unit + integration tests
 e2e/                                 — Playwright E2E tests
 .github/workflows/backup.yml         — scheduled Supabase dump (Free-tier backup workaround)
 ```
 
-## Prompt review workflow
+## Review workflow
 
-New submissions never go straight to the public library. A prompt starts
-`pending_review` on creation, is invisible to everyone but its author and
-admins (RLS: `prompts_select_signed_in`), and only becomes visible once an
-admin approves it at `/admin/review` — reject instead and the author sees
-the reason on their own submission (and their "My Submissions" list on
-`/account`). Editing an already-approved or -rejected prompt's content
-automatically resubmits it for review. See
-`supabase/migrations/20260816090111_prompt_review_workflow.sql` for the schema/RLS
-and `app/actions/review.ts` for the approve/reject actions.
+New submissions never go straight to the public library, for any of the
+three resource types. A prompt/skill/connector starts `pending_review` on
+creation, is invisible to everyone but its author and admins (RLS:
+`prompts_select_signed_in` / `skills_select_signed_in` /
+`connectors_select_signed_in`), and only becomes visible once an admin
+approves it at `/admin/review` (prompts), `/admin/review/skills`, or
+`/admin/review/connectors` — reject instead and the author sees the reason
+on their own submission (and their "My Submissions" list on `/account`,
+for prompts). Editing an already-approved or -rejected row's content
+automatically resubmits it for review, and so does changing its tags. See
+`supabase/migrations/20260816090111_prompt_review_workflow.sql` /
+`20260824140000_skills.sql` / `20260824150000_connectors.sql` for the
+schema/RLS and `app/actions/review.ts` / `app/actions/skill-review.ts` /
+`app/actions/connector-review.ts` for the approve/reject actions.
+
+### Categories
+
+Categories are a shared, admin-managed table (`supabase/migrations/20260824130000_categories.sql`),
+not a fixed enum — any signed-in user can add a new **tag** freely (typed
+directly into a prompt/skill/connector's tags field), but a new
+**category** requires an admin, added inline via the "+ New category"
+control on the create/edit form rather than a separate admin page. See
+`lib/data/categories.ts` and `app/actions/categories.ts`.
 
 ## Verifying it works
 
 - Sign up, sign in, sign out; confirm `/library` redirects to `/login` when signed out.
 - Create a prompt, view its detail page (shows a "Pending Review" pill to
-  you as the author), use **Copy prompt**.
+  you as the author), use **Copy prompt**. Repeat for a skill at
+  `/library/skills/new` (**Copy skill**) and a connector at
+  `/library/connectors/new` (**Copy connector guide**).
 - Promote yourself to admin via the SQL above, approve the prompt at
-  `/admin/review`, and confirm it now shows up in the public `/library/prompts`
+  `/admin/review` (the skill at `/admin/review/skills`, the connector at
+  `/admin/review/connectors`), and confirm each now shows up in its public
   grid with no pill.
+- As an admin, use the inline "+ New category" control on a prompt,
+  skill, or connector's create/edit form and confirm the new category is
+  immediately selectable and shows up in that section's filter legend.
 - Sign in as a second account and confirm you can't see a still-pending
-  prompt at all (404, not just hidden UI), and can't edit an approved
-  prompt you don't own (RLS-enforced, redirected server-side) — then
-  promote that second account to admin via the SQL above and confirm it
-  now can.
-- Filter by category and tag on `/library/prompts`, and try the `/` keyboard shortcut to jump to search.
-- `npm run test:e2e` covers this whole flow end-to-end against a local Supabase stack (`supabase start` first) — see `e2e/core-flows.spec.ts`.
+  prompt/skill/connector at all (404, not just hidden UI), and can't edit
+  an approved one you don't own (RLS-enforced, redirected server-side) —
+  then promote that second account to admin via the SQL above and confirm
+  it now can.
+- Filter by category and tag on `/library/prompts`, `/library/skills`, and
+  `/library/connectors`, and try the `/` keyboard shortcut to jump to
+  search.
+- `npm run test:e2e` covers all three flows end-to-end against a local
+  Supabase stack (`supabase start` first) — see `e2e/core-flows.spec.ts`,
+  `e2e/skills-flow.spec.ts`, and `e2e/connectors-flow.spec.ts`.
 
 ## CI & security
 
@@ -231,10 +276,28 @@ bypass (e.g. a known false positive not yet allowlisted):
 
 ## Future phases
 
-Skills and Cloud Connectors libraries are not built yet. Adding **Skills**
-as the next resource type is additive: a new migration for a `skills`
-table (same shared column convention + its own structured fields), a new
-`/library/skills` route reusing the existing generic `LibraryList` /
-`LibraryFilters` / `LibraryCard` components, and one new entry in
-`lib/constants/library-sections.ts` to light up its hub card and nav link.
-Nothing in `profiles`, auth, or the shared components needs to change.
+**Skills** shipped as the second resource type, proving out the pattern:
+a `skills` table on the same shared column convention as Prompts (own
+migration, `supabase/migrations/20260824140000_skills.sql`), the
+`/library/skills` route built on the now-genuinely-generic
+`LibraryList` / `LibraryFilters` / `LibraryCard` components, and the
+`skills` entry in `lib/constants/library-sections.ts` flipped to
+`enabled: true`. Nothing in `profiles`, auth, or the shared components
+needed to change.
+
+**Connectors** (Volume III) shipped as the third resource type, same
+pattern again: a `connectors` table (own migration,
+`supabase/migrations/20260824150000_connectors.sql`) with four guidance
+fields — Setup Steps, Config Snippet, Gotchas/Notes, Docs Links — the
+`/library/connectors` route on the same generic `LibraryList` /
+`LibraryFilters` / `LibraryCard` components, and the `connectors` entry in
+`lib/constants/library-sections.ts` flipped to `enabled: true`. It's a
+curated set of guides for wiring an AI agent to external tools/data
+sources (MCP server setup, API-key/OAuth patterns for tool use, data
+source and browser-automation connectors) — not cloud infrastructure docs
+and not any one vendor's own "Connectors" feature. Deliberately scoped
+small and hand-curated rather than an exhaustive directory — large public
+registries for this already exist (mcp.so, the official
+`registry.modelcontextprotocol.io`, glama.ai); DevAtlas's value is the same
+curated, structured, reviewed format Prompts and Skills already prove out,
+not catalog coverage.

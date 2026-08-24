@@ -1,12 +1,20 @@
 import Link from "next/link";
 import { LIBRARY_SECTIONS, type LibrarySection } from "@/lib/constants/library-sections";
 
-function volumeStatus(section: LibrarySection, promptsCharted: number) {
+function volumeStatus(section: LibrarySection, chartedCounts: Partial<Record<LibrarySection["key"], number>>) {
   if (!section.enabled) return "uncharted";
-  return `${promptsCharted} charted →`;
+  return `${chartedCounts[section.key] ?? 0} charted →`;
 }
 
-export function LibraryHub({ promptsCharted }: { promptsCharted: number }) {
+/** `chartedCounts` is keyed by section (`prompts`/`skills`/`connectors`) —
+ * each enabled resource type contributes its own approved-row count; a
+ * disabled section's count is never read (volumeStatus always shows
+ * "uncharted" for those). */
+export function LibraryHub({
+  chartedCounts,
+}: {
+  chartedCounts: Partial<Record<LibrarySection["key"], number>>;
+}) {
   return (
     <div className="flex-1 w-full mx-auto max-w-[1180px] px-4 sm:px-8 py-10 sm:py-16 pb-24">
       <div className="font-[family-name:var(--font-mono)] text-xs tracking-wider text-[var(--brass)] uppercase mb-3">
@@ -30,7 +38,7 @@ export function LibraryHub({ promptsCharted }: { promptsCharted: number }) {
           <VolumeCardDesktop
             key={section.key}
             section={section}
-            status={volumeStatus(section, promptsCharted)}
+            status={volumeStatus(section, chartedCounts)}
             delay={i * 0.08}
           />
         ))}
@@ -46,7 +54,7 @@ export function LibraryHub({ promptsCharted }: { promptsCharted: number }) {
           <VolumeRowMobile
             key={section.key}
             section={section}
-            status={volumeStatus(section, promptsCharted)}
+            status={volumeStatus(section, chartedCounts)}
           />
         ))}
       </div>

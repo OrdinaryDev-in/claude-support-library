@@ -1,4 +1,7 @@
 import { z } from "zod";
+import { parseTagsInput, slugify } from "@/lib/validation/shared";
+
+export { parseTagsInput, slugify };
 
 // 20,000 chars matches the CHECK constraints added on public.prompts by
 // supabase/migrations/20260818110400_prompt_text_length_constraints.sql — keep both
@@ -44,29 +47,6 @@ export const promptSchema = z.object({
 });
 
 export type PromptFormValues = z.infer<typeof promptSchema>;
-
-/** Turns "api, postgres, auth" into normalized, deduped tag slugs+names. */
-export function parseTagsInput(input: string): { name: string; slug: string }[] {
-  const seen = new Set<string>();
-  return input
-    .split(",")
-    .map((t) => t.trim().toLowerCase())
-    .filter((t) => t.length > 0)
-    .filter((t) => {
-      if (seen.has(t)) return false;
-      seen.add(t);
-      return true;
-    })
-    .map((name) => ({ name, slug: name.replace(/\s+/g, "-") }));
-}
-
-export function slugify(title: string): string {
-  return title
-    .trim()
-    .toLowerCase()
-    .replace(/[^a-z0-9]+/g, "-")
-    .replace(/^-+|-+$/g, "");
-}
 
 /** The exact copy-paste assembly format, shared by the form's live preview
  * and the detail page's CopyButton so they never drift. */

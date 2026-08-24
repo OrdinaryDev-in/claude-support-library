@@ -5,7 +5,7 @@ import { searchPrompts, categoryCounts, allTags, totalPublishedCount } from "@/l
 import { listCategories } from "@/lib/data/categories";
 import { LibraryFilters } from "@/components/library/LibraryFilters";
 import { PromptsGrid } from "@/components/library/PromptsGrid";
-import { PromptsCountProvider } from "@/components/library/PromptsCountContext";
+import { PromptsCountProvider, usePromptsCount } from "@/components/library/PromptsCountContext";
 import { LoadedCount } from "@/components/library/LoadedCount";
 
 // See app/(app)/library/page.tsx's comment on why this is noindex despite
@@ -59,7 +59,7 @@ export default async function BrowsePromptsPage({
               Prompts
             </h1>
             <div className="font-[family-name:var(--font-mono)] text-xs text-[var(--muted)]">
-              § VOLUME I · <LoadedCount total={total} />
+              § VOLUME I · <LoadedCount total={total} useCount={usePromptsCount} />
             </div>
           </div>
           <Link

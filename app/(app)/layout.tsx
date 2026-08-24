@@ -2,7 +2,9 @@ import { redirect } from "next/navigation";
 import { headers } from "next/headers";
 import { createClient } from "@/lib/supabase/server";
 import { NavBar, type NavBarUser } from "@/components/layout/NavBar";
-import { reviewQueueCounts } from "@/lib/data/prompts";
+import { reviewQueueCounts as promptReviewQueueCounts } from "@/lib/data/prompts";
+import { reviewQueueCounts as skillReviewQueueCounts } from "@/lib/data/skills";
+import { reviewQueueCounts as connectorReviewQueueCounts } from "@/lib/data/connectors";
 
 function initialsOf(name: string | null, email: string) {
   const source = (name ?? "").trim();
@@ -35,13 +37,21 @@ export default async function AppLayout({ children }: LayoutProps<"/">) {
   // Only fetch the queue counts for admins — reviewQueueCounts reads every
   // status via RLS's is_admin() branch, which a non-admin caller can't do
   // (and doesn't need to: they'd only ever see their own counts anyway).
-  const pendingReviewCount = isAdmin ? (await reviewQueueCounts(supabase)).pending_review : 0;
+  const [pendingPromptReviewCount, pendingSkillReviewCount, pendingConnectorReviewCount] = isAdmin
+    ? await Promise.all([
+        promptReviewQueueCounts(supabase).then((c) => c.pending_review),
+        skillReviewQueueCounts(supabase).then((c) => c.pending_review),
+        connectorReviewQueueCounts(supabase).then((c) => c.pending_review),
+      ])
+    : [0, 0, 0];
 
   const navUser: NavBarUser = {
     initials: initialsOf(profile?.full_name ?? null, profile?.email ?? ""),
     fullName: profile?.full_name || profile?.email || "",
     isAdmin,
-    pendingReviewCount,
+    pendingPromptReviewCount,
+    pendingSkillReviewCount,
+    pendingConnectorReviewCount,
   };
 
   return (

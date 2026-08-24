@@ -15,6 +15,13 @@
 // The old `category` enum column is left in place, nullable, unwritten by
 // the app going forward; sync_prompt_category_id() still derives
 // category_id from it if anything else ever sets `category` directly.
+//
+// `skills`/`skill_tags` + search_skills added by 20260824140000_skills.sql
+// (Phase 2, Part 3) — Skills is designed against `categories` from day one,
+// no separate category enum the way prompt_category was for Prompts.
+//
+// `connectors`/`connector_tags` + search_connectors added by
+// 20260824150000_connectors.sql (Phase 2, Part 2b) — same pattern again.
 
 export type PromptCategory =
   | "new_app"
@@ -24,6 +31,8 @@ export type PromptCategory =
   | "backend";
 
 export type PromptStatus = "pending_review" | "approved" | "rejected";
+export type SkillStatus = "pending_review" | "approved" | "rejected";
+export type ConnectorStatus = "pending_review" | "approved" | "rejected";
 
 export interface Database {
   public: {
@@ -164,6 +173,180 @@ export interface Database {
           },
         ];
       };
+      // Added by 20260824140000_skills.sql (Phase 2, Part 3).
+      skills: {
+        Row: {
+          id: string;
+          author_id: string;
+          title: string;
+          slug: string;
+          description: string;
+          category_id: string;
+          status: SkillStatus;
+          reviewed_by: string | null;
+          reviewed_at: string | null;
+          rejection_reason: string | null;
+          created_at: string;
+          updated_at: string;
+          trigger_description: string;
+          instructions_body: string;
+          required_tools_guidance: string;
+          example_usage: string;
+          expected_output_notes: string;
+          view_count: number;
+        };
+        Insert: {
+          id?: string;
+          author_id: string;
+          title: string;
+          slug: string;
+          description: string;
+          category_id: string;
+          status?: SkillStatus;
+          reviewed_by?: string | null;
+          reviewed_at?: string | null;
+          rejection_reason?: string | null;
+          created_at?: string;
+          updated_at?: string;
+          trigger_description: string;
+          instructions_body: string;
+          required_tools_guidance: string;
+          example_usage: string;
+          expected_output_notes: string;
+          view_count?: number;
+        };
+        Update: Partial<Database["public"]["Tables"]["skills"]["Insert"]>;
+        Relationships: [
+          {
+            foreignKeyName: "skills_author_id_fkey";
+            columns: ["author_id"];
+            isOneToOne: false;
+            referencedRelation: "profiles";
+            referencedColumns: ["id"];
+          },
+          {
+            foreignKeyName: "skills_reviewed_by_fkey";
+            columns: ["reviewed_by"];
+            isOneToOne: false;
+            referencedRelation: "profiles";
+            referencedColumns: ["id"];
+          },
+          {
+            foreignKeyName: "skills_category_id_fkey";
+            columns: ["category_id"];
+            isOneToOne: false;
+            referencedRelation: "categories";
+            referencedColumns: ["id"];
+          },
+        ];
+      };
+      skill_tags: {
+        Row: { skill_id: string; tag_id: string };
+        Insert: { skill_id: string; tag_id: string };
+        Update: Partial<Database["public"]["Tables"]["skill_tags"]["Insert"]>;
+        Relationships: [
+          {
+            foreignKeyName: "skill_tags_skill_id_fkey";
+            columns: ["skill_id"];
+            isOneToOne: false;
+            referencedRelation: "skills";
+            referencedColumns: ["id"];
+          },
+          {
+            foreignKeyName: "skill_tags_tag_id_fkey";
+            columns: ["tag_id"];
+            isOneToOne: false;
+            referencedRelation: "tags";
+            referencedColumns: ["id"];
+          },
+        ];
+      };
+      // Added by 20260824150000_connectors.sql (Phase 2, Part 2b).
+      connectors: {
+        Row: {
+          id: string;
+          author_id: string;
+          title: string;
+          slug: string;
+          description: string;
+          category_id: string;
+          status: ConnectorStatus;
+          reviewed_by: string | null;
+          reviewed_at: string | null;
+          rejection_reason: string | null;
+          created_at: string;
+          updated_at: string;
+          setup_steps: string;
+          config_snippet: string;
+          gotchas_notes: string;
+          docs_links: string;
+          view_count: number;
+        };
+        Insert: {
+          id?: string;
+          author_id: string;
+          title: string;
+          slug: string;
+          description: string;
+          category_id: string;
+          status?: ConnectorStatus;
+          reviewed_by?: string | null;
+          reviewed_at?: string | null;
+          rejection_reason?: string | null;
+          created_at?: string;
+          updated_at?: string;
+          setup_steps: string;
+          config_snippet: string;
+          gotchas_notes: string;
+          docs_links: string;
+          view_count?: number;
+        };
+        Update: Partial<Database["public"]["Tables"]["connectors"]["Insert"]>;
+        Relationships: [
+          {
+            foreignKeyName: "connectors_author_id_fkey";
+            columns: ["author_id"];
+            isOneToOne: false;
+            referencedRelation: "profiles";
+            referencedColumns: ["id"];
+          },
+          {
+            foreignKeyName: "connectors_reviewed_by_fkey";
+            columns: ["reviewed_by"];
+            isOneToOne: false;
+            referencedRelation: "profiles";
+            referencedColumns: ["id"];
+          },
+          {
+            foreignKeyName: "connectors_category_id_fkey";
+            columns: ["category_id"];
+            isOneToOne: false;
+            referencedRelation: "categories";
+            referencedColumns: ["id"];
+          },
+        ];
+      };
+      connector_tags: {
+        Row: { connector_id: string; tag_id: string };
+        Insert: { connector_id: string; tag_id: string };
+        Update: Partial<Database["public"]["Tables"]["connector_tags"]["Insert"]>;
+        Relationships: [
+          {
+            foreignKeyName: "connector_tags_connector_id_fkey";
+            columns: ["connector_id"];
+            isOneToOne: false;
+            referencedRelation: "connectors";
+            referencedColumns: ["id"];
+          },
+          {
+            foreignKeyName: "connector_tags_tag_id_fkey";
+            columns: ["tag_id"];
+            isOneToOne: false;
+            referencedRelation: "tags";
+            referencedColumns: ["id"];
+          },
+        ];
+      };
       tags: {
         Row: { id: string; name: string; slug: string };
         Insert: { id?: string; name: string; slug: string };
@@ -238,6 +421,26 @@ export interface Database {
           p_category_id?: string | null;
         };
         Returns: Database["public"]["Tables"]["prompts"]["Row"][];
+      };
+      search_skills: {
+        Args: {
+          p_category_id?: string | null;
+          p_tags?: string[] | null;
+          p_query?: string | null;
+          p_limit?: number;
+          p_offset?: number;
+        };
+        Returns: Database["public"]["Tables"]["skills"]["Row"][];
+      };
+      search_connectors: {
+        Args: {
+          p_category_id?: string | null;
+          p_tags?: string[] | null;
+          p_query?: string | null;
+          p_limit?: number;
+          p_offset?: number;
+        };
+        Returns: Database["public"]["Tables"]["connectors"]["Row"][];
       };
       is_admin: {
         Args: { uid: string };
