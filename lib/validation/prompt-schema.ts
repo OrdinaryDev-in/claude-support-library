@@ -1,13 +1,5 @@
 import { z } from "zod";
 
-export const promptCategoryValues = [
-  "new_app",
-  "module_feature",
-  "debugging",
-  "frontend",
-  "backend",
-] as const;
-
 // 20,000 chars matches the CHECK constraints added on public.prompts by
 // supabase/migrations/20260818110400_prompt_text_length_constraints.sql — keep both
 // in sync so a form submission that would fail the DB constraint is
@@ -18,7 +10,11 @@ const GUIDANCE_MAX = 20000;
 export const promptSchema = z.object({
   title: z.string().trim().min(1, "Title is required.").max(140),
   description: z.string().trim().min(1, "Description is required.").max(300),
-  category: z.enum(promptCategoryValues),
+  // Categories moved off a fixed enum onto the admin-managed `categories`
+  // table (20260824130000_categories.sql) — validated as a real row, not a
+  // compile-time list, so a category added via PromptForm's inline
+  // "+ New category" control is immediately valid here too.
+  category_id: z.string().uuid("Please pick a category."),
   tagsInput: z.string().trim().optional().default(""),
   base_instructions: z
     .string()

@@ -2,11 +2,11 @@ import Link from "next/link";
 import type { Metadata } from "next";
 import { createClient } from "@/lib/supabase/server";
 import { searchPrompts, categoryCounts, allTags, totalPublishedCount } from "@/lib/data/prompts";
+import { listCategories } from "@/lib/data/categories";
 import { LibraryFilters } from "@/components/library/LibraryFilters";
 import { PromptsGrid } from "@/components/library/PromptsGrid";
 import { PromptsCountProvider } from "@/components/library/PromptsCountContext";
 import { LoadedCount } from "@/components/library/LoadedCount";
-import type { PromptCategory } from "@/lib/types/database.types";
 
 // See app/(app)/library/page.tsx's comment on why this is noindex despite
 // otherwise looking like the app's most SEO-relevant page.
@@ -23,8 +23,16 @@ export default async function BrowsePromptsPage({
   const params = await searchParams;
   const supabase = await createClient();
 
+  // categories fetched once, then used both to resolve the URL's ?category=
+  // key into the uuid search_prompts actually filters on, and to render
+  // LibraryFilters' legend — so a category added via PromptForm's inline
+  // "+ New category" is immediately filterable here too, no code change.
+  const categories = await listCategories(supabase, "prompt");
+  const categoryKey = params.category || null;
+  const categoryId = categoryKey ? (categories.find((c) => c.key === categoryKey)?.id ?? null) : null;
+
   const filters = {
-    category: (params.category as PromptCategory) || null,
+    categoryId,
     tags: params.tags ? params.tags.split(",").filter(Boolean) : [],
     q: params.q || "",
   };
@@ -36,11 +44,11 @@ export default async function BrowsePromptsPage({
     totalPublishedCount(supabase),
   ]);
 
-  const hasFilters = Boolean(filters.category) || filters.tags.length > 0 || Boolean(filters.q);
+  const hasFilters = Boolean(categoryKey) || filters.tags.length > 0 || Boolean(filters.q);
   // Forces PromptsGrid to remount (fresh offset, no stale appended results)
   // whenever the filters actually change, instead of reusing client state
   // built up under a different filter set.
-  const filterKey = `${filters.category ?? ""}|${filters.tags.slice().sort().join(",")}|${filters.q}`;
+  const filterKey = `${filters.categoryId ?? ""}|${filters.tags.slice().sort().join(",")}|${filters.q}`;
 
   return (
     <PromptsCountProvider key={filterKey} initialCount={prompts.length}>
@@ -63,7 +71,7 @@ export default async function BrowsePromptsPage({
         </div>
 
         <div className="flex flex-col md:flex-row gap-6 md:gap-10">
-          <LibraryFilters counts={counts} tags={tags} />
+          <LibraryFilters categories={categories} counts={counts} tags={tags} />
 
           {/* Not a <main> — app/(app)/layout.tsx already provides the
               page's one <main> landmark; a nested second one is invalid

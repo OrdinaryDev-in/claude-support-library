@@ -1,19 +1,29 @@
 import type { SupabaseClient } from "@supabase/supabase-js";
-import type { Database, PromptCategory, PromptStatus } from "@/lib/types/database.types";
+import type { Database, PromptStatus } from "@/lib/types/database.types";
+import type { CategoryDisplay } from "@/lib/data/categories";
 
 type Client = SupabaseClient<Database>;
 export type PromptRow = Database["public"]["Tables"]["prompts"]["Row"];
-export interface PromptWithTags extends PromptRow {
+
+// Every select in this file embeds `categories(key, label, color)` via the
+// category_id FK (a many-to-one embed — supabase-js returns a single
+// object/null, same pattern as prompt_tags' `tags(name)` embed below).
+export interface PromptWithCategory extends PromptRow {
+  categories: CategoryDisplay | null;
+}
+export interface PromptWithTags extends PromptWithCategory {
   tags: string[];
 }
 
+const PROMPT_SELECT_WITH_CATEGORY = "*, categories(key, label, color)";
+
 export interface PromptListFilters {
-  category?: PromptCategory | null;
+  categoryId?: string | null;
   tags?: string[];
   q?: string;
 }
 
-async function attachTags(supabase: Client, prompts: PromptRow[]): Promise<PromptWithTags[]> {
+async function attachTags(supabase: Client, prompts: PromptWithCategory[]): Promise<PromptWithTags[]> {
   if (prompts.length === 0) return [];
 
   const { data: joins } = await supabase
@@ -53,34 +63,35 @@ export async function searchPrompts(
   filters: PromptListFilters,
   page: PromptListPage = {}
 ): Promise<PromptWithTags[]> {
-  const { data, error } = await supabase.rpc("search_prompts", {
-    p_category: filters.category ?? null,
-    p_tags: filters.tags && filters.tags.length > 0 ? filters.tags : null,
-    p_query: filters.q ?? null,
-    p_limit: page.limit ?? PROMPTS_PAGE_SIZE,
-    p_offset: page.offset ?? 0,
-  });
+  // p_category (the legacy enum param) is left null — search_prompts still
+  // accepts it (20260824130000_categories.sql's additive overload) but
+  // nothing in the app passes it anymore.
+  const { data, error } = await supabase
+    .rpc("search_prompts", {
+      p_category: null,
+      p_category_id: filters.categoryId ?? null,
+      p_tags: filters.tags && filters.tags.length > 0 ? filters.tags : null,
+      p_query: filters.q ?? null,
+      p_limit: page.limit ?? PROMPTS_PAGE_SIZE,
+      p_offset: page.offset ?? 0,
+    })
+    .select(PROMPT_SELECT_WITH_CATEGORY);
   if (error || !data) return [];
-  return attachTags(supabase, data);
+  return attachTags(supabase, data as unknown as PromptWithCategory[]);
 }
 
-/** Unfiltered totals for the legend rail — reflects the whole library, not
- * the current filter selection (matches the design's static legend). */
-export async function categoryCounts(
-  supabase: Client
-): Promise<Record<PromptCategory, number>> {
-  const base: Record<PromptCategory, number> = {
-    new_app: 0,
-    module_feature: 0,
-    debugging: 0,
-    frontend: 0,
-    backend: 0,
-  };
-  const { data } = await supabase.from("prompts").select("category").eq("status", "approved");
+/** Unfiltered totals for the legend rail, keyed by category id — reflects
+ * the whole library, not the current filter selection (matches the
+ * design's static legend). Paired with lib/data/categories.ts's
+ * listCategories() for the category id → label/color/order the legend
+ * actually renders. */
+export async function categoryCounts(supabase: Client): Promise<Record<string, number>> {
+  const counts: Record<string, number> = {};
+  const { data } = await supabase.from("prompts").select("category_id").eq("status", "approved");
   for (const row of data ?? []) {
-    base[row.category as PromptCategory] += 1;
+    counts[row.category_id] = (counts[row.category_id] ?? 0) + 1;
   }
-  return base;
+  return counts;
 }
 
 export async function totalPublishedCount(supabase: Client): Promise<number> {
@@ -99,7 +110,7 @@ export async function allTags(supabase: Client): Promise<string[]> {
 
 // ─── Review queue (admin) ──────────────────────────────────────────────
 
-export interface ReviewQueueRow extends PromptRow {
+export interface ReviewQueueRow extends PromptWithCategory {
   author: { full_name: string | null; email: string } | null;
 }
 
@@ -132,7 +143,7 @@ export async function listReviewQueue(
 ): Promise<ReviewQueueRow[]> {
   const { data } = await supabase
     .from("prompts")
-    .select("*, author:profiles!prompts_author_id_fkey(full_name, email)")
+    .select(`${PROMPT_SELECT_WITH_CATEGORY}, author:profiles!prompts_author_id_fkey(full_name, email)`)
     .eq("status", status)
     .order(status === "pending_review" ? "created_at" : "reviewed_at", {
       ascending: status === "pending_review",
@@ -143,11 +154,11 @@ export async function listReviewQueue(
 /** The caller's own prompts across every status, for the "My Submissions"
  * panel — the one place an author can see their own pending/rejected work,
  * since the public Browse grid only ever shows approved prompts. */
-export async function mySubmissions(supabase: Client, userId: string): Promise<PromptRow[]> {
+export async function mySubmissions(supabase: Client, userId: string): Promise<PromptWithCategory[]> {
   const { data } = await supabase
     .from("prompts")
-    .select("*")
+    .select(PROMPT_SELECT_WITH_CATEGORY)
     .eq("author_id", userId)
     .order("created_at", { ascending: false });
-  return data ?? [];
+  return (data ?? []) as unknown as PromptWithCategory[];
 }

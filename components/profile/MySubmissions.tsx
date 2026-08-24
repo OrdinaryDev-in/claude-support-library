@@ -1,7 +1,7 @@
 import Link from "next/link";
-import { categoryMeta } from "@/lib/constants/categories/prompts";
+import { categoryDisplay } from "@/lib/data/categories";
 import { StatusPill } from "@/components/prompts/StatusPill";
-import type { PromptRow } from "@/lib/data/prompts";
+import type { PromptWithCategory } from "@/lib/data/prompts";
 
 function formatDate(iso: string) {
   return new Date(iso).toLocaleDateString("en-US", { month: "short", day: "numeric", year: "numeric" });
@@ -11,7 +11,7 @@ function formatDate(iso: string) {
  * the public Browse grid only ever shows approved prompts (search_prompts
  * RPC, 20260816090111_prompt_review_workflow.sql), so this is where "did my
  * submission go anywhere?" gets answered. */
-export function MySubmissions({ submissions }: { submissions: PromptRow[] }) {
+export function MySubmissions({ submissions }: { submissions: PromptWithCategory[] }) {
   if (submissions.length === 0) {
     return (
       <div className="text-center py-10 px-5 border border-dashed border-[var(--border)] rounded-lg">
@@ -23,7 +23,7 @@ export function MySubmissions({ submissions }: { submissions: PromptRow[] }) {
   return (
     <ul className="list-none m-0 p-0 flex flex-col gap-2.5">
       {submissions.map((prompt) => {
-        const cat = categoryMeta(prompt.category);
+        const cat = categoryDisplay(prompt.categories);
         return (
           <li key={prompt.id}>
             <Link

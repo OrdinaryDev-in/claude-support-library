@@ -134,7 +134,7 @@ export async function createPrompt(
       title: fields.title,
       slug,
       description: fields.description,
-      category: fields.category,
+      category_id: fields.category_id,
       base_instructions: fields.base_instructions,
       fill_in_details_guidance: fields.fill_in_details_guidance,
       reference_projects_guidance: fields.reference_projects_guidance,
@@ -194,7 +194,7 @@ export async function updatePrompt(
       title: fields.title,
       slug,
       description: fields.description,
-      category: fields.category,
+      category_id: fields.category_id,
       base_instructions: fields.base_instructions,
       fill_in_details_guidance: fields.fill_in_details_guidance,
       reference_projects_guidance: fields.reference_projects_guidance,
@@ -270,7 +270,7 @@ export async function duplicatePrompt(
   const { data: source, error: fetchError } = await supabase
     .from("prompts")
     .select(
-      "title, description, category, base_instructions, fill_in_details_guidance, reference_projects_guidance, reference_links_guidance, expected_output_notes"
+      "title, description, category_id, base_instructions, fill_in_details_guidance, reference_projects_guidance, reference_links_guidance, expected_output_notes"
     )
     .eq("id", promptId)
     .single();
@@ -298,7 +298,7 @@ export async function duplicatePrompt(
       title,
       slug,
       description: source.description,
-      category: source.category,
+      category_id: source.category_id,
       base_instructions: source.base_instructions,
       fill_in_details_guidance: source.fill_in_details_guidance,
       reference_projects_guidance: source.reference_projects_guidance,

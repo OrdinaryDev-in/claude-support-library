@@ -38,7 +38,7 @@ export default async function ReviewDetailPage({
 
   const { data: prompt, error } = await supabase
     .from("prompts")
-    .select("*, author:profiles!prompts_author_id_fkey(full_name, email)")
+    .select("*, categories(key, label, color), author:profiles!prompts_author_id_fkey(full_name, email)")
     .eq("slug", slug)
     .single();
   if (error || !prompt) notFound();

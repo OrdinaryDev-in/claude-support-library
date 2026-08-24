@@ -46,7 +46,7 @@ export default async function PromptDetailPage({
 
   const { data: prompt, error } = await supabase
     .from("prompts")
-    .select("*")
+    .select("*, categories(key, label, color)")
     .eq("slug", slug)
     .single();
 
@@ -74,7 +74,7 @@ export default async function PromptDetailPage({
     }
   }
 
-  const promptWithTags: PromptWithTags = { ...prompt, tags };
+  const promptWithTags = { ...prompt, tags } as unknown as PromptWithTags;
   const templateText = assembleTemplate(prompt);
 
   return <PromptDetail prompt={promptWithTags} templateText={templateText} isOwner={isOwner} />;

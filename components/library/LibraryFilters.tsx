@@ -2,14 +2,20 @@
 
 import { useState } from "react";
 import { useRouter, usePathname, useSearchParams } from "next/navigation";
-import { PROMPT_CATEGORIES } from "@/lib/constants/categories/prompts";
-import type { PromptCategory } from "@/lib/types/database.types";
+import type { CategoryRow } from "@/lib/data/categories";
 
 export function LibraryFilters({
+  categories,
   counts,
   tags,
 }: {
-  counts: Record<PromptCategory, number>;
+  /** Live rows from the `categories` table (resource_type: "prompt") —
+   * replaces the old static PROMPT_CATEGORIES file, so a category added via
+   * PromptForm's inline "+ New category" shows up here on next load with
+   * no code change. */
+  categories: CategoryRow[];
+  /** Keyed by category id (categoryCounts(), lib/data/prompts.ts). */
+  counts: Record<string, number>;
   tags: string[];
 }) {
   const router = useRouter();
@@ -17,17 +23,19 @@ export function LibraryFilters({
   const searchParams = useSearchParams();
   const [mobileOpen, setMobileOpen] = useState(false);
 
-  const activeCategory = searchParams.get("category") as PromptCategory | null;
+  // The URL keeps using the short `key` (e.g. ?category=frontend), not the
+  // uuid — nicer URLs, and stable across a category row being recreated.
+  const activeCategoryKey = searchParams.get("category");
   const activeTags = (searchParams.get("tags") || "").split(",").filter(Boolean);
-  const hasFilters = Boolean(activeCategory) || activeTags.length > 0 || Boolean(searchParams.get("q"));
+  const hasFilters = Boolean(activeCategoryKey) || activeTags.length > 0 || Boolean(searchParams.get("q"));
 
   function push(params: URLSearchParams) {
     router.push(`${pathname}?${params.toString()}`);
   }
 
-  function toggleCategory(key: PromptCategory) {
+  function toggleCategory(key: string) {
     const params = new URLSearchParams(searchParams.toString());
-    if (activeCategory === key) params.delete("category");
+    if (activeCategoryKey === key) params.delete("category");
     else params.set("category", key);
     push(params);
   }
@@ -52,26 +60,27 @@ export function LibraryFilters({
         Legend
       </div>
       <div className="flex flex-col">
-        {PROMPT_CATEGORIES.map((cat) => (
+        {categories.map((cat) => (
           <button
-            key={cat.key}
+            key={cat.id}
             onClick={() => toggleCategory(cat.key)}
             className={
               "flex items-center gap-2 py-1.5 text-left rounded-sm transition-colors " +
-              (activeCategory === cat.key ? "text-[var(--text)]" : "text-[var(--text)]/90 hover:text-[var(--text)]")
+              (activeCategoryKey === cat.key ? "text-[var(--text)]" : "text-[var(--text)]/90 hover:text-[var(--text)]")
             }
-            aria-pressed={activeCategory === cat.key}
+            aria-pressed={activeCategoryKey === cat.key}
           >
             <span
               className="w-2 h-2 rounded-full shrink-0"
               style={{
                 background: cat.color,
-                boxShadow: activeCategory === cat.key ? `0 0 0 3px color-mix(in srgb, ${cat.color} 25%, transparent)` : undefined,
+                boxShadow:
+                  activeCategoryKey === cat.key ? `0 0 0 3px color-mix(in srgb, ${cat.color} 25%, transparent)` : undefined,
               }}
             />
             <span className="flex-1 text-[13px]">{cat.label}</span>
             <span className="font-[family-name:var(--font-mono)] text-xs text-[var(--muted)]">
-              {counts[cat.key]}
+              {counts[cat.id] ?? 0}
             </span>
           </button>
         ))}
@@ -126,9 +135,9 @@ export function LibraryFilters({
           aria-expanded={mobileOpen}
         >
           Filters{hasFilters ? " ·" : ""}
-          {activeCategory && (
+          {activeCategoryKey && (
             <span className="font-[family-name:var(--font-mono)] text-[11px] text-[var(--brass)]">
-              {PROMPT_CATEGORIES.find((c) => c.key === activeCategory)?.label}
+              {categories.find((c) => c.key === activeCategoryKey)?.label}
             </span>
           )}
           <svg

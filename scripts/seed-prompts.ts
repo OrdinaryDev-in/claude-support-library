@@ -33,7 +33,23 @@ async function main() {
   const authorId = await ensureSeedAuthor(supabase);
   console.log(`Seeding as author ${authorId} (${SEED_AUTHOR_EMAIL})`);
 
+  // Categories moved off a fixed enum onto the admin-managed `categories`
+  // table (20260824130000_categories.sql) — resolve each seed prompt's
+  // legacy `category` key to its row id once, up front, rather than a
+  // per-prompt query.
+  const { data: categoryRows } = await supabase
+    .from("categories")
+    .select("id, key")
+    .eq("resource_type", "prompt");
+  const categoryIdByKey = new Map((categoryRows ?? []).map((c) => [c.key, c.id]));
+
   for (const prompt of SEED_PROMPTS) {
+    const categoryId = categoryIdByKey.get(prompt.category);
+    if (!categoryId) {
+      console.error(`✗ ${prompt.slug}: no categories row for key "${prompt.category}" — run the categories migration first.`);
+      continue;
+    }
+
     const { data: promptRow, error } = await supabase
       .from("prompts")
       .upsert(
@@ -42,7 +58,7 @@ async function main() {
           title: prompt.title,
           slug: prompt.slug,
           description: prompt.description,
-          category: prompt.category,
+          category_id: categoryId,
           base_instructions: prompt.base_instructions,
           fill_in_details_guidance: prompt.fill_in_details_guidance,
           reference_projects_guidance: prompt.reference_projects_guidance,

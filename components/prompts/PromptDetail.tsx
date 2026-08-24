@@ -3,9 +3,10 @@
 import { useEffect, useRef, useState } from "react";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
-import { categoryMeta } from "@/lib/constants/categories/prompts";
+import { categoryDisplay } from "@/lib/data/categories";
 import { CopyButton } from "@/components/prompts/CopyButton";
 import { StatusPill } from "@/components/prompts/StatusPill";
+import { LoadingButton } from "@/components/ui/LoadingButton";
 import { deletePrompt, duplicatePrompt } from "@/app/actions/prompts";
 import type { PromptWithTags } from "@/lib/data/prompts";
 
@@ -41,7 +42,7 @@ export function PromptDetail({
   isOwner: boolean;
 }) {
   const router = useRouter();
-  const cat = categoryMeta(prompt.category);
+  const cat = categoryDisplay(prompt.categories);
 
   const [showDeleteConfirm, setShowDeleteConfirm] = useState(false);
   const [showToast, setShowToast] = useState(false);
@@ -155,13 +156,14 @@ export function PromptDetail({
 
         <div className="flex flex-wrap gap-2 shrink-0 sm:sticky sm:top-20">
           <CopyButton text={templateText} />
-          <button
+          <LoadingButton
             onClick={handleDuplicate}
-            disabled={duplicating}
-            className="px-3.5 py-2 rounded-md border border-[var(--border)] text-[var(--text)] text-[13px] disabled:opacity-45"
+            pending={duplicating}
+            pendingLabel="Duplicating…"
+            className="px-3.5 py-2 rounded-md border border-[var(--border)] text-[var(--text)] text-[13px]"
           >
-            {duplicating ? "Duplicating…" : "Duplicate as new prompt"}
-          </button>
+            Duplicate as new prompt
+          </LoadingButton>
           {isOwner && (
             <>
               <Link

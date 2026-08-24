@@ -3,7 +3,8 @@
 import { useState } from "react";
 import { updateFullName, updatePassword } from "@/app/actions/profile";
 import { MySubmissions } from "@/components/profile/MySubmissions";
-import type { PromptRow } from "@/lib/data/prompts";
+import { LoadingButton } from "@/components/ui/LoadingButton";
+import type { PromptWithCategory } from "@/lib/data/prompts";
 
 export interface ProfileData {
   initials: string;
@@ -14,7 +15,7 @@ export interface ProfileData {
   lastLogin: string;
 }
 
-export function ProfileForm({ profile, submissions }: { profile: ProfileData; submissions: PromptRow[] }) {
+export function ProfileForm({ profile, submissions }: { profile: ProfileData; submissions: PromptWithCategory[] }) {
   const [fullName, setFullName] = useState(profile.fullName);
   const [savingProfile, setSavingProfile] = useState(false);
   const [profileError, setProfileError] = useState<string | null>(null);
@@ -127,9 +128,9 @@ export function ProfileForm({ profile, submissions }: { profile: ProfileData; su
           </div>
         )}
         <div>
-          <button onClick={handleSaveProfile} disabled={savingProfile} className={activeBtn}>
-            {savingProfile ? "Saving…" : "Save changes"}
-          </button>
+          <LoadingButton onClick={handleSaveProfile} pending={savingProfile} pendingLabel="Saving…" className={activeBtn}>
+            Save changes
+          </LoadingButton>
         </div>
       </div>
 
@@ -189,9 +190,9 @@ export function ProfileForm({ profile, submissions }: { profile: ProfileData; su
           </div>
         )}
         <div>
-          <button onClick={handleResetPw} disabled={savingPw} className={activeBtn}>
-            {savingPw ? "Updating…" : "Update password"}
-          </button>
+          <LoadingButton onClick={handleResetPw} pending={savingPw} pendingLabel="Updating…" className={activeBtn}>
+            Update password
+          </LoadingButton>
         </div>
       </div>
 

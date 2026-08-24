@@ -3,10 +3,12 @@
 import { useMemo, useState } from "react";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
-import { PROMPT_CATEGORIES } from "@/lib/constants/categories/prompts";
 import { promptSchema, assembleTemplate, type PromptFormValues } from "@/lib/validation/prompt-schema";
 import { createPrompt, updatePrompt } from "@/app/actions/prompts";
-import type { PromptCategory, PromptStatus } from "@/lib/types/database.types";
+import { createCategory } from "@/app/actions/categories";
+import { LoadingButton } from "@/components/ui/LoadingButton";
+import type { CategoryRow } from "@/lib/data/categories";
+import type { PromptStatus } from "@/lib/types/database.types";
 
 export interface PromptFormInitialValues extends PromptFormValues {
   id: string;
@@ -28,18 +30,29 @@ export interface PromptFormInitialValues extends PromptFormValues {
 export function PromptForm({
   mode,
   initialValues,
+  categories,
+  isAdmin = false,
 }: {
   mode: "create" | "edit";
   initialValues?: PromptFormInitialValues;
+  /** Live rows from the `categories` table (resource_type: "prompt"). */
+  categories: CategoryRow[];
+  /** Gates the inline "+ New category" control below — categories are
+   * admin-managed (unlike tags, which any signed-in user can add), same
+   * reasoning as app/actions/categories.ts's requireAdmin(). */
+  isAdmin?: boolean;
 }) {
   const router = useRouter();
   const isEdit = mode === "edit";
 
+  // Only id/key/label/color are ever rendered here, so the locally-appended
+  // "+ New category" entry doesn't need to fake the rest of CategoryRow.
+  const [categoryList, setCategoryList] = useState<Pick<CategoryRow, "id" | "key" | "label" | "color">[]>(categories);
   const [fields, setFields] = useState<PromptFormValues>(
     initialValues ?? {
       title: "",
       description: "",
-      category: "new_app" as PromptCategory,
+      category_id: categories[0]?.id ?? "",
       tagsInput: "",
       base_instructions: "",
       fill_in_details_guidance: "",
@@ -51,6 +64,35 @@ export function PromptForm({
   const [saving, setSaving] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [savedToast, setSavedToast] = useState(false);
+
+  const [addingCategory, setAddingCategory] = useState(false);
+  const [newCategoryKey, setNewCategoryKey] = useState("");
+  const [newCategoryLabel, setNewCategoryLabel] = useState("");
+  const [newCategoryColor, setNewCategoryColor] = useState("#5b8def");
+  const [creatingCategory, setCreatingCategory] = useState(false);
+  const [categoryError, setCategoryError] = useState<string | null>(null);
+
+  async function handleAddCategory() {
+    setCategoryError(null);
+    setCreatingCategory(true);
+    const result = await createCategory({
+      resource_type: "prompt",
+      key: newCategoryKey,
+      label: newCategoryLabel,
+      color: newCategoryColor,
+      sort_order: categoryList.length,
+    });
+    setCreatingCategory(false);
+    if (!result.ok) {
+      setCategoryError(result.error);
+      return;
+    }
+    setCategoryList((list) => [...list, result.category]);
+    setField("category_id", result.category.id);
+    setAddingCategory(false);
+    setNewCategoryKey("");
+    setNewCategoryLabel("");
+  }
 
   function setField<K extends keyof PromptFormValues>(key: K, value: PromptFormValues[K]) {
     setFields((f) => ({ ...f, [key]: value }));
@@ -154,15 +196,15 @@ export function PromptForm({
               Category
             </span>
             <div role="radiogroup" aria-labelledby="prompt-category-label" className="flex flex-wrap gap-2">
-              {PROMPT_CATEGORIES.map((c) => {
-                const active = fields.category === c.key;
+              {categoryList.map((c) => {
+                const active = fields.category_id === c.id;
                 return (
                   <button
                     type="button"
-                    key={c.key}
+                    key={c.id}
                     role="radio"
                     aria-checked={active}
-                    onClick={() => setField("category", c.key)}
+                    onClick={() => setField("category_id", c.id)}
                     className="flex items-center gap-1.5 px-3 py-1.5 rounded-md border text-xs"
                     style={{
                       borderColor: active ? c.color : "var(--border)",
@@ -175,7 +217,77 @@ export function PromptForm({
                   </button>
                 );
               })}
+              {isAdmin && !addingCategory && (
+                <button
+                  type="button"
+                  onClick={() => setAddingCategory(true)}
+                  className="flex items-center gap-1.5 px-3 py-1.5 rounded-md border border-dashed border-[var(--border)] text-xs text-[var(--muted)] hover:text-[var(--text)] hover:border-[var(--text)]"
+                >
+                  + New category
+                </button>
+              )}
             </div>
+            {isAdmin && addingCategory && (
+              <div className="flex flex-wrap items-end gap-2 mt-2.5 p-3 bg-[var(--surface)] border border-[var(--border)] rounded-md">
+                <div>
+                  <label htmlFor="new-cat-key" className="block text-[11px] text-[var(--muted)] mb-1">
+                    Key
+                  </label>
+                  <input
+                    id="new-cat-key"
+                    className="dv-input w-32"
+                    placeholder="data_analysis"
+                    value={newCategoryKey}
+                    onChange={(e) => setNewCategoryKey(e.target.value)}
+                  />
+                </div>
+                <div>
+                  <label htmlFor="new-cat-label" className="block text-[11px] text-[var(--muted)] mb-1">
+                    Label
+                  </label>
+                  <input
+                    id="new-cat-label"
+                    className="dv-input w-40"
+                    placeholder="Data Analysis"
+                    value={newCategoryLabel}
+                    onChange={(e) => setNewCategoryLabel(e.target.value)}
+                  />
+                </div>
+                <div>
+                  <label htmlFor="new-cat-color" className="block text-[11px] text-[var(--muted)] mb-1">
+                    Color
+                  </label>
+                  <input
+                    id="new-cat-color"
+                    type="color"
+                    className="h-[34px] w-[42px] rounded-md border border-[var(--border)] bg-transparent p-1"
+                    value={newCategoryColor}
+                    onChange={(e) => setNewCategoryColor(e.target.value)}
+                  />
+                </div>
+                <LoadingButton
+                  type="button"
+                  onClick={handleAddCategory}
+                  pending={creatingCategory}
+                  pendingLabel="Adding…"
+                  className="px-3 py-2 rounded-md border border-[var(--brass)] text-[var(--brass)] text-[13px] font-semibold"
+                >
+                  Add
+                </LoadingButton>
+                <button
+                  type="button"
+                  onClick={() => setAddingCategory(false)}
+                  className="px-3 py-2 rounded-md border border-[var(--border)] text-[var(--text)] text-[13px]"
+                >
+                  Cancel
+                </button>
+                {categoryError && (
+                  <p role="alert" className="text-xs text-[var(--danger)] basis-full">
+                    {categoryError}
+                  </p>
+                )}
+              </div>
+            )}
           </div>
           <div>
             <label htmlFor="prompt-tags" className={labelClass}>
@@ -268,18 +380,14 @@ export function PromptForm({
           )}
 
           <div className="flex gap-2.5 mt-2">
-            <button
+            <LoadingButton
               type="submit"
-              disabled={saving}
-              className="px-[18px] py-2.5 rounded-md border-none text-[13px] font-semibold"
-              style={{
-                background: saving ? "var(--surface-2)" : "var(--brass)",
-                color: saving ? "var(--muted)" : "var(--ink)",
-                cursor: saving ? "default" : "pointer",
-              }}
+              pending={saving}
+              pendingLabel="Saving…"
+              className="px-[18px] py-2.5 rounded-md border-none text-[13px] font-semibold cursor-pointer bg-[var(--brass)] text-[var(--ink)] disabled:bg-[var(--surface-2)] disabled:text-[var(--muted)]"
             >
-              {saving ? "Saving…" : isEdit ? "Save changes" : "Publish prompt"}
-            </button>
+              {isEdit ? "Save changes" : "Publish prompt"}
+            </LoadingButton>
             <Link
               href={cancelHref}
               className="no-underline px-4 py-2.5 rounded-md border border-[var(--border)] text-[var(--text)] text-[13px]"

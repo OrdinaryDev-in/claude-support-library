@@ -3,9 +3,10 @@
 import { useEffect, useState, useTransition } from "react";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
-import { categoryMeta } from "@/lib/constants/categories/prompts";
+import { categoryDisplay } from "@/lib/data/categories";
 import { approvePrompt, rejectPrompt } from "@/app/actions/review";
 import { StatusPill } from "@/components/prompts/StatusPill";
+import { LoadingButton } from "@/components/ui/LoadingButton";
 import type { ReviewQueueRow } from "@/lib/data/prompts";
 
 interface SectionMeta {
@@ -35,7 +36,7 @@ const SECTIONS: SectionMeta[] = [
  * look like, with an approve/reject action bar instead of edit/delete. */
 export function ReviewDetail({ prompt }: { prompt: ReviewQueueRow }) {
   const router = useRouter();
-  const cat = categoryMeta(prompt.category);
+  const cat = categoryDisplay(prompt.categories);
 
   const [pending, startTransition] = useTransition();
   const [rejecting, setRejecting] = useState(false);
@@ -114,13 +115,14 @@ export function ReviewDetail({ prompt }: { prompt: ReviewQueueRow }) {
 
         {prompt.status === "pending_review" && (
           <div className="flex flex-wrap gap-2 shrink-0 sm:sticky sm:top-20">
-            <button
+            <LoadingButton
               onClick={handleApprove}
-              disabled={pending}
-              className="px-3.5 py-2 rounded-md border border-[var(--teal)] text-[var(--teal)] text-[13px] font-semibold disabled:opacity-45"
+              pending={pending}
+              pendingLabel="Approving…"
+              className="px-3.5 py-2 rounded-md border border-[var(--teal)] text-[var(--teal)] text-[13px] font-semibold"
             >
               Approve
-            </button>
+            </LoadingButton>
             <button
               onClick={() => setRejecting(true)}
               disabled={pending}
@@ -199,13 +201,14 @@ export function ReviewDetail({ prompt }: { prompt: ReviewQueueRow }) {
               >
                 Cancel
               </button>
-              <button
+              <LoadingButton
                 onClick={submitReject}
-                disabled={pending}
-                className="px-3.5 py-2 rounded-md border-none bg-[var(--danger)] text-[var(--ink)] text-[13px] font-semibold disabled:opacity-45"
+                pending={pending}
+                pendingLabel="Rejecting…"
+                className="px-3.5 py-2 rounded-md border-none bg-[var(--danger)] text-[var(--ink)] text-[13px] font-semibold"
               >
-                {pending ? "Rejecting…" : "Reject"}
-              </button>
+                Reject
+              </LoadingButton>
             </div>
           </div>
         </div>

@@ -23,10 +23,12 @@ const OTHER_USER_ID = "22222222-2222-2222-2222-222222222222";
 const ADMIN_ID = "33333333-3333-3333-3333-333333333333";
 const PROMPT_ID = "44444444-4444-4444-4444-444444444444";
 
+const CATEGORY_ID = "66666666-6666-4666-8666-666666666666";
+
 const VALID_FORM: PromptFormValues = {
   title: "Test Prompt",
   description: "A test prompt for the authorization boundary suite.",
-  category: "backend",
+  category_id: CATEGORY_ID,
   tagsInput: "api, postgres",
   base_instructions: "Do the thing.",
   fill_in_details_guidance: "Fill this in.",
@@ -241,11 +243,11 @@ describe("app/actions/prompts.ts — authorization boundary", () => {
       const { loadMorePrompts } = await import("./prompts");
       const { searchPrompts, PROMPTS_PAGE_SIZE } = await import("@/lib/data/prompts");
 
-      await loadMorePrompts({ category: null, tags: [], q: "" }, 20);
+      await loadMorePrompts({ categoryId: null, tags: [], q: "" }, 20);
 
       expect(searchPrompts).toHaveBeenCalledWith(
         supabase,
-        { category: null, tags: [], q: "" },
+        { categoryId: null, tags: [], q: "" },
         { offset: 20, limit: PROMPTS_PAGE_SIZE }
       );
       vi.doUnmock("@/lib/data/prompts");

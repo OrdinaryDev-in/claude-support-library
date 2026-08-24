@@ -1,6 +1,7 @@
 import { notFound, redirect } from "next/navigation";
 import { headers } from "next/headers";
 import { createClient } from "@/lib/supabase/server";
+import { listCategories } from "@/lib/data/categories";
 import { PromptForm, type PromptFormInitialValues } from "@/components/prompts/PromptForm";
 
 export default async function EditPromptPage({
@@ -55,7 +56,7 @@ export default async function EditPromptPage({
     editorIsAdmin: isAdmin,
     title: prompt.title,
     description: prompt.description,
-    category: prompt.category,
+    category_id: prompt.category_id,
     tagsInput,
     base_instructions: prompt.base_instructions,
     fill_in_details_guidance: prompt.fill_in_details_guidance,
@@ -64,5 +65,7 @@ export default async function EditPromptPage({
     expected_output_notes: prompt.expected_output_notes,
   };
 
-  return <PromptForm mode="edit" initialValues={initialValues} />;
+  const categories = await listCategories(supabase, "prompt");
+
+  return <PromptForm mode="edit" initialValues={initialValues} categories={categories} isAdmin={isAdmin} />;
 }

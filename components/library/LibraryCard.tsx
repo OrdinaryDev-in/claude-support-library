@@ -1,9 +1,9 @@
 import Link from "next/link";
 import type { PromptWithTags } from "@/lib/data/prompts";
-import { categoryMeta } from "@/lib/constants/categories/prompts";
+import { categoryDisplay } from "@/lib/data/categories";
 
 export function LibraryCard({ prompt }: { prompt: PromptWithTags }) {
-  const cat = categoryMeta(prompt.category);
+  const cat = categoryDisplay(prompt.categories);
 
   return (
     <Link

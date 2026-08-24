@@ -7,6 +7,14 @@
 //
 // prompts.status/reviewed_by/reviewed_at/rejection_reason added, is_published
 // removed, by 20260816090111_prompt_review_workflow.sql (prompt review workflow).
+//
+// `categories` table + prompts.category_id added by
+// 20260824130000_categories.sql / 20260824130100_sync_prompt_category_id.sql.
+// Prompts now reads/writes category_id (an admin-managed table row, not a
+// fixed enum) — see lib/validation/prompt-schema.ts and app/actions/prompts.ts.
+// The old `category` enum column is left in place, nullable, unwritten by
+// the app going forward; sync_prompt_category_id() still derives
+// category_id from it if anything else ever sets `category` directly.
 
 export type PromptCategory =
   | "new_app"
@@ -49,7 +57,13 @@ export interface Database {
           title: string;
           slug: string;
           description: string;
-          category: PromptCategory;
+          // Legacy column, kept nullable — the app no longer writes it (see
+          // category_id below); still present on every pre-cutover row for
+          // reference/rollback, and sync_prompt_category_id()
+          // (20260824130100_sync_prompt_category_id.sql) still derives
+          // category_id from it if some other caller ever sets it directly.
+          category: PromptCategory | null;
+          category_id: string;
           status: PromptStatus;
           reviewed_by: string | null;
           reviewed_at: string | null;
@@ -69,7 +83,14 @@ export interface Database {
           title: string;
           slug: string;
           description: string;
-          category: PromptCategory;
+          // Exactly one of these two is required at the DB level: either
+          // works, since sync_prompt_category_id()
+          // (20260824130100_sync_prompt_category_id.sql) derives category_id
+          // from category when only the latter is given (old-style callers,
+          // e.g. test/integration/prompt-review-guard.test.ts) — app write
+          // paths (app/actions/prompts.ts) always set category_id directly.
+          category?: PromptCategory | null;
+          category_id?: string;
           status?: PromptStatus;
           reviewed_by?: string | null;
           reviewed_at?: string | null;
@@ -95,6 +116,48 @@ export interface Database {
           {
             foreignKeyName: "prompts_reviewed_by_fkey";
             columns: ["reviewed_by"];
+            isOneToOne: false;
+            referencedRelation: "profiles";
+            referencedColumns: ["id"];
+          },
+          {
+            foreignKeyName: "prompts_category_id_fkey";
+            columns: ["category_id"];
+            isOneToOne: false;
+            referencedRelation: "categories";
+            referencedColumns: ["id"];
+          },
+        ];
+      };
+      // Added by 20260824130000_categories.sql — shared, admin-managed
+      // category taxonomy across resource types (prompts now; skills/
+      // connectors reuse it via their own resource_type rows).
+      categories: {
+        Row: {
+          id: string;
+          resource_type: "prompt" | "skill" | "connector";
+          key: string;
+          label: string;
+          color: string;
+          sort_order: number;
+          created_by: string | null;
+          created_at: string;
+        };
+        Insert: {
+          id?: string;
+          resource_type: "prompt" | "skill" | "connector";
+          key: string;
+          label: string;
+          color: string;
+          sort_order?: number;
+          created_by?: string | null;
+          created_at?: string;
+        };
+        Update: Partial<Database["public"]["Tables"]["categories"]["Insert"]>;
+        Relationships: [
+          {
+            foreignKeyName: "categories_created_by_fkey";
+            columns: ["created_by"];
             isOneToOne: false;
             referencedRelation: "profiles";
             referencedColumns: ["id"];
@@ -169,6 +232,10 @@ export interface Database {
           p_query?: string | null;
           p_limit?: number;
           p_offset?: number;
+          // Added by 20260824130000_categories.sql — additive overload
+          // param, sits after the original params so old callers passing
+          // only p_category are unaffected.
+          p_category_id?: string | null;
         };
         Returns: Database["public"]["Tables"]["prompts"]["Row"][];
       };

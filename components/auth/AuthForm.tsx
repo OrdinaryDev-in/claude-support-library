@@ -6,6 +6,7 @@ import Link from "next/link";
 import { createClient } from "@/lib/supabase/client";
 import { touchLastLogin } from "@/app/actions/profile";
 import { checkAuthRateLimit } from "@/app/actions/auth";
+import { LoadingButton } from "@/components/ui/LoadingButton";
 
 type Mode = "login" | "signup";
 
@@ -191,13 +192,14 @@ export function AuthForm({ mode }: { mode: Mode }) {
           </div>
         )}
 
-        <button
+        <LoadingButton
           type="submit"
-          disabled={pending}
-          className="mt-1.5 py-2.5 rounded-md border border-[var(--brass)] text-[var(--brass)] text-[13px] font-semibold disabled:opacity-45 hover:bg-[var(--brass)]/10 transition-colors"
+          pending={pending}
+          pendingLabel={isLogin ? "Signing in…" : "Creating account…"}
+          className="mt-1.5 py-2.5 rounded-md border border-[var(--brass)] text-[var(--brass)] text-[13px] font-semibold hover:bg-[var(--brass)]/10 transition-colors"
         >
-          {pending ? (isLogin ? "Signing in…" : "Creating account…") : isLogin ? "Sign in" : "Create account"}
-        </button>
+          {isLogin ? "Sign in" : "Create account"}
+        </LoadingButton>
 
         {!isLogin && (
           <p className="text-[11px] text-[var(--muted)] text-center leading-relaxed">
