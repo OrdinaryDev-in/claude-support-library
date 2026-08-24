@@ -11,10 +11,19 @@ export interface ExportableSkill {
 }
 
 /** YAML scalar-safe single-line description: collapse whitespace/newlines
- * (frontmatter `description` must be one line) and escape embedded quotes
- * so it stays valid inside a double-quoted YAML string. */
+ * (frontmatter `description` must be one line) and escape embedded
+ * backslashes and quotes so it stays valid inside a double-quoted YAML
+ * string. Backslashes must be escaped *before* quotes — doing it in the
+ * other order would double-escape the backslash the quote-escaping step
+ * just inserted. Author-supplied text (any signed-in author can write
+ * trigger_description) reaching an unescaped backslash here could break
+ * out of the quoted scalar in the generated file. */
 function yamlLine(text: string): string {
-  return text.replace(/\s+/g, " ").trim().replace(/"/g, '\\"');
+  return text
+    .replace(/\s+/g, " ")
+    .trim()
+    .replace(/\\/g, "\\\\")
+    .replace(/"/g, '\\"');
 }
 
 /** Claude Code's actual Agent Skill format: YAML frontmatter (`name` +
