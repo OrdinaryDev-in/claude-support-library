@@ -34,9 +34,9 @@ export const LIBRARY_SECTIONS: LibrarySection[] = [
   {
     key: "connectors",
     volume: "III",
-    label: "Cloud Connectors",
-    description: "Reference docs for cloud providers — coming soon.",
+    label: "Connectors",
+    description: "Guides for wiring AI agents to external tools and data sources.",
     href: "/library/connectors",
-    enabled: false,
+    enabled: true,
   },
 ];

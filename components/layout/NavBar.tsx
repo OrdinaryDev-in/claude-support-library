@@ -13,6 +13,7 @@ export interface NavBarUser {
   isAdmin: boolean;
   pendingPromptReviewCount: number;
   pendingSkillReviewCount: number;
+  pendingConnectorReviewCount: number;
 }
 
 export function NavBar({ user }: { user: NavBarUser | null }) {
@@ -25,8 +26,10 @@ export function NavBar({ user }: { user: NavBarUser | null }) {
   const onHub = pathname === "/library";
   const onPrompts = pathname.startsWith("/library/prompts");
   const onSkills = pathname.startsWith("/library/skills");
+  const onConnectors = pathname.startsWith("/library/connectors");
   const onSkillReview = pathname.startsWith("/admin/review/skills");
-  const onPromptReview = pathname.startsWith("/admin/review") && !onSkillReview;
+  const onConnectorReview = pathname.startsWith("/admin/review/connectors");
+  const onPromptReview = pathname.startsWith("/admin/review") && !onSkillReview && !onConnectorReview;
 
   useEffect(() => {
     function onKeyDown(e: KeyboardEvent) {
@@ -93,6 +96,9 @@ export function NavBar({ user }: { user: NavBarUser | null }) {
           <Link href="/library/skills" className={linkClass(onSkills)}>
             Skills
           </Link>
+          <Link href="/library/connectors" className={linkClass(onConnectors)}>
+            Connectors
+          </Link>
           {user?.isAdmin && (
             <Link href="/admin/review" className={`${linkClass(onPromptReview)} inline-flex items-center gap-1.5`}>
               Review
@@ -112,6 +118,19 @@ export function NavBar({ user }: { user: NavBarUser | null }) {
               {user.pendingSkillReviewCount > 0 && (
                 <span className="font-[family-name:var(--font-mono)] text-[10px] leading-none px-1.5 py-1 rounded-full bg-[var(--brass)] text-[var(--ink)]">
                   {user.pendingSkillReviewCount}
+                </span>
+              )}
+            </Link>
+          )}
+          {user?.isAdmin && (
+            <Link
+              href="/admin/review/connectors"
+              className={`${linkClass(onConnectorReview)} inline-flex items-center gap-1.5`}
+            >
+              Connectors Review
+              {user.pendingConnectorReviewCount > 0 && (
+                <span className="font-[family-name:var(--font-mono)] text-[10px] leading-none px-1.5 py-1 rounded-full bg-[var(--brass)] text-[var(--ink)]">
+                  {user.pendingConnectorReviewCount}
                 </span>
               )}
             </Link>
@@ -226,6 +245,20 @@ export function NavBar({ user }: { user: NavBarUser | null }) {
               {user.pendingSkillReviewCount > 0 && (
                 <span className="font-[family-name:var(--font-mono)] text-[10px] leading-none px-1.5 py-1 rounded-full bg-[var(--brass)] text-[var(--ink)]">
                   {user.pendingSkillReviewCount}
+                </span>
+              )}
+            </Link>
+          )}
+          {user?.isAdmin && (
+            <Link
+              href="/admin/review/connectors"
+              onClick={() => setMenuOpen(false)}
+              className="text-[var(--text)] text-sm inline-flex items-center gap-1.5"
+            >
+              Connectors Review
+              {user.pendingConnectorReviewCount > 0 && (
+                <span className="font-[family-name:var(--font-mono)] text-[10px] leading-none px-1.5 py-1 rounded-full bg-[var(--brass)] text-[var(--ink)]">
+                  {user.pendingConnectorReviewCount}
                 </span>
               )}
             </Link>

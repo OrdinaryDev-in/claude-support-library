@@ -12,6 +12,7 @@
     "lint": "eslint",
     "seed": "node --env-file=.env.local --import tsx scripts/seed-prompts.ts",
     "seed:skills": "node --env-file=.env.local --import tsx scripts/seed-skills.ts",
+    "seed:connectors": "node --env-file=.env.local --import tsx scripts/seed-connectors.ts",
     "generate-seed-sql": "npx tsx scripts/generate-seed-sql.ts",
     "supabase:security-check": "bash scripts/check-supabase-security.sh",
     "test": "vitest run",

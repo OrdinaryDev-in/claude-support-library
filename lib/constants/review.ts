@@ -1,4 +1,4 @@
-import type { PromptStatus, SkillStatus } from "@/lib/types/database.types";
+import type { PromptStatus, SkillStatus, ConnectorStatus } from "@/lib/types/database.types";
 
 export interface StatusMeta {
   label: string;
@@ -19,6 +19,14 @@ export const PROMPT_STATUS_META: Record<PromptStatus, StatusMeta> = {
 // skill_status (20260824140000_skills.sql) is its own Postgres enum, not a
 // reuse of prompt_status — see StatusPill's own comment.
 export const SKILL_STATUS_META: Record<SkillStatus, StatusMeta> = {
+  pending_review: { label: "Pending Review", color: "var(--brass)" },
+  approved: { label: "Approved", color: "var(--teal)" },
+  rejected: { label: "Rejected", color: "var(--danger)" },
+};
+
+// Same three values again, own map — connector_status
+// (20260824150000_connectors.sql) is its own Postgres enum too.
+export const CONNECTOR_STATUS_META: Record<ConnectorStatus, StatusMeta> = {
   pending_review: { label: "Pending Review", color: "var(--brass)" },
   approved: { label: "Approved", color: "var(--teal)" },
   rejected: { label: "Rejected", color: "var(--danger)" },
