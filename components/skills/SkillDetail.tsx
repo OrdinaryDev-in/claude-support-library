@@ -6,6 +6,7 @@ import { useRouter } from "next/navigation";
 import { categoryDisplay } from "@/lib/data/categories";
 import { CopyButton } from "@/components/prompts/CopyButton";
 import { StatusPill } from "@/components/library/StatusPill";
+import { SkillExportMenu } from "@/components/skills/SkillExportMenu";
 import { SKILL_STATUS_META } from "@/lib/constants/review";
 import { LoadingButton } from "@/components/ui/LoadingButton";
 import { deleteSkill, duplicateSkill } from "@/app/actions/skills";
@@ -142,6 +143,18 @@ export function SkillDetail({
 
         <div className="flex flex-wrap gap-2 shrink-0 sm:sticky sm:top-20">
           <CopyButton text={templateText} label="skill" />
+          <SkillExportMenu
+            skill={{
+              slug: skill.slug,
+              title: skill.title,
+              description: skill.description,
+              trigger_description: skill.trigger_description,
+              instructions_body: skill.instructions_body,
+              required_tools_guidance: skill.required_tools_guidance,
+              example_usage: skill.example_usage,
+              expected_output_notes: skill.expected_output_notes,
+            }}
+          />
           <LoadingButton
             onClick={handleDuplicate}
             pending={duplicating}
