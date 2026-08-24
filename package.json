@@ -16,7 +16,7 @@
     "supabase:security-check": "bash scripts/check-supabase-security.sh",
     "test": "vitest run",
     "test:watch": "vitest",
-    "test:e2e": "bash scripts/write-e2e-env.sh && NODE_ENV=test playwright test",
+    "test:e2e": "bash scripts/write-e2e-env.sh && NODE_ENV=test E2E_TEST_MODE=true playwright test",
     "prepare": "husky"
   },
   "dependencies": {
