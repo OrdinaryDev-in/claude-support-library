@@ -18,16 +18,6 @@ export default function TermsPage() {
           <Logo markSize={24} textClassName="text-xl" />
         </Link>
 
-        <div className="mt-8 mb-10 p-4 border border-[var(--brass)]/40 rounded-md bg-[var(--brass)]/5">
-          <p className="text-[13px] text-[var(--muted)] leading-relaxed m-0">
-            <strong className="text-[var(--brass)]">Draft, not reviewed by a lawyer.</strong>{" "}
-            This describes what using DevAtlas actually involves today, in
-            plain language — it hasn&apos;t had legal review. Get it reviewed
-            before treating it as binding. The governing-law section below
-            is intentionally left blank pending that.
-          </p>
-        </div>
-
         <h1 className="font-[family-name:var(--font-display)] text-2xl sm:text-3xl font-medium mb-2">
           Terms of Service
         </h1>
