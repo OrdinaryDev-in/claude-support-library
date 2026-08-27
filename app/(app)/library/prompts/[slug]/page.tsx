@@ -6,11 +6,14 @@ import { PromptDetail } from "@/components/prompts/PromptDetail";
 import { assembleTemplate } from "@/lib/validation/prompt-schema";
 import type { PromptWithTags } from "@/lib/data/prompts";
 
-// Same noindex reasoning as app/(app)/library/page.tsx — this route
-// requires a signed-in session, so a crawler never reaches it anonymously
-// regardless. Dynamic per-prompt title/description still matter for the
-// signed-in UX (browser tab, history, bookmarks, and — per WCAG 2.4.2 —
-// screen reader users navigating between prompts by document title).
+// Same noindex reasoning as app/(app)/library/page.tsx — this route is
+// guest-readable (an unauthenticated visitor, crawler included, gets a
+// Supabase anonymous session rather than a login redirect), so `noindex`
+// is doing real work here, not just documenting an already-unreachable
+// URL. Dynamic per-prompt title/description still matter for the
+// signed-in/guest UX (browser tab, history, bookmarks, and — per WCAG
+// 2.4.2 — screen reader users navigating between prompts by document
+// title).
 export async function generateMetadata({
   params,
 }: PageProps<"/library/prompts/[slug]">): Promise<Metadata> {
@@ -37,11 +40,14 @@ export default async function PromptDetailPage({
   const { slug } = await params;
   const supabase = await createClient();
 
-  // proxy.ts (lib/supabase/middleware.ts) already ran getUser() for this
-  // request and forwards the verified id via this header — reading it
-  // here instead of calling getUser() again skips a repeat Supabase Auth
-  // round trip. This route allows anonymous viewing, so absence just
-  // means "no owner controls," not an auth failure.
+  // proxy.ts (lib/supabase/middleware.ts) already ran getUser() (or, for
+  // an unauthenticated visitor here, signInAnonymously()) for this request
+  // and forwards the verified id via this header — reading it here
+  // instead of calling getUser() again skips a repeat Supabase Auth round
+  // trip. A guest gets a real (anonymous-session) userId here, never
+  // matching prompt.author_id and never resolving to an admin role below,
+  // so isOwner naturally stays false for them — this route needs no
+  // separate guest branch.
   const userId = (await headers()).get("x-user-id");
 
   const { data: prompt, error } = await supabase

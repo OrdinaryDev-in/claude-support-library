@@ -18,7 +18,13 @@ async function requireUser() {
   const {
     data: { user },
   } = await supabase.auth.getUser();
-  if (!user) redirect("/login");
+  // A guest's anonymous session (lib/supabase/middleware.ts) satisfies
+  // `user` truthy but must not satisfy write access — categories are
+  // admin-only writes anyway (see requireAdmin below), and a guest can
+  // never be admin, but reject here too rather than let it fall through
+  // to a generic "not admin" error. /signup, not /login: a guest has no
+  // account to log into yet.
+  if (!user || user.is_anonymous) redirect("/signup");
   return { supabase, user };
 }
 

@@ -1,0 +1,24 @@
+-- Follow-up to 20260827171616_guest_read_access.sql: is_anonymous() was
+-- assumed to be EXECUTE-able by `authenticated` the same way is_admin()
+-- always has been, with no explicit grant needed — but that assumption
+-- only held on the hosted project this was originally developed and
+-- tested against (`select proacl from pg_proc` there showed
+-- `authenticated=X` on is_admin() despite no migration ever granting it
+-- explicitly, implying the hosted platform applies its own default
+-- function-level grant that a fresh stack doesn't get).
+--
+-- Confirmed by actually running a full `supabase db reset` + `npm run
+-- test:e2e` against the LOCAL stack (not just the hosted project): every
+-- create{Prompt,Skill,Connector}() failed with
+-- `permission denied for function is_anonymous` (Postgres error 42501).
+-- 20260818110300_default_privileges_authenticated.sql — the migration
+-- that would normally cover this — only sets default privileges for
+-- TABLES and SEQUENCES, never functions, so a fresh local stack (and any
+-- other non-hosted or newly-provisioned Supabase project) genuinely has
+-- no EXECUTE grant on this function for `authenticated` at all.
+--
+-- Fix: grant EXECUTE explicitly rather than relying on an implicit,
+-- environment-dependent default. Safe to add on top of the hosted
+-- project too (already implicitly granted there) — an explicit grant is
+-- idempotent alongside an existing implicit one.
+grant execute on function public.is_anonymous() to authenticated;

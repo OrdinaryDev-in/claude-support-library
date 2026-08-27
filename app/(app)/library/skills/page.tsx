@@ -1,5 +1,6 @@
 import Link from "next/link";
 import type { Metadata } from "next";
+import { headers } from "next/headers";
 import { createClient } from "@/lib/supabase/server";
 import { searchSkills, categoryCounts, allTags, totalPublishedCount } from "@/lib/data/skills";
 import { listCategories } from "@/lib/data/categories";
@@ -24,6 +25,7 @@ export default async function BrowseSkillsPage({
 }) {
   const params = await searchParams;
   const supabase = await createClient();
+  const isGuest = (await headers()).get("x-is-guest") === "1";
 
   const categories = await listCategories(supabase, "skill");
   const categoryKey = params.category || null;
@@ -57,12 +59,21 @@ export default async function BrowseSkillsPage({
               § VOLUME II · <LoadedCount total={total} useCount={useSkillsCount} />
             </div>
           </div>
-          <Link
-            href="/library/skills/new"
-            className="no-underline px-4 py-2 border border-[var(--brass)] text-[var(--brass)] rounded-md text-[13px] font-semibold hover:bg-[var(--brass)]/10 transition-colors"
-          >
-            + New skill
-          </Link>
+          {isGuest ? (
+            <Link
+              href="/signup"
+              className="no-underline px-4 py-2 border border-[var(--brass)] text-[var(--brass)] rounded-md text-[13px] font-semibold hover:bg-[var(--brass)]/10 transition-colors"
+            >
+              Sign up to submit
+            </Link>
+          ) : (
+            <Link
+              href="/library/skills/new"
+              className="no-underline px-4 py-2 border border-[var(--brass)] text-[var(--brass)] rounded-md text-[13px] font-semibold hover:bg-[var(--brass)]/10 transition-colors"
+            >
+              + New skill
+            </Link>
+          )}
         </div>
 
         <div className="flex flex-col md:flex-row gap-6 md:gap-10">

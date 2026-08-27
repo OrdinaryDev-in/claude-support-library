@@ -1,3 +1,4 @@
+import { redirect } from "next/navigation";
 import { headers } from "next/headers";
 import { createClient } from "@/lib/supabase/server";
 import { listCategories } from "@/lib/data/categories";
@@ -5,6 +6,12 @@ import { SkillForm } from "@/components/skills/SkillForm";
 
 // Mirrors app/(app)/library/prompts/new/page.tsx.
 export default async function NewSkillPage() {
+  // /library is guest-readable (proxy.ts), so a guest's anonymous session
+  // reaches this route too — bounce to /signup before rendering the form
+  // rather than letting them fill it out only to be redirected on submit
+  // (createSkill()'s own requireUser() would reject it there either way).
+  if ((await headers()).get("x-is-guest") === "1") redirect("/signup");
+
   const supabase = await createClient();
   const categories = await listCategories(supabase, "skill");
 

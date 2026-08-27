@@ -20,39 +20,63 @@ export default async function AppLayout({ children }: LayoutProps<"/">) {
   // this request — a network round trip to Supabase Auth — and forwards
   // the verified id via this header. Reading it here instead of calling
   // getUser() again avoids paying that round trip twice per page load.
-  const userId = (await headers()).get("x-user-id");
+  // A guest gets a real x-user-id too (their anonymous session's id) —
+  // x-is-guest is what distinguishes them from a real account below.
+  const requestHeaders = await headers();
+  const userId = requestHeaders.get("x-user-id");
+  const isGuest = requestHeaders.get("x-is-guest") === "1";
 
   // proxy.ts already redirects unauthenticated requests before they reach
-  // this layout — this is a defense-in-depth backstop, not the primary gate.
+  // this layout (including creating a guest session on a guest-readable
+  // route) — this is a defense-in-depth backstop, not the primary gate.
   if (!userId) redirect("/login");
 
   const supabase = await createClient();
-  const { data: profile } = await supabase
-    .from("profiles")
-    .select("full_name, email, role")
-    .eq("id", userId)
-    .single();
 
-  const isAdmin = profile?.role === "admin";
-  // Only fetch the queue counts for admins — reviewQueueCounts reads every
-  // status via RLS's is_admin() branch, which a non-admin caller can't do
-  // (and doesn't need to: they'd only ever see their own counts anyway).
-  const [pendingPromptReviewCount, pendingSkillReviewCount, pendingConnectorReviewCount] = isAdmin
-    ? await Promise.all([
-        promptReviewQueueCounts(supabase).then((c) => c.pending_review),
-        skillReviewQueueCounts(supabase).then((c) => c.pending_review),
-        connectorReviewQueueCounts(supabase).then((c) => c.pending_review),
-      ])
-    : [0, 0, 0];
+  let navUser: NavBarUser;
+  if (isGuest) {
+    // No profile fields worth fetching for a guest — profiles.full_name/
+    // email are always null for an anonymous sign-in, and admin status is
+    // structurally impossible for one (see prevent_role_self_escalation,
+    // supabase/migrations/20260815025500_rls.sql).
+    navUser = {
+      isGuest: true,
+      initials: "",
+      fullName: "",
+      isAdmin: false,
+      pendingPromptReviewCount: 0,
+      pendingSkillReviewCount: 0,
+      pendingConnectorReviewCount: 0,
+    };
+  } else {
+    const { data: profile } = await supabase
+      .from("profiles")
+      .select("full_name, email, role")
+      .eq("id", userId)
+      .single();
 
-  const navUser: NavBarUser = {
-    initials: initialsOf(profile?.full_name ?? null, profile?.email ?? ""),
-    fullName: profile?.full_name || profile?.email || "",
-    isAdmin,
-    pendingPromptReviewCount,
-    pendingSkillReviewCount,
-    pendingConnectorReviewCount,
-  };
+    const isAdmin = profile?.role === "admin";
+    // Only fetch the queue counts for admins — reviewQueueCounts reads every
+    // status via RLS's is_admin() branch, which a non-admin caller can't do
+    // (and doesn't need to: they'd only ever see their own counts anyway).
+    const [pendingPromptReviewCount, pendingSkillReviewCount, pendingConnectorReviewCount] = isAdmin
+      ? await Promise.all([
+          promptReviewQueueCounts(supabase).then((c) => c.pending_review),
+          skillReviewQueueCounts(supabase).then((c) => c.pending_review),
+          connectorReviewQueueCounts(supabase).then((c) => c.pending_review),
+        ])
+      : [0, 0, 0];
+
+    navUser = {
+      isGuest: false,
+      initials: initialsOf(profile?.full_name ?? null, profile?.email ?? ""),
+      fullName: profile?.full_name || profile?.email || "",
+      isAdmin,
+      pendingPromptReviewCount,
+      pendingSkillReviewCount,
+      pendingConnectorReviewCount,
+    };
+  }
 
   return (
     <div className="min-h-screen flex flex-col bg-[var(--ink)] text-[var(--text)] relative">

@@ -50,13 +50,13 @@ describe("app/actions/skills.ts — authorization boundary", () => {
   });
 
   describe("createSkill", () => {
-    it("redirects to /login when unauthenticated", async () => {
+    it("redirects to /signup when unauthenticated", async () => {
       const supabase = createSupabaseMock();
       setUser(supabase, null);
       mockCreateClient.mockResolvedValue(supabase);
       const { createSkill } = await import("./skills");
 
-      await expect(createSkill(VALID_FORM)).rejects.toThrow("REDIRECT:/login");
+      await expect(createSkill(VALID_FORM)).rejects.toThrow("REDIRECT:/signup");
     });
 
     it("rejects invalid input without touching the database", async () => {
@@ -192,13 +192,13 @@ describe("app/actions/skills.ts — authorization boundary", () => {
       expect(result).toEqual({ ok: true });
     });
 
-    it("redirects to /login when unauthenticated", async () => {
+    it("redirects to /signup when unauthenticated", async () => {
       const supabase = createSupabaseMock();
       setUser(supabase, null);
       mockCreateClient.mockResolvedValue(supabase);
       const { deleteSkill } = await import("./skills");
 
-      await expect(deleteSkill(SKILL_ID)).rejects.toThrow("REDIRECT:/login");
+      await expect(deleteSkill(SKILL_ID)).rejects.toThrow("REDIRECT:/signup");
     });
   });
 

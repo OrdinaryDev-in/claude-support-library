@@ -49,13 +49,13 @@ describe("app/actions/connectors.ts — authorization boundary", () => {
   });
 
   describe("createConnector", () => {
-    it("redirects to /login when unauthenticated", async () => {
+    it("redirects to /signup when unauthenticated", async () => {
       const supabase = createSupabaseMock();
       setUser(supabase, null);
       mockCreateClient.mockResolvedValue(supabase);
       const { createConnector } = await import("./connectors");
 
-      await expect(createConnector(VALID_FORM)).rejects.toThrow("REDIRECT:/login");
+      await expect(createConnector(VALID_FORM)).rejects.toThrow("REDIRECT:/signup");
     });
 
     it("rejects invalid input without touching the database", async () => {
@@ -191,13 +191,13 @@ describe("app/actions/connectors.ts — authorization boundary", () => {
       expect(result).toEqual({ ok: true });
     });
 
-    it("redirects to /login when unauthenticated", async () => {
+    it("redirects to /signup when unauthenticated", async () => {
       const supabase = createSupabaseMock();
       setUser(supabase, null);
       mockCreateClient.mockResolvedValue(supabase);
       const { deleteConnector } = await import("./connectors");
 
-      await expect(deleteConnector(CONNECTOR_ID)).rejects.toThrow("REDIRECT:/login");
+      await expect(deleteConnector(CONNECTOR_ID)).rejects.toThrow("REDIRECT:/signup");
     });
   });
 
