@@ -1,0 +1,12 @@
+-- Follow-up to 20260827171616_guest_read_access.sql: is_anonymous()'s ACL
+-- carried an explicit PUBLIC execute grant (this project's default
+-- privileges grant to PUBLIC directly for new functions, not just to
+-- `anon` the way is_admin's original comment assumed) — `revoke ... from
+-- anon` alone doesn't remove a PUBLIC grant, which still lets `anon`
+-- execute via the implicit PUBLIC path. Confirmed via
+-- `select proacl from pg_proc where proname = 'is_anonymous'` showing a
+-- bare `=X/postgres` entry, and by `supabase db advisors --type
+-- security` still flagging anon_security_definer_function_executable
+-- after the anon-only revoke. authenticated/service_role keep EXECUTE via
+-- their own explicit ACL entries, unaffected by this.
+revoke execute on function public.is_anonymous() from public;

@@ -6,6 +6,72 @@
     "added": "2026-08-15"
   },
   {
+    "lint": "authenticated_security_definer_function_executable",
+    "function": "is_anonymous",
+    "reason": "Same shape as is_admin's entry above: is_anonymous() must stay EXECUTE-able by `authenticated` so RLS policies can call it on behalf of a guest's anonymous session (an anonymous sign-in's JWT carries role: authenticated at the Postgres level). `public`/`anon` EXECUTE were revoked in 20260827171616_guest_read_access.sql and 20260827171722_guest_read_access_revoke_public_execute.sql. Accepted residual risk: any signed-in user (real or anonymous) can call rpc/is_anonymous() directly and learn only whether *their own* session is anonymous — no other data is exposed.",
+    "added": "2026-08-27"
+  },
+  {
+    "lint": "auth_allow_anonymous_sign_ins",
+    "table": "categories",
+    "reason": "Intentional: guest (read-only) access, added in 20260827171616_guest_read_access.sql — a Supabase anonymous sign-in carries role: authenticated, so every `to authenticated` read policy now also covers guests by design. categories_select_signed_in is read-only for everyone (writes stay admin-gated, structurally impossible for an anonymous session); the flagged delete/update policies are admin-only and equally unreachable by a guest.",
+    "added": "2026-08-27"
+  },
+  {
+    "lint": "auth_allow_anonymous_sign_ins",
+    "table": "connector_tags",
+    "reason": "Intentional: guest (read-only) access, added in 20260827171616_guest_read_access.sql. Select is read-only for everyone; the flagged write policies were tightened in that same migration to require `not is_anonymous()`, so a guest's anonymous session can read but never write.",
+    "added": "2026-08-27"
+  },
+  {
+    "lint": "auth_allow_anonymous_sign_ins",
+    "table": "connectors",
+    "reason": "Intentional: guest (read-only) access, added in 20260827171616_guest_read_access.sql. Select is read-only for everyone (guests see only status = 'approved' rows, same as any non-author signed-in user); the flagged write policies were tightened in that same migration to require `not is_anonymous()`.",
+    "added": "2026-08-27"
+  },
+  {
+    "lint": "auth_allow_anonymous_sign_ins",
+    "table": "error_logs",
+    "reason": "Not introduced by guest access — error_logs_select_admin is admin-only select (structurally unreachable by any anonymous session) and predates 20260827171616_guest_read_access.sql; anon has always had insert-only access here for pre-session client error logging (20260818110500_error_logs.sql). Flagged now only because the advisor re-scans every anon-reachable policy once anonymous sign-ins are enabled project-wide.",
+    "added": "2026-08-27"
+  },
+  {
+    "lint": "auth_allow_anonymous_sign_ins",
+    "table": "profiles",
+    "reason": "Intentional: guest (read-only) access, added in 20260827171616_guest_read_access.sql. profiles_select_all is read-only for everyone (needed to show \"by <author>\" on cards); profiles_update_own was tightened in that same migration to require `not is_anonymous()`, so a guest can never edit any profile, including its own.",
+    "added": "2026-08-27"
+  },
+  {
+    "lint": "auth_allow_anonymous_sign_ins",
+    "table": "prompt_tags",
+    "reason": "Intentional: guest (read-only) access, added in 20260827171616_guest_read_access.sql. Select is read-only for everyone; the flagged write policies were tightened in that same migration to require `not is_anonymous()`.",
+    "added": "2026-08-27"
+  },
+  {
+    "lint": "auth_allow_anonymous_sign_ins",
+    "table": "prompts",
+    "reason": "Intentional: guest (read-only) access, added in 20260827171616_guest_read_access.sql — this is the core of the feature (browsing /library/prompts without an account). prompts_select_signed_in only ever exposed status = 'approved' rows to a non-author; the flagged write policies were tightened in that same migration to require `not is_anonymous()`.",
+    "added": "2026-08-27"
+  },
+  {
+    "lint": "auth_allow_anonymous_sign_ins",
+    "table": "skill_tags",
+    "reason": "Intentional: guest (read-only) access, added in 20260827171616_guest_read_access.sql. Select is read-only for everyone; the flagged write policies were tightened in that same migration to require `not is_anonymous()`.",
+    "added": "2026-08-27"
+  },
+  {
+    "lint": "auth_allow_anonymous_sign_ins",
+    "table": "skills",
+    "reason": "Intentional: guest (read-only) access, added in 20260827171616_guest_read_access.sql. skills_select_signed_in only ever exposed status = 'approved' rows to a non-author; the flagged write policies were tightened in that same migration to require `not is_anonymous()`.",
+    "added": "2026-08-27"
+  },
+  {
+    "lint": "auth_allow_anonymous_sign_ins",
+    "table": "tags",
+    "reason": "Intentional: guest (read-only) access, added in 20260827171616_guest_read_access.sql. tags_select_signed_in is read-only for everyone; tags_insert_signed_in was tightened in that same migration to require `not is_anonymous()`.",
+    "added": "2026-08-27"
+  },
+  {
     "lint": "auth_leaked_password_protection",
     "entity": "Auth",
     "reason": "Requires the Supabase Pro plan or above (org 'Mubashir-Mohamed's Org' is on Free) — there's no dashboard toggle to enable it at this tier. Revisit and remove this entry if/when the org upgrades. Partially mitigated by the app's own minLength=8 password requirement (components/auth/AuthForm.tsx).",

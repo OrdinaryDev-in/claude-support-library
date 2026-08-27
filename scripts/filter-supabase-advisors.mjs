@@ -44,13 +44,18 @@ if (!Array.isArray(lints)) {
 }
 
 // An allowlist entry matches on `lint` name plus whichever metadata key it
-// specifies (`function` for function-level findings, `entity` for
-// project-level ones like Auth settings). An entry with neither key
-// matches any finding of that lint name — keep entries specific.
+// specifies (`function` for function-level findings, `table` for
+// table-level ones like RLS-policy findings, `entity` for project-level
+// ones like Auth settings — `function` and `table` both compare against
+// the same underlying `metadata.name` field the advisor returns, just
+// named for whichever kind of object the lint is actually about). An
+// entry with none of these keys matches any finding of that lint name —
+// keep entries specific.
 const isAllowed = (lint) =>
   allowlist.some((a) => {
     if (a.lint !== lint.name) return false;
     if (a.function !== undefined && a.function !== lint.metadata?.name) return false;
+    if (a.table !== undefined && a.table !== lint.metadata?.name) return false;
     if (a.entity !== undefined && a.entity !== lint.metadata?.entity) return false;
     return true;
   });

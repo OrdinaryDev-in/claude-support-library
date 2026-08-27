@@ -58,11 +58,11 @@ describe("app/actions/profile.ts", () => {
   });
 
   describe("updateFullName", () => {
-    it("redirects to /login when unauthenticated", async () => {
+    it("redirects to /signup when unauthenticated", async () => {
       supabase.auth.getUser.mockResolvedValue({ data: { user: null } });
       const { updateFullName } = await import("./profile");
 
-      await expect(updateFullName("New Name")).rejects.toThrow("REDIRECT:/login");
+      await expect(updateFullName("New Name")).rejects.toThrow("REDIRECT:/signup");
     });
 
     it("rejects an empty name without touching the database", async () => {
@@ -138,6 +138,10 @@ describe("app/actions/profile.ts", () => {
     });
 
     it("redirects to /login when unauthenticated", async () => {
+      // Unlike updateFullName, this action's guard is `!user?.email`
+      // (app/actions/profile.ts) — a guest's anonymous session already
+      // has no email, so it hits the same branch and same /login target
+      // as a fully missing session; not changed as part of guest access.
       supabase.auth.getUser.mockResolvedValue({ data: { user: null } });
       const { updatePassword } = await import("./profile");
 

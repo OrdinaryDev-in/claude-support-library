@@ -25,7 +25,13 @@ async function requireUser() {
   const {
     data: { user },
   } = await supabase.auth.getUser();
-  if (!user) redirect("/login");
+  // A guest's anonymous session (lib/supabase/middleware.ts) satisfies
+  // `user` truthy but must not satisfy write access — RLS's own
+  // is_anonymous() guard (supabase/migrations/20260827171616_guest_read_access.sql)
+  // is the real backstop, this just gives a clean redirect instead of a
+  // generic Postgres RLS error. /signup, not /login: a guest has no
+  // account to log into yet.
+  if (!user || user.is_anonymous) redirect("/signup");
   return { supabase, user };
 }
 

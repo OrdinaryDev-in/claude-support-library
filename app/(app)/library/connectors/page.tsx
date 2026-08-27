@@ -1,5 +1,6 @@
 import Link from "next/link";
 import type { Metadata } from "next";
+import { headers } from "next/headers";
 import { createClient } from "@/lib/supabase/server";
 import { searchConnectors, categoryCounts, allTags, totalPublishedCount } from "@/lib/data/connectors";
 import { listCategories } from "@/lib/data/categories";
@@ -24,6 +25,7 @@ export default async function BrowseConnectorsPage({
 }) {
   const params = await searchParams;
   const supabase = await createClient();
+  const isGuest = (await headers()).get("x-is-guest") === "1";
 
   const categories = await listCategories(supabase, "connector");
   const categoryKey = params.category || null;
@@ -57,12 +59,21 @@ export default async function BrowseConnectorsPage({
               § VOLUME III · <LoadedCount total={total} useCount={useConnectorsCount} />
             </div>
           </div>
-          <Link
-            href="/library/connectors/new"
-            className="no-underline px-4 py-2 border border-[var(--brass)] text-[var(--brass)] rounded-md text-[13px] font-semibold hover:bg-[var(--brass)]/10 transition-colors"
-          >
-            + New connector
-          </Link>
+          {isGuest ? (
+            <Link
+              href="/signup"
+              className="no-underline px-4 py-2 border border-[var(--brass)] text-[var(--brass)] rounded-md text-[13px] font-semibold hover:bg-[var(--brass)]/10 transition-colors"
+            >
+              Sign up to submit
+            </Link>
+          ) : (
+            <Link
+              href="/library/connectors/new"
+              className="no-underline px-4 py-2 border border-[var(--brass)] text-[var(--brass)] rounded-md text-[13px] font-semibold hover:bg-[var(--brass)]/10 transition-colors"
+            >
+              + New connector
+            </Link>
+          )}
         </div>
 
         <div className="flex flex-col md:flex-row gap-6 md:gap-10">

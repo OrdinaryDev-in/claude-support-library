@@ -11,6 +11,10 @@ export interface NavBarUser {
   initials: string;
   fullName: string;
   isAdmin: boolean;
+  // True for a guest's anonymous session (app/(app)/layout.tsx) — renders
+  // a sign-up/log-in CTA in place of the profile menu below. initials/
+  // fullName are empty strings and isAdmin is always false for a guest.
+  isGuest: boolean;
   pendingPromptReviewCount: number;
   pendingSkillReviewCount: number;
   pendingConnectorReviewCount: number;
@@ -159,7 +163,22 @@ export function NavBar({ user }: { user: NavBarUser | null }) {
           </div>
         </form>
 
-        {user ? (
+        {user?.isGuest ? (
+          <>
+            <Link
+              href="/login"
+              className="hidden sm:inline text-[var(--muted)] text-[13px] hover:text-[var(--text)] transition-colors"
+            >
+              Log in
+            </Link>
+            <Link
+              href="/signup"
+              className="no-underline px-3 py-1.5 border border-[var(--brass)] text-[var(--brass)] rounded-md text-[13px] font-semibold hover:bg-[var(--brass)]/10 transition-colors shrink-0"
+            >
+              Sign up
+            </Link>
+          </>
+        ) : user ? (
           <>
             <button
               onClick={handleSignOut}
@@ -263,10 +282,21 @@ export function NavBar({ user }: { user: NavBarUser | null }) {
               )}
             </Link>
           )}
-          {user && (
-            <button onClick={handleSignOut} className="text-left text-[var(--muted)] text-sm">
-              Sign out
-            </button>
+          {user?.isGuest ? (
+            <>
+              <Link href="/login" onClick={() => setMenuOpen(false)} className="text-[var(--text)] text-sm">
+                Log in
+              </Link>
+              <Link href="/signup" onClick={() => setMenuOpen(false)} className="text-[var(--brass)] text-sm font-semibold">
+                Sign up
+              </Link>
+            </>
+          ) : (
+            user && (
+              <button onClick={handleSignOut} className="text-left text-[var(--muted)] text-sm">
+                Sign out
+              </button>
+            )
           )}
         </div>
       )}

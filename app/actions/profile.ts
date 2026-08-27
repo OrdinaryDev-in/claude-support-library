@@ -27,7 +27,9 @@ export async function updateFullName(
   const {
     data: { user },
   } = await supabase.auth.getUser();
-  if (!user) redirect("/login");
+  // A guest's anonymous session (lib/supabase/middleware.ts) satisfies
+  // `user` truthy but has no account to edit — /signup, not /login.
+  if (!user || user.is_anonymous) redirect("/signup");
 
   const trimmed = fullName.trim();
   if (!trimmed) return { ok: false, error: "Full name can't be empty." };

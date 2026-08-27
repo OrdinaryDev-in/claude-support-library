@@ -39,8 +39,10 @@ const VALID_FORM: PromptFormValues = {
 
 const INVALID_FORM = { ...VALID_FORM, title: "" } as PromptFormValues;
 
-function setUser(supabase: SupabaseMock, id: string | null) {
-  supabase.auth.getUser.mockResolvedValue({ data: { user: id ? { id } : null } });
+function setUser(supabase: SupabaseMock, id: string | null, options: { anonymous?: boolean } = {}) {
+  supabase.auth.getUser.mockResolvedValue({
+    data: { user: id ? { id, is_anonymous: options.anonymous ?? false } : null },
+  });
 }
 
 describe("app/actions/prompts.ts — authorization boundary", () => {
@@ -57,13 +59,22 @@ describe("app/actions/prompts.ts — authorization boundary", () => {
   });
 
   describe("createPrompt", () => {
-    it("redirects to /login when unauthenticated", async () => {
+    it("redirects to /signup when unauthenticated", async () => {
       const supabase = createSupabaseMock();
       setUser(supabase, null);
       mockCreateClient.mockResolvedValue(supabase);
       const { createPrompt } = await import("./prompts");
 
-      await expect(createPrompt(VALID_FORM)).rejects.toThrow("REDIRECT:/login");
+      await expect(createPrompt(VALID_FORM)).rejects.toThrow("REDIRECT:/signup");
+    });
+
+    it("redirects a guest's anonymous session to /signup too, not just a missing session", async () => {
+      const supabase = createSupabaseMock();
+      setUser(supabase, "guest-1", { anonymous: true });
+      mockCreateClient.mockResolvedValue(supabase);
+      const { createPrompt } = await import("./prompts");
+
+      await expect(createPrompt(VALID_FORM)).rejects.toThrow("REDIRECT:/signup");
     });
 
     it("rejects invalid input without touching the database", async () => {
@@ -219,13 +230,13 @@ describe("app/actions/prompts.ts — authorization boundary", () => {
       expect(result).toEqual({ ok: true });
     });
 
-    it("redirects to /login when unauthenticated", async () => {
+    it("redirects to /signup when unauthenticated", async () => {
       const supabase = createSupabaseMock();
       setUser(supabase, null);
       mockCreateClient.mockResolvedValue(supabase);
       const { deletePrompt } = await import("./prompts");
 
-      await expect(deletePrompt(PROMPT_ID)).rejects.toThrow("REDIRECT:/login");
+      await expect(deletePrompt(PROMPT_ID)).rejects.toThrow("REDIRECT:/signup");
     });
   });
 

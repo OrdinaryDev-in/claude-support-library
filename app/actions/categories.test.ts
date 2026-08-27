@@ -37,13 +37,13 @@ describe("app/actions/categories.ts — authorization boundary", () => {
   const validCategory = { resource_type: "prompt" as const, key: "ops_infra", label: "Ops / Infra", color: "#9c7bd9", sort_order: 0 };
 
   describe("createCategory", () => {
-    it("redirects to /login when unauthenticated", async () => {
+    it("redirects to /signup when unauthenticated", async () => {
       const supabase = createSupabaseMock();
       setUser(supabase, null);
       mockCreateClient.mockResolvedValue(supabase);
       const { createCategory } = await import("./categories");
 
-      await expect(createCategory(validCategory)).rejects.toThrow("REDIRECT:/login");
+      await expect(createCategory(validCategory)).rejects.toThrow("REDIRECT:/signup");
     });
 
     it("denies a signed-in non-admin", async () => {
