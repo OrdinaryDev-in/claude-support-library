@@ -233,6 +233,27 @@ export function AuthForm({ mode }: { mode: Mode }) {
           </>
         )}
       </div>
+
+      <div className="flex items-center gap-2.5 mt-5 mb-4">
+        <div className="flex-1 h-px bg-[var(--border)]" />
+        <span className="font-[family-name:var(--font-mono)] text-[10px] text-[var(--muted)]">OR</span>
+        <div className="flex-1 h-px bg-[var(--border)]" />
+      </div>
+
+      {/* /library is guest-readable (lib/supabase/middleware.ts) — a
+          plain navigation there is enough; the middleware transparently
+          creates the visitor's anonymous session on arrival, no explicit
+          "continue as guest" action needed here. This link is the only
+          reason a first-time visitor would ever discover that read-only
+          browsing exists at all: proxy.ts otherwise redirects "/" itself
+          straight to /login, so without this, someone landing on / has no
+          way to find /library without already knowing its URL. */}
+      <Link
+        href="/library"
+        className="block text-center py-2.5 rounded-md border border-[var(--border)] text-[var(--text)] text-[13px] font-medium hover:bg-white/[0.03] transition-colors no-underline"
+      >
+        Browse the library without an account →
+      </Link>
     </>
   );
 }
